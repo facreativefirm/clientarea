@@ -1,0 +1,231 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Shield, Moon, Sun, ShoppingBag, Languages, LayoutDashboard, User, ChevronDown, Server } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
+import { useAuthStore } from "@/lib/store/authStore";
+import { useSettingsStore } from "@/lib/store/settingsStore";
+import { useCartStore } from "@/lib/store/cartStore";
+import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import { motion } from "framer-motion";
+
+export function PublicNavbar() {
+    const { user, isAuthenticated } = useAuthStore();
+    const { t } = useLanguage();
+    const { settings } = useSettingsStore();
+    const { items } = useCartStore();
+
+    const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null);
+    const [services, setServices] = React.useState<any[]>([]);
+
+    React.useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const res = await api.get("/products/services");
+                setServices(res.data.data.services || []);
+            } catch (e) {
+                console.error("Failed to fetch services for nav", e);
+            }
+        };
+        fetchServices();
+    }, []);
+
+    const navLinks = [
+        { name: t("home"), href: "/" },
+        { name: t("services"), href: "/#hosting", hasDropdown: true },
+        { name: t("about_us"), href: "/about" },
+        { name: t("contact_us"), href: "/contact" },
+    ];
+
+    const getDashboardLink = () => {
+        if (!user) return "/auth/login";
+        if (user.userType === 'ADMIN' || user.userType === 'SUPER_ADMIN') return "/admin";
+        if (user.userType === 'RESELLER') return "/reseller";
+        return "/client";
+    };
+
+    const getDashboardLabel = () => {
+        if (user?.userType === 'ADMIN' || user?.userType === 'SUPER_ADMIN') return t("admin_panel") || "Admin Panel";
+        return t("client_area") || "Client Area";
+    };
+
+    return (
+        <nav className="fixed top-0 w-full z-50 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2 group">
+                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
+                        <Shield className="w-5 h-5" />
+                    </div>
+                    <span className="text-xl font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors">
+                        {settings.appName || 'WHMCS CRM'}
+                    </span>
+                </Link>
+
+                {/* Desktop Nav */}
+                <div className="hidden md:flex items-center gap-2">
+                    {navLinks.map((link) => (
+                        <div
+                            key={link.name}
+                            className="relative group"
+                            onMouseEnter={() => link.hasDropdown && setActiveDropdown(link.name)}
+                            onMouseLeave={() => setActiveDropdown(null)}
+                        >
+                            <Link
+                                href={link.href}
+                                className="text-sm font-bold text-gray-600 hover:text-primary transition-all px-4 py-2 rounded-xl flex items-center gap-1 group-hover:bg-primary/5"
+                            >
+                                {link.name}
+                                {link.hasDropdown && <ChevronDown size={14} className={cn("transition-transform duration-300", activeDropdown === link.name && "rotate-180")} />}
+                            </Link>
+
+                            {/* Dropdown Menu */}
+                            {link.hasDropdown && activeDropdown === link.name && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl p-4 grid gap-2"
+                                >
+                                    {services.map((service) => (
+                                        <Link
+                                            key={service.id}
+                                            href={`/services/${service.slug}`}
+                                            className="p-3 rounded-xl hover:bg-primary/5 flex items-center gap-3 transition-colors group/item"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">
+                                                <Server size={16} />
+                                            </div>
+                                            <div className="text-sm font-bold text-gray-700 group-hover/item:text-primary">
+                                                {service.name}
+                                            </div>
+                                        </Link>
+                                    ))}
+                                    {services.length === 0 && (
+                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center py-4">
+                                            Scanning Services...
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Actions */}
+                <div className="hidden md:flex items-center gap-4">
+                    <Link href="/checkout" className="relative p-2 text-gray-400 hover:text-primary transition-colors">
+                        <ShoppingBag size={22} />
+                        {items.length > 0 && (
+                            <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                                {items.length}
+                            </span>
+                        )}
+                    </Link>
+
+                    {isAuthenticated ? (
+                        <Link href={getDashboardLink()}>
+                            <Button className="rounded-xl font-bold bg-[#f37021] text-white shadow-lg shadow-[#f37021]/20 hover:bg-[#d9621c] transition-all px-6 gap-2">
+                                <LayoutDashboard className="w-4 h-4" />
+                                {getDashboardLabel()}
+                            </Button>
+                        </Link>
+                    ) : (
+                        <>
+                            <Link href="/auth/login">
+                                <Button variant="ghost" className="rounded-xl font-bold text-gray-700 hover:text-primary hover:bg-transparent">
+                                    Login
+                                </Button>
+                            </Link>
+                            <Link href="/auth/register">
+                                <Button className="rounded-xl font-bold bg-[#f37021] text-white shadow-lg shadow-[#f37021]/20 hover:bg-[#d9621c] transition-all px-6">
+                                    {t("get_started")}
+                                </Button>
+                            </Link>
+                        </>
+                    )}
+                </div>
+
+                {/* Mobile Menu */}
+                <div className="md:hidden flex items-center gap-3">
+                    <Link href="/checkout" className="relative p-2 text-gray-400">
+                        <ShoppingBag size={22} />
+                        {items.length > 0 && (
+                            <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                                {items.length}
+                            </span>
+                        )}
+                    </Link>
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Menu className="w-6 h-6 text-gray-700" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="bg-white p-0 border-l border-gray-100">
+                            <div className="flex flex-col h-full bg-white p-6">
+                                <div className="flex items-center gap-2 mb-10">
+                                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+                                        <Shield className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-900">{settings.appName || 'WHMCS CRM'}</span>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    {navLinks.map((link) => (
+                                        <React.Fragment key={link.name}>
+                                            <Link
+                                                href={link.href}
+                                                className="text-lg font-medium text-gray-600 hover:text-primary hover:bg-gray-50 px-4 py-3 rounded-xl transition-colors"
+                                            >
+                                                {link.name}
+                                            </Link>
+                                            {link.hasDropdown && (
+                                                <div className="pl-6 flex flex-col gap-1 border-l-2 border-gray-100 ml-4 mb-4">
+                                                    {services.map((service) => (
+                                                        <Link
+                                                            key={service.id}
+                                                            href={`/services/${service.slug}`}
+                                                            className="text-sm font-bold text-gray-500 hover:text-primary py-2"
+                                                        >
+                                                            {service.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                    <div className="h-[1px] bg-gray-100 my-4" />
+
+                                    {isAuthenticated ? (
+                                        <Link href={getDashboardLink()} className="w-full">
+                                            <Button className="w-full rounded-xl font-bold py-6 text-base shadow-lg shadow-primary/20 gap-2">
+                                                <LayoutDashboard className="w-5 h-5" />
+                                                {getDashboardLabel()}
+                                            </Button>
+                                        </Link>
+                                    ) : (
+                                        <>
+                                            <Link href="/auth/login" className="w-full">
+                                                <Button variant="outline" className="w-full rounded-xl font-bold py-6 text-base border-gray-200">
+                                                    Log In
+                                                </Button>
+                                            </Link>
+                                            <Link href="/auth/register" className="w-full">
+                                                <Button className="w-full rounded-xl font-bold py-6 text-base shadow-lg shadow-[#f37021]/20 bg-[#f37021] hover:bg-[#d9621c] text-white">
+                                                    {t("get_started")}
+                                                </Button>
+                                            </Link>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+            </div>
+        </nav>
+    );
+}

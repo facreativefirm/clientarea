@@ -1,0 +1,101 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { Shield, Facebook, Twitter, Instagram, Linkedin, Heart } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
+import { useSettingsStore } from "@/lib/store/settingsStore";
+
+export function Footer() {
+    const { t } = useLanguage();
+    const { settings } = useSettingsStore();
+
+    return (
+        <footer className="relative border-t border-gray-100 bg-white pt-20 pb-10 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                                <Shield className="w-5 h-5" />
+                            </div>
+                            <span className="text-xl font-bold text-gray-900">
+                                {settings.appName || 'WHMCS CRM'}
+                            </span>
+                        </div>
+                        <p className="text-gray-500 leading-relaxed text-sm">
+                            BDIX-Optimized NVMe SSD Hosting for ultimate speed. {t("professional_support")} is our impression.
+                        </p>
+                        <div className="flex gap-4">
+                            {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                                <Link key={i} href="#" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all duration-300">
+                                    <Icon size={16} />
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="font-bold text-gray-900 text-lg mb-6">{t("services")}</h4>
+                        <ul className="space-y-3 text-sm">
+                            {[
+                                { name: t("hosting"), href: "/#hosting" },
+                                { name: t("domains"), href: "/client/domains/register" },
+                                { name: t("vps_servers"), href: "/#hosting" },
+                                { name: "SSL Certificates", href: "/#services" }
+                            ].map((item) => (
+                                <li key={item.name}>
+                                    <Link href={item.href} className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 group">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-primary transition-colors" />
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="font-bold text-gray-900 text-lg mb-6">{t("support")}</h4>
+                        <ul className="space-y-3 text-sm">
+                            {[
+                                { name: t("about_us"), href: "/about" },
+                                { name: t("contact_us"), href: "/contact" },
+                                { name: t("privacy_policy"), href: "/privacy" },
+                                { name: t("terms_of_service"), href: "/terms" },
+                                { name: t("faq"), href: "/#faq" }
+                            ].map((item) => (
+                                <li key={item.name}>
+                                    <Link href={item.href} className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 group">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-primary transition-colors" />
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="font-bold text-gray-900 text-lg mb-6">Newsletter</h4>
+                        <p className="text-gray-500 text-sm mb-4">{t("contact_desc")}</p>
+                        <form className="flex gap-2">
+                            <input
+                                type="email"
+                                placeholder={t("your_email")}
+                                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                            />
+                            <button className="bg-[#f37021] text-white rounded-xl px-4 font-bold hover:bg-[#d9621c] transition-colors shadow-lg shadow-[#f37021]/20">
+                                Go
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-gray-400 text-center md:text-left">
+                        &copy; {new Date().getFullYear()} {settings.appName || 'WHMCS CRM'}. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </footer>
+    );
+}
