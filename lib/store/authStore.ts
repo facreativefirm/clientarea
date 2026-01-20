@@ -19,20 +19,32 @@ interface AuthState {
     clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
-    user: null,
-    sessionToken: null,
-    isAuthenticated: false,
-    setAuth: (user, sessionToken) => {
-        set({ user, sessionToken, isAuthenticated: true });
-    },
-    logout: () => {
-        set({ user: null, sessionToken: null, isAuthenticated: false });
-    },
-    clearAuth: () => {
-        set({ user: null, sessionToken: null, isAuthenticated: false });
-    },
-}));
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            sessionToken: null,
+            isAuthenticated: false,
+            setAuth: (user, sessionToken) => {
+                set({ user, sessionToken, isAuthenticated: true });
+            },
+            logout: () => {
+                set({ user: null, sessionToken: null, isAuthenticated: false });
+                clearSessionToken(); // Clear cookie as well
+            },
+            clearAuth: () => {
+                set({ user: null, sessionToken: null, isAuthenticated: false });
+            },
+        }),
+        {
+            name: 'whmcs-auth', // name of the item in the storage (must be unique)
+            storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+            partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated, sessionToken: state.sessionToken }),
+        }
+    )
+);
 
 // Helper to get session token from cookie
 export const getSessionToken = (): string | null => {

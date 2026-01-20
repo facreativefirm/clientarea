@@ -196,102 +196,117 @@ interface InvoiceData {
 interface InvoicePDFProps {
     invoice: InvoiceData;
     appName?: string;
+    currencyCode?: string;
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'WHMCS CRM' }) => (
-    <Document>
-        <Page size="A4" style={styles.page}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.companyInfo}>
-                    <Text style={styles.companyName}>{appName}</Text>
-                    <View style={styles.companyDetails}>
-                        <Text>123 Hosting Street</Text>
-                        <Text>Dhaka, Bangladesh</Text>
-                        <Text>support@whmcscrm.com</Text>
+export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'WHMCS CRM', currencyCode = 'USD' }) => {
+    const formatValue = (amount: number | string) => {
+        const value = Number(amount).toFixed(2);
+        const symbols: Record<string, string> = {
+            'BDT': 'Tk', // Use text instead of symbol for better PDF font support
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+        };
+        const symbol = symbols[currencyCode] || currencyCode;
+        return `${symbol} ${value}`;
+    };
+
+    return (
+        <Document>
+            <Page size="A4" style={styles.page}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <View style={styles.companyInfo}>
+                        <Text style={styles.companyName}>{appName}</Text>
+                        <View style={styles.companyDetails}>
+                            <Text>4210 Oxygen Chittagong</Text>
+                            <Text>Chittagong, Bangladesh</Text>
+                            <Text>naimursharon@gmail.com</Text>
+                        </View>
                     </View>
-                </View>
-                <View>
-                    <Text style={styles.invoiceTitle}>INVOICE</Text>
-                    <Text style={styles.invoiceNumber}>#{invoice.invoiceNumber || invoice.id}</Text>
-                    <Text style={styles.invoiceDate}>
-                        Date: {new Date((invoice as any).invoiceDate || (invoice as any).createdAt || invoice.date).toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.invoiceDate}>
-                        Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}
-                    </Text>
-                </View>
-            </View>
-
-            {/* Client Information */}
-            <View style={styles.clientSection}>
-                <Text style={styles.sectionTitle}>BILL TO</Text>
-                <Text style={styles.clientName}>
-                    {invoice.client.firstName} {invoice.client.lastName}
-                </Text>
-                {invoice.client.companyName && (
-                    <Text style={styles.clientDetails}>{invoice.client.companyName}</Text>
-                )}
-                <View style={styles.clientDetails}>
-                    {invoice.client.address && <Text>{invoice.client.address}</Text>}
-                    {(invoice.client.city || invoice.client.country) && (
-                        <Text>{invoice.client.city} {invoice.client.country}</Text>
-                    )}
-                    <Text>{invoice.client.email}</Text>
-                </View>
-            </View>
-
-            {/* Items Table */}
-            <View style={styles.table}>
-                <View style={styles.tableHeader}>
-                    <Text style={[styles.tableColDescription, styles.headerText]}>Description</Text>
-                    <Text style={[styles.tableColQty, styles.headerText]}>Qty</Text>
-                    <Text style={[styles.tableColPrice, styles.headerText]}>Unit Price</Text>
-                    <Text style={[styles.tableColTotal, styles.headerText]}>Total</Text>
-                </View>
-                {invoice.items.map((item) => (
-                    <View key={item.id} style={styles.tableRow}>
-                        <Text style={styles.tableColDescription}>{item.description}</Text>
-                        <Text style={styles.tableColQty}>{item.quantity}</Text>
-                        <Text style={styles.tableColPrice}>${Number(item.unitPrice).toFixed(2)}</Text>
-                        <Text style={styles.tableColTotal}>
-                            ${Number(item.total || (item.quantity * item.unitPrice)).toFixed(2)}
+                    <View>
+                        <Text style={styles.invoiceTitle}>INVOICE</Text>
+                        <Text style={styles.invoiceNumber}>#{invoice.invoiceNumber || invoice.id}</Text>
+                        <Text style={styles.invoiceDate}>
+                            Date: {new Date((invoice as any).invoiceDate || (invoice as any).createdAt || invoice.date).toLocaleDateString()}
+                        </Text>
+                        <Text style={styles.invoiceDate}>
+                            Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}
                         </Text>
                     </View>
-                ))}
-            </View>
+                </View>
 
-            {/* Totals */}
-            <View style={styles.totalsSection}>
-                <View style={styles.totalsBox}>
-                    <View style={styles.totalRow}>
-                        <Text>Subtotal</Text>
-                        <Text>${Number(invoice.subtotal).toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.totalRow}>
-                        <Text>Tax</Text>
-                        <Text>${Number(invoice.tax || 0).toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.grandTotalRow}>
-                        <Text style={styles.grandTotalLabel}>Total</Text>
-                        <Text style={styles.grandTotalAmount}>${Number(invoice.totalAmount).toFixed(2)}</Text>
+                {/* Client Information */}
+                <View style={styles.clientSection}>
+                    <Text style={styles.sectionTitle}>BILL TO</Text>
+                    <Text style={styles.clientName}>
+                        {invoice.client.firstName} {invoice.client.lastName}
+                    </Text>
+                    {invoice.client.companyName && (
+                        <Text style={styles.clientDetails}>{invoice.client.companyName}</Text>
+                    )}
+                    <View style={styles.clientDetails}>
+                        {invoice.client.address && <Text>{invoice.client.address}</Text>}
+                        {(invoice.client.city || invoice.client.country) && (
+                            <Text>{invoice.client.city} {invoice.client.country}</Text>
+                        )}
+                        <Text>{invoice.client.email}</Text>
                     </View>
                 </View>
-            </View>
 
-            {/* Notes */}
-            {invoice.notes && (
-                <View style={styles.notesSection}>
-                    <Text style={styles.notesTitle}>Notes</Text>
-                    <Text style={styles.notesText}>{invoice.notes}</Text>
+                {/* Items Table */}
+                <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                        <Text style={[styles.tableColDescription, styles.headerText]}>Description</Text>
+                        <Text style={[styles.tableColQty, styles.headerText]}>Qty</Text>
+                        <Text style={[styles.tableColPrice, styles.headerText]}>Unit Price</Text>
+                        <Text style={[styles.tableColTotal, styles.headerText]}>Total</Text>
+                    </View>
+                    {invoice.items.map((item) => (
+                        <View key={item.id} style={styles.tableRow}>
+                            <Text style={styles.tableColDescription}>{item.description}</Text>
+                            <Text style={styles.tableColQty}>{item.quantity}</Text>
+                            <Text style={styles.tableColPrice}>{formatValue(item.unitPrice)}</Text>
+                            <Text style={styles.tableColTotal}>
+                                {formatValue(item.total || (item.quantity * item.unitPrice))}
+                            </Text>
+                        </View>
+                    ))}
                 </View>
-            )}
 
-            {/* Footer */}
-            <View style={styles.footer}>
-                <Text>Thank you for your business.</Text>
-                <Text>Generated by {appName}</Text>
-            </View>
-        </Page>
-    </Document>
-);
+                {/* Totals */}
+                <View style={styles.totalsSection}>
+                    <View style={styles.totalsBox}>
+                        <View style={styles.totalRow}>
+                            <Text>Subtotal</Text>
+                            <Text>{formatValue(invoice.subtotal)}</Text>
+                        </View>
+                        <View style={styles.totalRow}>
+                            <Text>Tax</Text>
+                            <Text>{formatValue(invoice.tax || 0)}</Text>
+                        </View>
+                        <View style={styles.grandTotalRow}>
+                            <Text style={styles.grandTotalLabel}>Total</Text>
+                            <Text style={styles.grandTotalAmount}>{formatValue(invoice.totalAmount)}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Notes */}
+                {invoice.notes && (
+                    <View style={styles.notesSection}>
+                        <Text style={styles.notesTitle}>Notes</Text>
+                        <Text style={styles.notesText}>{invoice.notes}</Text>
+                    </View>
+                )}
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text>Thank you for your business.</Text>
+                    <Text>Generated by {appName}</Text>
+                </View>
+            </Page>
+        </Document>
+    );
+};

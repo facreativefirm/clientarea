@@ -60,7 +60,7 @@ export default function ProductDetailPage() {
         const item: CartItem = {
             id: product.id.toString(),
             name: product.name,
-            type: 'HOSTING',
+            type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
             price: product.monthlyPrice,
             billingCycle: "MONTHLY",
             quantity: 1,

@@ -96,7 +96,7 @@ export function HeroSection() {
             >
                 <motion.div
                     animate={{ y: [0, -15, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                     className="relative w-full flex justify-end"
                 >
                     <img
@@ -128,12 +128,12 @@ export function HeroSection() {
                             transition={{ duration: 0.6, delay: 0.3 }}
                             className="relative pl-8"
                         >
-                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#f37021] rounded-full" />
+                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-secondary rounded-full" />
                             <div className="space-y-4">
                                 <p className="text-xl text-white/90 leading-relaxed font-normal max-w-2xl">
                                     {t("retention_reputation")}
                                 </p>
-                                <p className="text-lg font-medium text-[#f37021] cursor-pointer hover:text-[#d9621c] transition-all">
+                                <p className="text-lg font-medium text-secondary cursor-pointer hover:text-secondary/80 transition-all">
                                     {t("verify_buy")}
                                 </p>
                             </div>
@@ -157,7 +157,7 @@ export function HeroSection() {
                                     <button
                                         type="submit"
                                         disabled={checking}
-                                        className="bg-[#f37021] text-white rounded-full px-10 h-14 font-bold hover:bg-[#d9621c] transition-colors shadow-lg shadow-[#f37021]/20 flex items-center gap-2 disabled:opacity-70"
+                                        className="bg-secondary text-white rounded-full px-10 h-14 font-bold hover:bg-secondary/90 transition-colors shadow-lg shadow-secondary/20 flex items-center gap-2 disabled:opacity-70"
                                     >
                                         {checking && <Loader2 size={20} className="animate-spin" />}
                                         {checking ? "Scanning..." : "Search"}
@@ -227,7 +227,7 @@ export function HeroSection() {
                                         transition={{ delay: 0.7 + i * 0.1 }}
                                         className="flex items-baseline gap-2 group cursor-default"
                                     >
-                                        <span className="text-xl font-bold text-[#f37021]">
+                                        <span className="text-xl font-bold text-secondary">
                                             {tld.tld.startsWith('.') ? tld.tld : `.${tld.tld}`}
                                         </span>
                                         <span className="text-xl font-bold text-white/90">
@@ -249,7 +249,7 @@ export function HeroSection() {
                                         transition={{ delay: 0.7 + i * 0.1 }}
                                         className="flex items-baseline gap-2"
                                     >
-                                        <span className="text-xl font-bold text-[#f37021]">{item.tld}</span>
+                                        <span className="text-xl font-bold text-secondary">{item.tld}</span>
                                         <span className="text-xl font-bold text-white/90">{item.price}</span>
                                     </motion.div>
                                 ))

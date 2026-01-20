@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Menu, Shield, Moon, Sun, ShoppingBag, Languages, LayoutDashboard, User, ChevronDown, Server } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -166,6 +166,7 @@ export function PublicNavbar() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="bg-white p-0 border-l border-gray-100">
+                            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                             <div className="flex flex-col h-full bg-white p-6">
                                 <div className="flex items-center gap-2 mb-10">
                                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">

@@ -114,7 +114,7 @@ export default function ResellerDashboard() {
                         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    Reseller <span className="text-primary">Command Center</span>
+                                    Reseller <span className="text-secondary">Command Center</span>
                                 </h1>
                                 <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">
                                     Hello {user?.firstName}, manage your infrastructure and scale your revenue.
@@ -127,7 +127,7 @@ export default function ResellerDashboard() {
                                         White-Label Config
                                     </Link>
                                 </Button>
-                                <Button asChild className="h-12 px-6 rounded-xl font-bold shadow-md bg-primary text-primary-foreground hover:bg-primary/90">
+                                <Button asChild className="h-12 px-6 rounded-xl font-bold shadow-md bg-secondary text-white hover:bg-secondary/90 border-none">
                                     <Link href="/reseller/payouts">
                                         <Wallet className="w-5 h-5 mr-3" />
                                         Payouts
@@ -139,27 +139,27 @@ export default function ResellerDashboard() {
                         {/* Metrics Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <MetricCard
-                                title="ActiveClients"
+                                title="Active Services"
                                 value={stats?.activeServices || '0'}
                                 change="+5.2%"
                                 trend="up"
-                                icon={Users}
+                                icon={ShoppingBag}
                                 loading={loading}
                             />
                             <MetricCard
-                                title="Total Sales"
-                                value={formatPrice(stats?.totalRevenue?._sum?.totalAmount || 0)}
-                                change="+12.8%"
+                                title="Revenue"
+                                value={stats?.totalRevenue?._sum?.amountPaid ? formatPrice(stats.totalRevenue._sum.amountPaid) : formatPrice(0)}
+                                change="+12.5%"
                                 trend="up"
                                 icon={TrendingUp}
                                 loading={loading}
                             />
                             <MetricCard
-                                title="My Commission (15%)"
-                                value={formatPrice(Number(stats?.totalRevenue?._sum?.totalAmount || 0) * 0.15)}
-                                change="+12.8%"
+                                title="Balance"
+                                value={stats?.totalCommissions?._sum?.commissionAmount ? formatPrice(stats.totalCommissions._sum.commissionAmount) : formatPrice(0)}
+                                change="+8.2%"
                                 trend="up"
-                                icon={DollarSign}
+                                icon={Zap}
                                 loading={loading}
                             />
                             <MetricCard

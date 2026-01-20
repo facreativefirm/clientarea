@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore, setSessionToken } from "@/lib/store/authStore";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import { useWhiteLabel } from "@/components/white-label-provider";
 
 const loginSchema = z.object({
     identifier: z.string().min(3, "Username or email is required"),
@@ -23,9 +24,22 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
     const router = useRouter();
-    const setAuth = useAuthStore((state) => state.setAuth);
+    const { setAuth, isAuthenticated, user } = useAuthStore();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { brand } = useWhiteLabel();
+
+    React.useEffect(() => {
+        if (isAuthenticated && user) {
+            if (user.userType === "ADMIN" || user.userType === "SUPER_ADMIN") {
+                router.push("/admin");
+            } else if (user.userType === "RESELLER") {
+                router.push("/reseller");
+            } else {
+                router.push("/client");
+            }
+        }
+    }, [isAuthenticated, user, router]);
 
     const {
         register,
@@ -55,8 +69,13 @@ export default function LoginPage() {
 
             console.log('[Login] Auth set, redirecting based on user type:', user.userType);
 
-            // Redirect based on user type
-            if (user.userType === "ADMIN" || user.userType === "SUPER_ADMIN") {
+            // Redirect based on user type or redirect param
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+
+            if (redirect && redirect.startsWith('/')) {
+                router.push(redirect);
+            } else if (user.userType === "ADMIN" || user.userType === "SUPER_ADMIN") {
                 router.push("/admin");
             } else if (user.userType === "RESELLER") {
                 router.push("/reseller");
@@ -84,7 +103,7 @@ export default function LoginPage() {
                         <ShieldCheck className="w-8 h-8" />
                     </div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        Welcome Back
+                        {brand?.name ? `Welcome to ${brand.name}` : "Welcome Back"}
                     </h1>
                     <p className="text-muted-foreground mt-2">Log in to manage your premium services</p>
                 </div>

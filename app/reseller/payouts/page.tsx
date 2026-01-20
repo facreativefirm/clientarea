@@ -27,30 +27,46 @@ import { Badge } from "@/components/shared/Badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { formatPrice } from "@/lib/utils";
+
 export default function ResellerPayoutsPage() {
     const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [payouts, setPayouts] = useState<any[]>([]);
-    const [balance, setBalance] = useState(185.50);
+    const [balance, setBalance] = useState(0);
+    const [stats, setStats] = useState<any>(null);
     const [amount, setAmount] = useState("");
+    const [method, setMethod] = useState("Bank Transfer");
     const [requesting, setRequesting] = useState(false);
 
     useEffect(() => {
-        fetchPayouts();
+        fetchData();
     }, []);
 
-    const fetchPayouts = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await api.get("/reseller/commissions");
-            setPayouts(response.data.data.commissions || []);
-            // In a real app we'd also fetch balance
-        } catch (err) {
-            console.error("Error fetching payouts:", err);
-            setPayouts([
-                { id: 1, amount: 50.00, status: "COMPLETED", createdAt: "2025-12-01T10:00:00Z", method: "PayPal" },
-                { id: 2, amount: 120.00, status: "PENDING", createdAt: "2025-12-20T14:30:00Z", method: "Bank Transfer" },
+            const [payoutsRes, statsRes] = await Promise.all([
+                api.get("/reseller/payouts"),
+                api.get("/reseller/dashboard")
             ]);
+            setPayouts(payoutsRes.data.data.payouts || []);
+            setStats(statsRes.data.data.stats);
+
+            // Available balance is sum of approved commissions not yet linked to a payout
+            // For now let's use the totalCommissions sum from stats (PAID status)
+            const cleared = Number(statsRes.data.data.stats.totalCommissions?._sum?.commissionAmount || 0);
+            setBalance(cleared);
+        } catch (err) {
+            console.error("Error fetching data:", err);
+            toast.error("Telemetry failure: Could not reach treasury.");
         } finally {
             setLoading(false);
         }
@@ -58,24 +74,26 @@ export default function ResellerPayoutsPage() {
 
     const handleRequestPayout = async () => {
         const val = parseFloat(amount);
-        if (isNaN(val) || val <= 10) {
-            toast.error("Minimum payout amount is $10.00");
+        if (isNaN(val) || val < 10) {
+            toast.error("Minimum payout threshold is $10.00");
             return;
         }
         if (val > balance) {
-            toast.error("Withdrawal amount exceeds available balance");
+            toast.error("Withdrawal exceeds cleared treasury balance.");
             return;
         }
 
         try {
             setRequesting(true);
-            await api.post("/reseller/payout-request", { amount: val });
-            toast.success("Withdrawal request broadcasted to treasury");
+            await api.post("/reseller/payout-request", {
+                amount: val,
+                method: method
+            });
+            toast.success("Withdrawal sequence initiated.");
             setAmount("");
-            fetchPayouts();
+            fetchData();
         } catch (err: any) {
-            toast.success("Simulation: Withdrawal request logged.");
-            setAmount("");
+            toast.error(err.response?.data?.message || "Failed to broadcast request.");
         } finally {
             setRequesting(false);
         }
@@ -83,41 +101,41 @@ export default function ResellerPayoutsPage() {
 
     const columns = [
         {
-            header: "Transaction ID",
+            header: "Deployment ID",
             accessorKey: "id" as any,
             cell: (item: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                         <History size={14} />
                     </div>
-                    <span className="font-bold">#TRX-{item.id}</span>
+                    <span className="font-black text-xs">#PY-{item.id}</span>
                 </div>
             )
         },
         {
-            header: "Deployment Date",
+            header: "Initiated",
             accessorKey: "createdAt" as any,
             cell: (item: any) => (
-                <span className="text-muted-foreground font-medium">
+                <span className="text-muted-foreground font-bold text-xs uppercase">
                     {new Date(item.createdAt).toLocaleDateString()}
                 </span>
             )
         },
         {
-            header: "Amount",
-            accessorKey: "amount" as any,
+            header: "Funds (Net)",
+            accessorKey: "netAmount" as any,
             cell: (item: any) => (
-                <span className="font-black text-white text-lg">
-                    ${Number(item.amount).toFixed(2)}
+                <span className="font-black text-foreground text-sm">
+                    {formatPrice(Number(item.netAmount))}
                 </span>
             )
         },
         {
-            header: "Payout Protocol",
-            accessorKey: "method" as any,
+            header: "Destination",
+            accessorKey: "paymentMethod" as any,
             cell: (item: any) => (
-                <Badge variant="outline" className="bg-white/5 border-white/10 font-bold uppercase tracking-widest text-[10px]">
-                    {item.method}
+                <Badge variant="outline" className="bg-white/5 border-white/10 font-black uppercase text-[9px] tracking-tighter">
+                    {item.paymentMethod}
                 </Badge>
             )
         },
@@ -125,7 +143,13 @@ export default function ResellerPayoutsPage() {
             header: "Status",
             accessorKey: "status" as any,
             cell: (item: any) => (
-                <Badge variant={item.status === 'COMPLETED' ? 'success' : 'warning'} className="px-3 py-1 rounded-lg font-black">
+                <Badge
+                    className={cn(
+                        "px-3 py-1 rounded-lg font-black text-[9px] border-none shadow-sm",
+                        item.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-500" :
+                            item.status === 'PENDING' ? "bg-amber-500/10 text-amber-500" : "bg-rose-500/10 text-rose-500"
+                    )}
+                >
                     {item.status}
                 </Badge>
             )
@@ -142,7 +166,7 @@ export default function ResellerPayoutsPage() {
                         {/* Header */}
                         <div>
                             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                Treasury & <span className="text-primary">Payouts</span>
+                                Treasury & <span className="text-secondary">Payouts</span>
                             </h1>
                             <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Securely monitor and withdraw your accumulated partnership commissions.</p>
                         </div>
@@ -165,8 +189,7 @@ export default function ResellerPayoutsPage() {
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Available Balance</span>
                                     </div>
                                     <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">
-                                        <span className="text-primary opacity-50 text-2xl md:text-3xl mr-1">$</span>
-                                        {balance.toFixed(2)}
+                                        {formatPrice(balance)}
                                     </h2>
                                     <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 bg-emerald-500/5 w-fit px-3 py-1.5 rounded-full border border-emerald-500/10 uppercase tracking-widest leading-none">
                                         <CheckCircle2 size={12} />
@@ -175,15 +198,31 @@ export default function ResellerPayoutsPage() {
                                 </div>
 
                                 <div className="mt-12 space-y-4 relative z-10">
-                                    <div className="relative">
-                                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        <Input
-                                            type="number"
-                                            placeholder="Enter amount (Min $10)"
-                                            className="pl-12 h-14 rounded-xl bg-secondary/20 border-border font-bold focus:ring-primary/20"
-                                            value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                        />
+                                    <div className="flex flex-col gap-4">
+                                        <div className="relative">
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input
+                                                type="number"
+                                                placeholder="Enter amount (Min $10)"
+                                                className="pl-12 h-14 rounded-xl bg-secondary/20 border-border font-bold focus:ring-primary/20"
+                                                value={amount}
+                                                onChange={(e) => setAmount(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Payout Gateway</label>
+                                            <Select value={method} onValueChange={setMethod}>
+                                                <SelectTrigger className="h-14 rounded-xl bg-secondary/20 border-border font-bold">
+                                                    <SelectValue placeholder="Select Method" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-xl border-border">
+                                                    <SelectItem value="Bank Transfer" className="font-bold">Bank Transfer (Swift/Local)</SelectItem>
+                                                    <SelectItem value="bKash" className="font-bold">bKash (Merchant Payout)</SelectItem>
+                                                    <SelectItem value="PayPal" className="font-bold">PayPal (Global)</SelectItem>
+                                                    <SelectItem value="Crypto" className="font-bold">USDT (TRC20)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                     <Button
                                         className="w-full h-14 rounded-xl font-bold text-lg gap-2 shadow-md bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95"
@@ -212,7 +251,7 @@ export default function ResellerPayoutsPage() {
                                         variant="outline"
                                         size="icon"
                                         className="h-10 w-10 rounded-xl border-border hover:bg-secondary/50"
-                                        onClick={fetchPayouts}
+                                        onClick={fetchData}
                                     >
                                         <RefreshCw size={16} className={cn(loading && "animate-spin")} />
                                     </Button>

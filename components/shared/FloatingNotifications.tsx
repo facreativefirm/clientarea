@@ -88,8 +88,11 @@ export function FloatingNotifications() {
 
             setNotifications(newNotifications);
             setUnreadCount(newUnreadCount);
-        } catch (error) {
-            console.error("Failed to fetch notifications", error);
+        } catch (error: any) {
+            // Ignore 401s as they are handled by the interceptor
+            if (error.response?.status !== 401) {
+                console.error("Failed to fetch notifications", error);
+            }
         }
     };
 

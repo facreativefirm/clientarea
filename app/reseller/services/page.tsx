@@ -119,12 +119,12 @@ export default function ResellerServicesPage() {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    Service <span className="text-primary">Inventory</span>
+                                    Service <span className="text-secondary">Inventory</span>
                                 </h1>
                                 <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Monitoring and management of services assigned to your sub-clients.</p>
                             </div>
                             <div className="flex gap-4 w-full md:w-auto">
-                                <Button className="h-12 px-8 rounded-xl font-bold bg-primary text-primary-foreground shadow-md gap-2 w-full md:w-auto">
+                                <Button className="h-12 px-8 rounded-xl font-bold bg-secondary text-white shadow-md gap-2 w-full md:w-auto hover:bg-secondary/90 border-none">
                                     Broadcast Update
                                 </Button>
                             </div>

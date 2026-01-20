@@ -154,7 +154,7 @@ export default function StoreFront() {
         const item: CartItem = {
             id: product.id.toString(),
             name: product.name,
-            type: product.category || product.productType || 'HOSTING',
+            type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
             price: typeof price === 'string' ? parseFloat(price) : price,
             billingCycle: billingCycle as any,
             quantity: 1,

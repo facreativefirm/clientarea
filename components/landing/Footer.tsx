@@ -40,9 +40,10 @@ export function Footer() {
                         <ul className="space-y-3 text-sm">
                             {[
                                 { name: t("hosting"), href: "/#hosting" },
-                                { name: t("domains"), href: "/client/domains/register" },
+                                { name: t("domains"), href: "/client/domains" },
                                 { name: t("vps_servers"), href: "/#hosting" },
-                                { name: "SSL Certificates", href: "/#services" }
+                                { name: "SSL Certificates", href: "/#services" },
+                                { name: "Reseller Program", href: "/reseller" }
                             ].map((item) => (
                                 <li key={item.name}>
                                     <Link href={item.href} className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 group">
@@ -83,7 +84,7 @@ export function Footer() {
                                 placeholder={t("your_email")}
                                 className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                             />
-                            <button className="bg-[#f37021] text-white rounded-xl px-4 font-bold hover:bg-[#d9621c] transition-colors shadow-lg shadow-[#f37021]/20">
+                            <button className="bg-secondary text-white rounded-xl px-4 font-bold hover:bg-secondary/90 transition-colors shadow-lg shadow-secondary/20">
                                 Go
                             </button>
                         </form>

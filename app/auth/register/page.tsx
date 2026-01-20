@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { useAuthStore } from "@/lib/store/authStore";
 
 const registerSchema = z.object({
     username: z.string().min(3, "Username must be at least 3 characters"),
@@ -27,10 +28,20 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+import { useWhiteLabel } from "@/components/white-label-provider";
+
 export default function RegisterPage() {
     const router = useRouter();
+    const { isAuthenticated, user } = useAuthStore();
+    const { isReseller, resellerId, brand } = useWhiteLabel();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (isAuthenticated && user) {
+            router.push(user.userType === "ADMIN" || user.userType === "SUPER_ADMIN" ? "/admin" : "/client");
+        }
+    }, [isAuthenticated, user, router]);
 
     const {
         register,
@@ -51,10 +62,17 @@ export default function RegisterPage() {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 phoneNumber: data.phoneNumber,
+                resellerId: isReseller ? resellerId : null,
             });
 
-            // Success - redirect to login
-            router.push("/auth/login?registered=true");
+            // Success - redirect to login, preserving any redirect param
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+            const loginUrl = redirect
+                ? `/auth/login?registered=true&redirect=${encodeURIComponent(redirect)}`
+                : "/auth/login?registered=true";
+
+            router.push(loginUrl);
         } catch (err: any) {
             setError(err.response?.data?.message || "Registration failed. Please try again.");
         } finally {
@@ -70,7 +88,7 @@ export default function RegisterPage() {
                         <UserPlus className="w-8 h-8" />
                     </div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        Create Your Account
+                        {brand?.name ? `Join ${brand.name}` : "Create Your Account"}
                     </h1>
                     <p className="text-muted-foreground mt-2">Join the next generation of cloud management</p>
                 </div>

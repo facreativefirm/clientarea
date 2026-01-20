@@ -20,7 +20,8 @@ import {
     BarChart,
     ChevronRight,
     Search,
-    Lock
+    Lock,
+    Zap
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -29,18 +30,104 @@ import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
+import api from "@/lib/api";
+
 export default function ResellerSettingsPage() {
     const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true);
+
+    // Brand States
     const [brandName, setBrandName] = useState("Pro Hosting Solutions");
-    const [primaryColor, setPrimaryColor] = useState("#3b82f6");
-    const [accentColor, setAccentColor] = useState("#10b981");
+    const [primaryColor, setPrimaryColor] = useState("#005eae");
+    const [accentColor, setAccentColor] = useState("#f37021");
+    const [logoUrl, setLogoUrl] = useState("");
+    const [faviconUrl, setFaviconUrl] = useState("");
+    const [theme, setTheme] = useState("dark");
+    const [siteTitle, setSiteTitle] = useState("");
+    const [metaDescription, setMetaDescription] = useState("");
+
+    // Connectivity & Logic States
+    const [customDomain, setCustomDomain] = useState("");
+    const [markupRate, setMarkupRate] = useState(15);
+    const [whiteLabelEnabled, setWhiteLabelEnabled] = useState(true);
+    const [verifyingDNS, setVerifyingDNS] = useState(false);
+
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            setInitialLoading(true);
+            const response = await api.get("/reseller/settings");
+            const data = response.data.data.settings;
+
+            if (data) {
+                const brand = typeof data.brandSettings === 'string'
+                    ? JSON.parse(data.brandSettings)
+                    : (data.brandSettings || {});
+
+                setBrandName(brand.name || "Pro Hosting Solutions");
+                setPrimaryColor(brand.primaryColor || "#3b82f6");
+                setAccentColor(brand.accentColor || "#10b981");
+                setLogoUrl(brand.logoUrl || "");
+                setFaviconUrl(brand.faviconUrl || "");
+                setTheme(brand.theme || "dark");
+                setSiteTitle(brand.siteTitle || "");
+                setMetaDescription(brand.metaDescription || "");
+                setCustomDomain(data.customDomain || "");
+                setMarkupRate(Number(data.markupRate || 15));
+                setWhiteLabelEnabled(data.whiteLabelEnabled);
+            }
+        } catch (err) {
+            console.error("Error fetching settings:", err);
+            toast.error("Failed to load brand data.");
+        } finally {
+            setInitialLoading(false);
+        }
+    };
+
+    const handleVerifyDNS = async () => {
+        if (!customDomain) {
+            toast.error("Enter a domain first.");
+            return;
+        }
+        try {
+            setVerifyingDNS(true);
+            const response = await api.get(`/reseller/verify-dns?domain=${customDomain}`);
+            const { verified, message } = response.data.data;
+
+            if (verified) {
+                toast.success(message || "DNS Verified! Domain is ready.");
+            } else {
+                toast.warning(message || "DNS records not found yet.");
+            }
+        } catch (err) {
+            toast.error("Security/Network error during DNS lookup.");
+        } finally {
+            setVerifyingDNS(false);
+        }
+    };
 
     const handleSave = async () => {
         try {
             setLoading(true);
-            // Simulate saving
-            await new Promise(r => setTimeout(r, 1200));
+            await api.patch("/reseller/settings", {
+                brandSettings: {
+                    name: brandName.trim(),
+                    primaryColor,
+                    accentColor,
+                    logoUrl: logoUrl.trim(),
+                    faviconUrl: faviconUrl.trim(),
+                    theme,
+                    siteTitle: siteTitle.trim(),
+                    metaDescription: metaDescription.trim()
+                },
+                customDomain: customDomain.trim(),
+                markupRate,
+                whiteLabelEnabled
+            });
             toast.success("Identity profile updated successfully!");
         } catch (err) {
             toast.error("Protocol error: Failed to save identity.");
@@ -60,7 +147,7 @@ export default function ResellerSettingsPage() {
                         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    White-Label <span className="text-primary">Identity</span>
+                                    White-Label <span className="text-secondary">Identity</span>
                                 </h1>
                                 <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Engineer your unique storefront identity and portal environment.</p>
                             </div>
@@ -120,18 +207,47 @@ export default function ResellerSettingsPage() {
                                             </div>
 
                                             <div className="space-y-6 pt-10 border-t border-border">
+                                                <h3 className="text-xl font-extrabold">Profit Logistics</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Global Markup Rate (%)</label>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type="number"
+                                                                value={markupRate}
+                                                                onChange={(e) => setMarkupRate(Number(e.target.value))}
+                                                                className="h-12 rounded-xl bg-secondary/20 border-border font-bold pr-12 focus:ring-emerald-500/20"
+                                                            />
+                                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">%</div>
+                                                        </div>
+                                                        <p className="text-[9px] text-muted-foreground font-medium ml-1">This margin applies to all services unless explicitly overridden.</p>
+                                                    </div>
+                                                    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase text-emerald-500 tracking-tighter">Profit Shield Active</p>
+                                                            <p className="text-xs font-medium text-muted-foreground mt-1">Automatic margin protection is enabled.</p>
+                                                        </div>
+                                                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                                            <Zap size={20} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-6 pt-10 border-t border-border">
                                                 <h3 className="text-lg font-extrabold">Theme Preference</h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     {[
-                                                        { id: 'dark', label: 'Dark Protocol', icon: Monitor, active: true },
-                                                        { id: 'light', label: 'Light Mode', icon: Monitor, active: false },
-                                                        { id: 'system', label: 'OS Adaptive', icon: Monitor, active: false },
+                                                        { id: 'dark', label: 'Dark Protocol', icon: Monitor },
+                                                        { id: 'light', label: 'Light Mode', icon: Monitor },
+                                                        { id: 'system', label: 'OS Adaptive', icon: Monitor },
                                                     ].map((t) => (
                                                         <button
                                                             key={t.id}
+                                                            onClick={() => setTheme(t.id)}
                                                             className={cn(
                                                                 "h-16 rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all",
-                                                                t.active ? "bg-primary/10 border-primary text-primary shadow-sm shadow-primary/10" : "bg-secondary/20 border-border text-muted-foreground hover:border-primary/50"
+                                                                theme === t.id ? "bg-primary/10 border-primary text-primary shadow-sm shadow-primary/10" : "bg-secondary/20 border-border text-muted-foreground hover:border-primary/50"
                                                             )}
                                                         >
                                                             <t.icon size={18} />
@@ -147,19 +263,24 @@ export default function ResellerSettingsPage() {
                                         <div className="bg-card border border-border rounded-xl p-6 md:p-10 space-y-10 shadow-sm">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                                 <div className="space-y-4">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Master Portal Logo</label>
-                                                    <div className="aspect-video border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-4 bg-secondary/20 group hover:border-primary/50 transition-all cursor-pointer overflow-hidden relative">
-                                                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        <Upload className="text-muted-foreground group-hover:text-primary transition-colors" size={32} />
-                                                        <p className="text-sm font-bold">Upload Vector SVG</p>
-                                                    </div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Master Portal Logo (URL)</label>
+                                                    <Input
+                                                        placeholder="https://example.com/logo.png"
+                                                        value={logoUrl}
+                                                        onChange={(e) => setLogoUrl(e.target.value)}
+                                                        className="h-12 rounded-xl bg-secondary/20 border-border font-bold focus:ring-primary/20"
+                                                    />
+                                                    <p className="text-[9px] text-muted-foreground font-medium ml-1">Recommended: SVG or Transparent PNG, max height 40px.</p>
                                                 </div>
                                                 <div className="space-y-4">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Browser Favicon</label>
-                                                    <div className="aspect-square w-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 bg-secondary/20 group hover:border-primary/50 transition-all cursor-pointer mx-auto md:mx-0">
-                                                        <ImageIcon className="text-muted-foreground group-hover:text-primary transition-colors" size={24} />
-                                                        <p className="text-[10px] font-bold">ICO / PNG</p>
-                                                    </div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Browser Favicon (URL)</label>
+                                                    <Input
+                                                        placeholder="https://example.com/favicon.ico"
+                                                        value={faviconUrl}
+                                                        onChange={(e) => setFaviconUrl(e.target.value)}
+                                                        className="h-12 rounded-xl bg-secondary/20 border-border font-bold focus:ring-primary/20"
+                                                    />
+                                                    <p className="text-[9px] text-muted-foreground font-medium ml-1">Displayed in browser tab. ICO or PNG format.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -171,8 +292,21 @@ export default function ResellerSettingsPage() {
                                                 <h3 className="text-xl font-black">Custom Client Nexus</h3>
                                                 <p className="text-sm text-muted-foreground font-medium">Link your master domain for a fully independent brand experience.</p>
                                                 <div className="flex gap-4 mt-6">
-                                                    <Input placeholder="portal.yourdomain.com" className="h-14 rounded-2xl bg-white/5 border-white/10 font-bold flex-1" />
-                                                    <Button variant="outline" className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all">Verify DNS</Button>
+                                                    <Input
+                                                        placeholder="portal.yourdomain.com"
+                                                        className="h-14 rounded-2xl bg-white/5 border-white/10 font-bold flex-1"
+                                                        value={customDomain}
+                                                        onChange={(e) => setCustomDomain(e.target.value)}
+                                                    />
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={handleVerifyDNS}
+                                                        disabled={verifyingDNS}
+                                                        className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5"
+                                                    >
+                                                        {verifyingDNS ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                        Verify DNS
+                                                    </Button>
                                                 </div>
                                             </div>
 
@@ -181,11 +315,21 @@ export default function ResellerSettingsPage() {
                                                 <div className="space-y-4">
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold text-muted-foreground">Global Site Title</label>
-                                                        <Input placeholder="Premium Managed Cloud - Powered by..." className="h-12 rounded-xl bg-white/5 border-white/10" />
+                                                        <Input
+                                                            placeholder="Premium Managed Cloud - Powered by..."
+                                                            className="h-12 rounded-xl bg-white/5 border-white/10"
+                                                            value={siteTitle}
+                                                            onChange={(e) => setSiteTitle(e.target.value)}
+                                                        />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold text-muted-foreground">Meta Description</label>
-                                                        <textarea className="w-full h-24 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm font-medium focus:outline-none focus:border-primary/50" placeholder="Describe your hosting services..." />
+                                                        <textarea
+                                                            className="w-full h-24 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm font-medium focus:outline-none focus:border-primary/50"
+                                                            placeholder="Describe your hosting services..."
+                                                            value={metaDescription}
+                                                            onChange={(e) => setMetaDescription(e.target.value)}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>

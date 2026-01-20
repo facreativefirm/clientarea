@@ -63,9 +63,9 @@ export const useCartStore = create<CartState>()(
             total: () => {
                 const subtotal = get().items.reduce((acc, item) => {
                     const price = typeof item.price === 'string' ? parseFloat(item.price) : (item.price || 0);
-                    return acc + price;
+                    return acc + (price * (item.quantity || 1));
                 }, 0);
-                // Simple discount logic for demo
+
                 if (get().promoCode === 'SAVE20') return subtotal * 0.8;
                 return subtotal;
             },

@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { Label } from "@/components/ui/label";
+import { useWhiteLabel } from "@/components/white-label-provider";
 
 function CheckoutContent() {
     const { t } = useLanguage();
@@ -47,6 +48,7 @@ function CheckoutContent() {
     const { items, removeItem, updateItem, clearCart, total, promoCode, setPromoCode, updateDomainName } = useCartStore();
     const { user } = useAuthStore();
     const { formatPrice } = useSettingsStore();
+    const { isReseller: isWhiteLabel, resellerId: ownerId } = useWhiteLabel();
 
     const [step, setStep] = useState(invoiceId ? 3 : 1);
     const [loading, setLoading] = useState(false);
@@ -214,7 +216,8 @@ function CheckoutContent() {
                     return orderItem;
                 }),
                 paymentMethod: paymentMethod,
-                promoCode: promoCode || undefined
+                promoCode: promoCode || undefined,
+                resellerId: isWhiteLabel ? ownerId : null,
             });
 
             setCompletedOrder(response.data.data.order);

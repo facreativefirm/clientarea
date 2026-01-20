@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getSessionToken, clearSessionToken } from './store/authStore';
+import { getSessionToken, clearSessionToken, useAuthStore } from './store/authStore';
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3006/api',
@@ -54,13 +54,23 @@ api.interceptors.response.use(
                 error.config?.url?.includes('/auth/register');
 
             if (!isAuthRequest && typeof window !== 'undefined') {
-                console.log('[API] 401 error - clearing session and redirecting to login');
-                // Clear session cookie
-                clearSessionToken();
+                const currentPath = window.location.pathname;
 
-                // Only redirect if not already on login page
-                if (!window.location.pathname.includes('/auth/login')) {
-                    window.location.href = '/auth/login';
+                // Define protected path prefixes
+                const protectedPaths = ['/client', '/admin', '/reseller', '/profile'];
+                const isProtectedPage = protectedPaths.some(path => currentPath.startsWith(path));
+
+                console.log(`[API] 401 error on ${currentPath}. Protected? ${isProtectedPage}`);
+
+                // CRITICAL: Clear both cookie and Zustand store state
+                clearSessionToken();
+                useAuthStore.getState().logout();
+
+                if (isProtectedPage) {
+                    console.log('[API] Session expired on protected page - redirecting to login');
+                    window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
+                } else {
+                    console.warn('[API] 401 received on public page - cleared local session but stayed on page');
                 }
             }
         }

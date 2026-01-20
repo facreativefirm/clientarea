@@ -23,9 +23,14 @@ export function ServiceGroupList() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const rawHost = urlParams.get('__reseller_host') || window.location.host;
+                // Sanitize protocol and trailing slash before sending
+                const host = encodeURIComponent(rawHost.replace(/^https?:\/\//, '').replace(/\/$/, ''));
+
                 const [groupsRes, productsRes] = await Promise.all([
                     api.get("/products/services"),
-                    api.get("/products")
+                    api.get(`/products?host=${host}`)
                 ]);
                 setGroups(groupsRes.data.data.services || []);
                 setProducts(productsRes.data.data.products || []);

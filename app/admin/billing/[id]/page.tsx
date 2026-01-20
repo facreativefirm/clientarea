@@ -94,7 +94,11 @@ export default function InvoiceDetailsPage() {
 
             // Generate PDF
             const blob = await pdf(
-                <InvoicePDF invoice={invoice as any} appName={settings.appName || 'WHMCS CRM'} />
+                <InvoicePDF
+                    invoice={invoice as any}
+                    appName={settings.appName || 'WHMCS CRM'}
+                    currencyCode={settings.defaultCurrency || 'BDT'}
+                />
             ).toBlob();
 
             // Create download link
@@ -124,7 +128,7 @@ export default function InvoiceDetailsPage() {
 
     if (!invoice) return null;
 
-    const clientName = invoice.client.user ? `${invoice.client.user.firstName} ${invoice.client.user.lastName}` : (invoice.client.companyName || 'Valued Client');
+    const clientName = (invoice.client.companyName || 'Valued Client');
     const contact = invoice.client.contacts?.[0];
 
     return (
@@ -186,9 +190,9 @@ export default function InvoiceDetailsPage() {
                                         <h2 className="text-2xl font-bold text-primary">{settings.appName || 'WHMCS CRM'}</h2>
                                     </div>
                                     <div className="text-sm text-muted-foreground print:text-gray-600">
-                                        <p>123 Hosting Street</p>
-                                        <p>Dhaka, Bangladesh</p>
-                                        <p>support@whmcscrm.com</p>
+                                        <p>4210 Oxygen Chittagong</p>
+                                        <p>Chittagong, Bangladesh</p>
+                                        <p>naimursharon@gmail.com</p>
                                     </div>
                                 </div>
                                 <div className="text-right">

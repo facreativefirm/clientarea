@@ -1,0 +1,331 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Navbar } from "@/components/layout/Navbar";
+import { useLanguage } from "@/components/language-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2, Save, ArrowLeft, Loader2 } from "lucide-react";
+import Link from "next/link";
+import api from "@/lib/api";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+import { useSettingsStore } from "@/lib/store/settingsStore";
+
+export default function CreateQuotePage() {
+    const router = useRouter();
+    const { t } = useLanguage();
+    const { formatPrice, fetchSettings } = useSettingsStore();
+
+    const [loading, setLoading] = useState(false);
+    const [clients, setClients] = useState<any[]>([]);
+    const [products, setProducts] = useState<any[]>([]);
+
+    // Form State
+    const [clientId, setClientId] = useState("");
+    const [subject, setSubject] = useState("");
+    const [validUntil, setValidUntil] = useState("");
+    const [terms, setTerms] = useState("This quote is valid for 30 days. Payment is required upon acceptance.");
+    const [notes, setNotes] = useState("");
+
+    const [items, setItems] = useState<any[]>([
+        { description: "Service / Product Name", quantity: 1, unitPrice: 0, productId: null, billingCycle: "monthly", domainName: "" }
+    ]);
+
+    useEffect(() => {
+        fetchSettings();
+        // Fetch Clients for dropdown
+        api.get("/clients").then(res => {
+            if (res.data.status === 'success') {
+                setClients(res.data.data.clients);
+            }
+        });
+
+        // Fetch Products
+        api.get("/products").then(res => {
+            if (res.data.status === 'success') {
+                setProducts(res.data.data.products);
+            }
+        });
+
+        // Default valid until 30 days
+        const date = new Date();
+        date.setDate(date.getDate() + 30);
+        setValidUntil(date.toISOString().split('T')[0]);
+    }, []);
+
+    const addItem = () => {
+        setItems([...items, { description: "", quantity: 1, unitPrice: 0, productId: null, billingCycle: "monthly", domainName: "" }]);
+    };
+
+    const removeItem = (index: number) => {
+        setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index: number, field: string, value: any) => {
+        const newItems = [...items];
+        let updatedItem = { ...newItems[index], [field]: value };
+
+        // Auto-fill logic when product or billing cycle changes
+        if (field === 'productId' && value) {
+            const product = products.find(p => p.id === parseInt(value));
+            if (product) {
+                updatedItem.description = product.name;
+                updatedItem.productId = parseInt(value);
+                // Set price based on current cycle
+                const cycle = updatedItem.billingCycle || "monthly";
+                updatedItem.unitPrice = getProductPrice(product, cycle);
+            }
+        } else if (field === 'billingCycle' && updatedItem.productId) {
+            const product = products.find(p => p.id === updatedItem.productId);
+            if (product) {
+                updatedItem.unitPrice = getProductPrice(product, value);
+            }
+        }
+
+        newItems[index] = updatedItem;
+        setItems(newItems);
+    };
+
+    const getProductPrice = (product: any, cycle: string) => {
+        switch (cycle) {
+            case 'monthly': return product.monthlyPrice || 0;
+            case 'quarterly': return product.quarterlyPrice || 0;
+            case 'semi-annually': return product.semiAnnualPrice || 0;
+            case 'annually': return product.annualPrice || 0;
+            case 'biennial': return product.biennialPrice || 0;
+            case 'triennial': return product.triennialPrice || 0;
+            default: return product.monthlyPrice || 0;
+        }
+    };
+
+    const calculateTotal = () => {
+        return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    };
+
+    const handleSubmit = async () => {
+        if (!clientId) return toast.error("Please select a client");
+        if (!subject) return toast.error("Please enter a subject");
+
+        setLoading(true);
+        try {
+            await api.post("/quotes", {
+                clientId,
+                subject,
+                validUntil,
+                terms,
+                notes,
+                items: items.map(i => ({
+                    description: i.description,
+                    quantity: Number(i.quantity),
+                    unitPrice: Number(i.unitPrice),
+                    productId: i.productId,
+                    billingCycle: i.billingCycle,
+                    domainName: i.domainName
+                }))
+            });
+            toast.success("Quote created successfully");
+            router.push("/admin/billing/quotes");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to create quote");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN", "STAFF"]}>
+            <div className="min-h-screen bg-gray-50/50">
+                <Navbar />
+                <Sidebar />
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/admin/billing/quotes"><ArrowLeft size={20} /></Link>
+                        </Button>
+                        <h1 className="text-2xl font-bold text-gray-900">Create New Quote</h1>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-8">
+                        {/* Header Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label>Client</Label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={clientId}
+                                    onChange={(e) => setClientId(e.target.value)}
+                                >
+                                    <option value="">Select a client...</option>
+                                    {clients.map((c: any) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.user.firstName} {c.user.lastName} ({c.companyName || 'Individual'})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Valid Until</Label>
+                                <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+                            </div>
+                            <div className="col-span-2 space-y-2">
+                                <Label>Subject / Title</Label>
+                                <Input placeholder="e.g. Web Development Project Proposal" value={subject} onChange={(e) => setSubject(e.target.value)} />
+                            </div>
+                        </div>
+
+                        {/* Items Section */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center border-b pb-2">
+                                <h3 className="font-semibold text-gray-900">Line Items</h3>
+                            </div>
+
+                            <div className="space-y-6">
+                                {items.map((item, index) => (
+                                    <div key={index} className="p-5 bg-white rounded-xl border border-gray-100 shadow-sm relative group/item hover:border-primary/20 transition-colors">
+                                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                                            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Item #{index + 1}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8"
+                                                onClick={() => removeItem(index)}
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4">
+                                            {/* Top Selection Row */}
+                                            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Product / Service (Optional)</Label>
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        value={item.productId || ""}
+                                                        onChange={(e) => updateItem(index, 'productId', e.target.value)}
+                                                    >
+                                                        <option value="">-- Custom Item --</option>
+                                                        {products.map(p => (
+                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {item.productId ? (
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs font-semibold text-gray-500 uppercase">Billing Cycle</Label>
+                                                        <select
+                                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                            value={item.billingCycle || "monthly"}
+                                                            onChange={(e) => updateItem(index, 'billingCycle', e.target.value)}
+                                                        >
+                                                            <option value="monthly">Monthly</option>
+                                                            <option value="quarterly">Quarterly</option>
+                                                            <option value="semi-annually">Semi-Annually</option>
+                                                            <option value="annually">Annually</option>
+                                                            <option value="biennial">Biennial</option>
+                                                            <option value="triennial">Triennial</option>
+                                                        </select>
+                                                    </div>
+                                                ) : (
+                                                    <div className="hidden md:block"></div>
+                                                )}
+                                            </div>
+
+                                            {/* Description Row */}
+                                            <div className="md:col-span-12 space-y-2">
+                                                <Label className="text-xs font-semibold text-gray-500 uppercase">Description / Notes</Label>
+                                                <Input
+                                                    placeholder="Enter service details or custom item name..."
+                                                    value={item.description}
+                                                    onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                                    className="bg-gray-50/30"
+                                                />
+                                            </div>
+
+                                            {/* Footer Row: Domain, Qty, Price, Total */}
+                                            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-dashed border-gray-100 items-end">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Domain (Optional)</Label>
+                                                    <Input
+                                                        placeholder="example.com"
+                                                        value={item.domainName}
+                                                        onChange={(e) => updateItem(index, 'domainName', e.target.value)}
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4 md:col-span-2">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs font-semibold text-gray-500 uppercase text-center block">Qty</Label>
+                                                        <Input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                            className="text-center"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs font-semibold text-gray-500 uppercase text-center block">Unit Price</Label>
+                                                        <Input
+                                                            type="number"
+                                                            value={item.unitPrice}
+                                                            onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
+                                                            className="text-center"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-right pb-1">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subtotal</p>
+                                                    <p className="text-xl font-bold text-gray-900">
+                                                        {formatPrice(item.quantity * item.unitPrice)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <Button variant="outline" onClick={addItem} className="gap-2">
+                                <Plus size={16} /> Add Another Item
+                            </Button>
+
+                            <div className="flex justify-end pt-4 border-t">
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-500">Total Amount</p>
+                                    <p className="text-2xl font-bold text-primary">{formatPrice(calculateTotal())}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                            <div className="space-y-2">
+                                <Label>Notes (Visible to Client)</Label>
+                                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Terms & Conditions</Label>
+                                <Textarea value={terms} onChange={(e) => setTerms(e.target.value)} />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-6">
+                            <Button size="lg" onClick={handleSubmit} disabled={loading} className="gap-2">
+                                {loading && <Loader2 className="animate-spin" />}
+                                Save Quote
+                            </Button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </AuthGuard>
+    );
+}

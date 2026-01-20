@@ -134,6 +134,24 @@ export function Navbar() {
                             <User className="mr-2 h-4 w-4" />
                             <span>Profile</span>
                         </DropdownMenuItem>
+
+                        {/* Hybrid view switching for Resellers */}
+                        {user?.userType === 'RESELLER' && (
+                            <>
+                                {router && !window.location.pathname.startsWith('/client') ? (
+                                    <DropdownMenuItem onClick={() => router.push("/client")} className="bg-primary/5 text-primary font-bold">
+                                        <Shield className="mr-2 h-4 w-4" />
+                                        <span>Switch to Client View</span>
+                                    </DropdownMenuItem>
+                                ) : (
+                                    <DropdownMenuItem onClick={() => router.push("/reseller")} className="bg-primary/5 text-primary font-bold">
+                                        <Shield className="mr-2 h-4 w-4 text-[#f37021]" />
+                                        <span>Switch to Reseller View</span>
+                                    </DropdownMenuItem>
+                                )}
+                            </>
+                        )}
+
                         <DropdownMenuItem onClick={() => router.push("/settings")}>
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Settings</span>

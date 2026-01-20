@@ -46,10 +46,11 @@ export default function EditServicePage({ params: paramsPromise }: { params: Pro
         try {
             setPerformingAction(true);
             await api.post(`/services/${id}/action`, { action });
-            toast.success(`Action '${action}' executed successfully`);
+            toast.success(`Service ${action}d successfully`);
             fetchService();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || `Failed to execute ${action}`);
+            const message = error.response?.data?.message || `Failed to execute ${action}`;
+            toast.error(message);
         } finally {
             setPerformingAction(false);
         }

@@ -43,8 +43,11 @@ export default function NotificationsPage() {
             setNotifications(data.notifications);
             setTotalPages(data.totalPages);
             setTotalItems(data.total);
-        } catch (error) {
-            console.error("Failed to load notifications", error);
+        } catch (error: any) {
+            // Ignore 401s as they are handled by the interceptor
+            if (error.response?.status !== 401) {
+                console.error("Failed to load notifications", error);
+            }
         } finally {
             setLoading(false);
         }

@@ -22,7 +22,8 @@ import {
     ShieldCheck,
     BarChart3,
     FileText,
-    Zap
+    Zap,
+    TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -60,14 +61,17 @@ export function Sidebar() {
 
         if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
             return [
+                // ... (existing admin menus)
                 { name: t("dashboard"), icon: LayoutDashboard, href: "/admin" },
                 {
-                    name: t("clients"),
+                    name: "User Management",
                     icon: Users,
                     children: [
+                        { name: "Internal Requests", href: "/admin/applications" },
                         { name: t("view_all_clients"), href: "/admin/clients" },
+                        { name: "Resellers", href: "/admin/resellers" },
                         { name: t("add_new_client"), href: "/admin/clients/add" },
-                        { name: t("client_groups"), href: "/admin/clients/groups" }
+                        { name: t("client_groups"), href: "/admin/clients/groups" },
                     ]
                 },
                 {
@@ -105,6 +109,7 @@ export function Sidebar() {
                     icon: CreditCard,
                     children: [
                         { name: t("invoices"), href: "/admin/billing" },
+                        { name: t("quotes") || "Quotes", href: "/admin/billing/quotes" },
                         { name: t("transactions"), href: "/admin/billing?tab=transactions" },
                         { name: t("refunds") || "Refunds", href: "/admin/billing/refunds" },
                         { name: t("create_invoice"), href: "/admin/billing/create" },
@@ -144,27 +149,64 @@ export function Sidebar() {
                         { name: t("security_questions"), href: "/admin/security/questions" }
                     ]
                 },
+                {
+                    name: "Sales Team",
+                    icon: TrendingUp,
+                    children: [
+                        { name: "Overview", href: "/admin/sales-team" },
+                        { name: "Verifications", href: "/admin/sales-team/verifications" },
+                        { name: "Withdrawals", href: "/admin/sales-team/withdrawals" },
+                    ]
+                },
                 { name: t("reports"), icon: BarChart3, href: "/admin/reports" },
             ];
-        } else if (role === 'RESELLER') {
+        }
+
+        if (role === 'RESELLER' && !pathname.startsWith('/client')) {
             return [
                 { name: t("dashboard"), icon: LayoutDashboard, href: "/reseller" },
-                { name: t("services"), icon: Server, href: "/reseller/services" },
+                {
+                    name: "Client Relations",
+                    icon: Users,
+                    children: [
+                        { name: "Client CRM", href: "/reseller/clients" },
+                    ]
+                },
+                {
+                    name: "Merchandise",
+                    icon: Server,
+                    children: [
+                        { name: "Active Services", href: "/reseller/services" },
+                        { name: "Order History", href: "/reseller/orders" },
+                        { name: "Invoices & Billing", href: "/reseller/invoices" },
+                    ]
+                },
+                { name: "Product Catalog", icon: ShoppingCart, href: "/reseller/products" },
                 { name: t("payouts"), icon: Wallet, href: "/reseller/payouts" },
-                { name: t("white_label"), icon: Zap, href: "/reseller/settings" },
-                { name: t("billing"), icon: CreditCard, href: "/reseller/billing" },
-            ];
-        } else {
-            return [
-                { name: t("dashboard"), icon: LayoutDashboard, href: "/client" },
-                { name: t("store"), icon: ShoppingCart, href: "/client/store" },
-                { name: t("services"), icon: Server, href: "/client/services" },
-                { name: t("domains"), icon: Globe, href: "/client/domains" },
-                { name: t("billing"), icon: CreditCard, href: "/client/billing" },
-                { name: t("transactions") || "Transactions", icon: FileText, href: "/client/transactions" },
-                { name: t("support"), icon: LifeBuoy, href: "/support" },
+                { name: "White-Label Config", icon: Zap, href: "/reseller/settings" },
+                { name: "Help & Support", icon: LifeBuoy, href: "/support" },
+                { name: "Switch to Client View", icon: ShieldCheck, href: "/client" },
             ];
         }
+
+        // Default Client Menu (for CLIENT role or RESELLER in personal view)
+        const clientMenu = [
+            { name: t("dashboard"), icon: LayoutDashboard, href: "/client" },
+            { name: t("store"), icon: ShoppingCart, href: "/client/store" },
+            { name: t("services"), icon: Server, href: "/client/services" },
+            { name: t("domains"), icon: Globe, href: "/client/domains" },
+            { name: t("billing"), icon: CreditCard, href: "/client/billing" },
+            { name: t("quotes") || "Quotes", icon: FileText, href: "/client/quotes" },
+            { name: t("transactions") || "Transactions", icon: FileText, href: "/client/transactions" },
+            { name: t("support"), icon: LifeBuoy, href: "/support" },
+        ];
+
+        // If reseller is in client view, add a quick link back to reseller dashboard
+        if (role === 'RESELLER') {
+            clientMenu.push({ name: "Back to Reseller", icon: ShieldCheck, href: "/reseller" });
+        }
+
+        return clientMenu;
     };
 
     const menuItems = getMenuItems();
@@ -198,7 +240,9 @@ export function Sidebar() {
                                         className={cn(
                                             "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-sm font-medium",
                                             pathname === item.href
-                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                                ? (pathname.startsWith('/reseller')
+                                                    ? "bg-secondary text-white shadow-lg shadow-secondary/20"
+                                                    : "bg-primary text-primary-foreground shadow-lg shadow-primary/20")
                                                 : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
                                         )}
                                     >
@@ -210,7 +254,11 @@ export function Sidebar() {
                                         onClick={() => toggleMenu(item.name)}
                                         className={cn(
                                             "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-sm font-medium",
-                                            isActive && !isOpen ? "bg-primary/10 text-primary border border-primary/20" : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                                            isActive && !isOpen
+                                                ? (pathname.startsWith('/reseller')
+                                                    ? "bg-secondary/10 text-secondary border border-secondary/20"
+                                                    : "bg-primary/10 text-primary border border-primary/20")
+                                                : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
@@ -231,8 +279,10 @@ export function Sidebar() {
                                                 className={cn(
                                                     "block px-4 py-2 rounded-lg text-xs transition-all",
                                                     pathname === child.href
-                                                        ? "text-primary font-bold bg-primary/5 shadow-inner shadow-primary/10"
-                                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                                                        ? (pathname.startsWith('/reseller')
+                                                            ? "bg-secondary/10 text-secondary font-black"
+                                                            : "bg-primary/10 text-primary font-black")
+                                                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground font-medium"
                                                 )}
                                             >
                                                 {child.name}
