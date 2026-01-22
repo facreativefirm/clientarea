@@ -145,6 +145,7 @@ export default function ApplyPage() {
                                 <SelectContent className="bg-background border-white/10">
                                     <SelectItem value="STAFF">Staff / Sales Member</SelectItem>
                                     <SelectItem value="RESELLER">Reseller Account</SelectItem>
+                                    <SelectItem value="INVESTOR">Investor</SelectItem>
                                     <SelectItem value="ADMIN">System Administrator</SelectItem>
                                 </SelectContent>
                             </Select>

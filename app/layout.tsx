@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/components/language-provider";
 import { Toaster } from "sonner";
 import { SettingsBootstrap } from "@/components/SettingsBootstrap";
-import { FloatingNotifications } from "@/components/shared/FloatingNotifications";
+import { FloatingPortal } from "@/components/shared/FloatingPortal";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -40,7 +40,7 @@ export default function RootLayout({
           <SettingsBootstrap>
             <LanguageProvider>
               {children}
-              <FloatingNotifications />
+              <FloatingPortal />
               <Toaster richColors position="top-right" />
             </LanguageProvider>
           </SettingsBootstrap>

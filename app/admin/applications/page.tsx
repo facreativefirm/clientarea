@@ -112,7 +112,8 @@ export default function ApplicationsPage() {
                     variant={
                         item.userType === 'ADMIN' ? 'destructive' :
                             item.userType === 'STAFF' ? 'info' :
-                                'warning'
+                                item.userType === 'INVESTOR' ? 'success' :
+                                    'warning'
                     }
                     className="font-black text-[9px] uppercase tracking-widest px-3 py-1"
                 >

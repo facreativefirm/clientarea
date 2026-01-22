@@ -46,7 +46,7 @@ export default function WithdrawalsPage() {
 
     // Form
     const [amount, setAmount] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("BANK_TRANSFER");
+    const [paymentMethod, setPaymentMethod] = useState("bKash");
     const [paymentDetails, setPaymentDetails] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -193,9 +193,10 @@ export default function WithdrawalsPage() {
                                     value={paymentMethod}
                                     onChange={(e) => setPaymentMethod(e.target.value)}
                                 >
-                                    <option value="BANK_TRANSFER">Direct Bank Transfer</option>
-                                    <option value="PAYPAL">PayPal Wallet</option>
-                                    <option value="CASH">Cash / Physical Check</option>
+                                    <option value="bKash">bKash</option>
+                                    <option value="Nagad">Nagad</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Rocket">Rocket</option>
                                 </select>
                             </div>
 

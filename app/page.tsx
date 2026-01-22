@@ -5,6 +5,7 @@ import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ServiceGroupList } from "@/components/landing/ServiceGroupList";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { PerformanceSections } from "@/components/landing/PerformanceSections";
 import { NetworkMap } from "@/components/landing/NetworkMap";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { FAQSection } from "@/components/landing/FAQSection";
@@ -55,6 +56,7 @@ export default function Home() {
               <HeroSection />
               <ServiceGroupList />
               <FeaturesSection />
+              <PerformanceSections />
               <NetworkMap />
               <TestimonialsSection />
               <FAQSection />

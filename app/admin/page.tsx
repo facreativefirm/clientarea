@@ -142,11 +142,11 @@ export default function AdminDashboard() {
                         {/* Metrics Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <MetricCard
-                                title={t("total_revenue")}
-                                value={`$${stats?.totalRevenue?._sum?.totalAmount || '0.00'}`}
-                                change="+12.5%"
+                                title={t("net_revenue") || "Net Revenue"}
+                                value={`$${(Number(stats?.totalRevenue?._sum?.amountPaid || 0) - Number(stats?.payouts?.total || 0)).toFixed(2)}`}
+                                change={stats?.payouts?.total > 0 ? `-$${stats.payouts.total.toFixed(0)} payouts` : "+12.5%"}
                                 icon={DollarSign}
-                                trend="up"
+                                trend={stats?.payouts?.total > 0 ? "down" : "up"}
                                 loading={loading}
                             />
                             <MetricCard
@@ -238,6 +238,12 @@ export default function AdminDashboard() {
                                                         color: "#f8fafc",
                                                         borderRadius: "12px",
                                                         boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                                                    }}
+                                                    formatter={(value: any, name: string | any) => {
+                                                        if (name === "revenue") return [`$${value}`, "Net Revenue"];
+                                                        if (name === "gross") return [`$${value}`, "Gross Revenue"];
+                                                        if (name === "payouts") return [`$${value}`, "Total Payouts"];
+                                                        return [value, name];
                                                     }}
                                                 />
                                                 <Area

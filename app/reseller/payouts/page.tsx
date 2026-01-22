@@ -43,7 +43,7 @@ export default function ResellerPayoutsPage() {
     const [balance, setBalance] = useState(0);
     const [stats, setStats] = useState<any>(null);
     const [amount, setAmount] = useState("");
-    const [method, setMethod] = useState("Bank Transfer");
+    const [method, setMethod] = useState("bKash");
     const [requesting, setRequesting] = useState(false);
 
     useEffect(() => {
@@ -216,10 +216,10 @@ export default function ResellerPayoutsPage() {
                                                     <SelectValue placeholder="Select Method" />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-xl border-border">
-                                                    <SelectItem value="Bank Transfer" className="font-bold">Bank Transfer (Swift/Local)</SelectItem>
-                                                    <SelectItem value="bKash" className="font-bold">bKash (Merchant Payout)</SelectItem>
-                                                    <SelectItem value="PayPal" className="font-bold">PayPal (Global)</SelectItem>
-                                                    <SelectItem value="Crypto" className="font-bold">USDT (TRC20)</SelectItem>
+                                                    <SelectItem value="bKash" className="font-bold">bKash</SelectItem>
+                                                    <SelectItem value="Nagad" className="font-bold">Nagad</SelectItem>
+                                                    <SelectItem value="Bank Transfer" className="font-bold">Bank Transfer</SelectItem>
+                                                    <SelectItem value="Rocket" className="font-bold">Rocket</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

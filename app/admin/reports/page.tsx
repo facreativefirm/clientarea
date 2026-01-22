@@ -36,18 +36,23 @@ export default function AdminReportsPage() {
 
             // Process Revenue Data
             const rawRevenue = revenueRes.data.data.report || [];
+            const payouts = revenueRes.data.data.payouts || { total: 0, investor: 0, reseller: 0, salesTeam: 0 };
+
             const processedRevenue = {
                 paidInvoices: 0,
                 pendingRevenue: 0,
                 overdueRevenue: 0,
-                totalRevenue: 0
+                totalRevenue: 0, // This will be Net Revenue
+                grossRevenue: 0,
+                totalPayouts: payouts.total,
+                payoutBreakdown: payouts
             };
 
             rawRevenue.forEach((item: any) => {
                 const amount = parseFloat(item._sum.amountPaid || 0);
                 if (item.status === 'PAID' || item.status === 'PARTIALLY_PAID' || item.status === 'REFUNDED') {
                     processedRevenue.paidInvoices += amount;
-                    processedRevenue.totalRevenue += amount;
+                    processedRevenue.grossRevenue += amount;
                 } else if (item.status === 'UNPAID' || item.status === 'PAYMENT_PENDING') {
                     processedRevenue.pendingRevenue += amount;
                 } else if (item.status === 'OVERDUE') {
@@ -55,9 +60,11 @@ export default function AdminReportsPage() {
                 }
             });
 
+            processedRevenue.totalRevenue = processedRevenue.grossRevenue - processedRevenue.totalPayouts;
+
             setRevenueData(processedRevenue);
 
-            // Client Data - Now comes pre-calculated from backend
+            // Client Data
             setClientStats(clientRes.data.data);
 
         } catch (err) {
@@ -95,14 +102,15 @@ export default function AdminReportsPage() {
                                 <DollarSign className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t("total_revenue") || "Total Revenue"}</p>
+                                <p className="text-sm text-muted-foreground">{t("net_revenue") || "Net Revenue"}</p>
                                 <h3 className="text-2xl font-bold">
                                     {currencySymbol}{revenueData?.totalRevenue?.toFixed(2) || '0.00'}
                                 </h3>
                             </div>
                         </div>
-                        <div className="h-32 bg-white/5 rounded-xl flex items-center justify-center">
-                            <p className="text-xs text-muted-foreground">Revenue trend visualization</p>
+                        <div className="flex items-center justify-between text-xs px-1">
+                            <span className="text-muted-foreground">Gross: {currencySymbol}{revenueData?.grossRevenue?.toFixed(2)}</span>
+                            <span className="text-rose-500 font-bold">Payouts: -{currencySymbol}{revenueData?.totalPayouts?.toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -154,25 +162,29 @@ export default function AdminReportsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="glass rounded-[2rem] p-8">
-                        <h3 className="text-xl font-bold mb-6">{t("revenue_breakdown") || "Revenue Breakdown"}</h3>
+                        <h3 className="text-xl font-bold mb-6">Financial Deductions (Payouts)</h3>
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("paid") || "Paid"}</span>
-                                <span className="font-bold text-emerald-500">
-                                    {currencySymbol}{revenueData?.paidInvoices?.toFixed(2) || '0.00'}
+                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors border-l-4 border-l-blue-500">
+                                <span className="text-muted-foreground">Reseller Payouts</span>
+                                <span className="font-bold text-rose-500">
+                                    -{currencySymbol}{revenueData?.payoutBreakdown?.reseller?.toFixed(2) || '0.00'}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("pending") || "Pending"}</span>
-                                <span className="font-bold text-orange-500">
-                                    {currencySymbol}{revenueData?.pendingRevenue?.toFixed(2) || '0.00'}
+                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors border-l-4 border-l-emerald-500">
+                                <span className="text-muted-foreground">Investor Payouts</span>
+                                <span className="font-bold text-rose-500">
+                                    -{currencySymbol}{revenueData?.payoutBreakdown?.investor?.toFixed(2) || '0.00'}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("unpaid") || "Overdue"}</span>
-                                <span className="font-bold text-destructive">
-                                    {currencySymbol}{revenueData?.overdueRevenue?.toFixed(2) || '0.00'}
+                            <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors border-l-4 border-l-purple-500">
+                                <span className="text-muted-foreground">Sales Team Payouts</span>
+                                <span className="font-bold text-rose-500">
+                                    -{currencySymbol}{revenueData?.payoutBreakdown?.salesTeam?.toFixed(2) || '0.00'}
                                 </span>
+                            </div>
+                            <div className="pt-2 border-t border-white/10 flex justify-between font-bold">
+                                <span>Total Deductions</span>
+                                <span className="text-rose-500">{currencySymbol}{revenueData?.totalPayouts?.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

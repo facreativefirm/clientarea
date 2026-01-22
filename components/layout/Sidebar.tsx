@@ -23,7 +23,8 @@ import {
     BarChart3,
     FileText,
     Zap,
-    TrendingUp
+    TrendingUp,
+    DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -124,6 +125,14 @@ export function Sidebar() {
                     ]
                 },
                 {
+                    name: "Investors",
+                    icon: DollarSign,
+                    children: [
+                        { name: "Manage Investors", href: "/admin/investors" },
+                        { name: "Withdrawals", href: "/admin/investors/payouts" }
+                    ]
+                },
+                {
                     name: t("support"),
                     icon: LifeBuoy,
                     children: [
@@ -186,6 +195,16 @@ export function Sidebar() {
                 { name: "White-Label Config", icon: Zap, href: "/reseller/settings" },
                 { name: "Help & Support", icon: LifeBuoy, href: "/support" },
                 { name: "Switch to Client View", icon: ShieldCheck, href: "/client" },
+            ];
+        }
+
+        if (role === 'INVESTOR') {
+            return [
+                { name: t("dashboard"), icon: LayoutDashboard, href: "/investor" },
+                { name: "My Commissions", icon: DollarSign, href: "/investor/commissions" },
+                { name: "Withdrawals", icon: Wallet, href: "/investor/payouts" },
+                { name: t("profile"), icon: Users, href: "/profile" },
+                { name: t("logout"), icon: LogOut, href: "/auth/login" },
             ];
         }
 

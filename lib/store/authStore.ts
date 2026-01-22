@@ -4,7 +4,7 @@ interface User {
     id: number;
     username: string;
     email: string;
-    userType: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'RESELLER' | 'CLIENT';
+    userType: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'RESELLER' | 'CLIENT' | 'INVESTOR';
     firstName?: string;
     lastName?: string;
     status: string;

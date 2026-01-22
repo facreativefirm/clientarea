@@ -37,7 +37,7 @@ interface Notification {
     isRead: boolean;
 }
 
-export function FloatingNotifications() {
+export function FloatingNotifications({ className }: { className?: string }) {
     const { user } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -134,7 +134,7 @@ export function FloatingNotifications() {
     const seeAllLink = (user.userType === 'ADMIN' || user.userType === 'SUPER_ADMIN') ? '/admin/notifications' : '/client/notifications';
 
     return (
-        <div ref={containerRef} className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-2 font-sans">
+        <div ref={containerRef} className={cn("fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-2 font-sans", className)}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div

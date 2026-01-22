@@ -581,7 +581,7 @@ function PublicCheckoutContent() {
                                                     <Button className="w-full h-11 rounded-lg font-bold text-sm bg-[#f37021] text-white shadow-lg">Pay Now</Button>
                                                 </Link>
                                                 <Link href="/client/dashboard" className="flex-1">
-                                                    <Button variant="outline" className="w-full h-11 rounded-lg font-bold text-sm border-white/10 text-white hover:bg-white/5">Client Dashboard</Button>
+                                                    <Button variant="outline" className="w-full h-11 rounded-lg font-bold text-sm border-white/10 text-white bg-white/5">Client Dashboard</Button>
                                                 </Link>
                                             </div>
                                         </div>
