@@ -162,7 +162,7 @@ export default function StoreFront() {
             annualPrice: typeof product.annualPrice === 'string' ? parseFloat(product.annualPrice) : product.annualPrice
         };
         addItem(item);
-        toast.success(`${product.name} ${t("added_to_cart")}`);
+        toast.success(`${product.name} added to cart.`);
         router.push("/client/checkout");
     };
 

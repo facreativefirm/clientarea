@@ -97,7 +97,7 @@ export default function ServicesPage() {
             cell: (item: any) => (
                 <div className="flex gap-2">
                     <Link href={`/admin/products/services/${item.id}`}>
-                        <Button variant="ghost" size="sm">{t("manage") || "Manage"}</Button>
+                        <Button variant="ghost" size="sm">Manage</Button>
                     </Link>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10">
                         <Trash2 size={16} />
@@ -115,13 +115,13 @@ export default function ServicesPage() {
                 <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold">{t("services") || "Services"}</h1>
-                            <p className="text-muted-foreground">{t("service_description") || "Manage your product service groups."}</p>
+                            <h1 className="text-3xl font-bold">Services</h1>
+                            <p className="text-muted-foreground">Manage your product service groups.</p>
                         </div>
                         <Link href="/admin/products/services/add">
                             <Button className="gap-2 shadow-lg shadow-primary/20">
                                 <Plus className="w-4 h-4" />
-                                {t("add_service") || "Add Service"}
+                                Add Service
                             </Button>
                         </Link>
                     </div>
@@ -144,7 +144,7 @@ export default function ServicesPage() {
                                 icon={Folder}
                                 title="No Services Found"
                                 description="Start by creating your first service group."
-                                actionLabel={t("add_service") || "Add Service"}
+                                actionLabel="Add Service"
                                 onAction={() => window.location.href = '/admin/products/services/add'}
                             />
                         ) : (

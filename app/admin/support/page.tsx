@@ -174,12 +174,12 @@ function AdminSupportContent() {
             }
         },
         {
-            header: t("actions"),
+            header: "actions",
             accessorKey: "id" as any,
             cell: (item: any) => (
                 <Link href={`/admin/support/${item.id}`}>
                     <Button variant="outline" size="sm" className="font-black text-[10px] uppercase tracking-widest h-8 rounded-lg">
-                        {t("reply")}
+                        Reply
                     </Button>
                 </Link>
             )
@@ -206,12 +206,12 @@ function AdminSupportContent() {
                     {/* Header */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <h1 className="text-3xl font-extrabold tracking-tight">{t("support_center") || "Support Center"}</h1>
-                            <p className="text-muted-foreground mt-1 font-medium">{t("support_description") || "Manage and resolve customer inquiries with enterprise velocity."}</p>
+                            <h1 className="text-3xl font-extrabold tracking-tight">Support Center</h1>
+                            <p className="text-muted-foreground mt-1 font-medium">Manage and resolve customer inquiries with enterprise velocity.</p>
                         </div>
                         <Link href="/admin/support/new">
                             <Button className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2">
-                                <Plus size={18} /> {t("open_new_ticket") || "Open New Ticket"}
+                                <Plus size={18} /> Open New Ticket
                             </Button>
                         </Link>
                     </div>
@@ -230,7 +230,7 @@ function AdminSupportContent() {
                                 className="bg-card border border-border p-6 rounded-2xl flex items-center justify-between hover:border-primary/30 transition-all group text-left shadow-sm"
                             >
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t(stat.label)}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</p>
                                     <h3 className="text-3xl font-extrabold tracking-tight">{stat.count}</h3>
                                 </div>
                                 <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110", stat.bg, stat.color)}>
@@ -246,16 +246,16 @@ function AdminSupportContent() {
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
                                 <TabsList className="bg-secondary/30 p-1 rounded-xl h-auto flex flex-wrap border border-border">
                                     <TabsTrigger value="tickets" className="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                                        {t("ticket_queue")}
+                                        Ticket Queue
                                     </TabsTrigger>
                                     <TabsTrigger value="replies" className="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                                        {t("predefined_replies")}
+                                        Predefined Replies
                                     </TabsTrigger>
                                     <TabsTrigger value="departments" className="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                                        {t("departments")}
+                                        Departments
                                     </TabsTrigger>
                                     <TabsTrigger value="network" className="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest">
-                                        {t("network_issues")}
+                                        Network Issues
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -310,7 +310,7 @@ function AdminSupportContent() {
                                             icon={FileText}
                                             title="No tickets found"
                                             description="No tickets match your current filters."
-                                            actionLabel={t("open_new_ticket")}
+                                            actionLabel="Open New Ticket"
                                             onAction={() => router.push('/admin/support/new')}
                                         />
                                     ) : (

@@ -108,7 +108,7 @@ export default function ClientServicesPage() {
                 <Button variant="outline" size="sm" asChild className="h-9 px-4 rounded-lg font-bold bg-secondary/30 border-border hover:bg-primary hover:text-white transition-all gap-2 text-[10px] uppercase tracking-widest">
                     <Link href={`/client/services/${item.id}`}>
                         <Settings size={14} />
-                        {t("manage")}
+                        Manage
                         <ArrowRight size={12} className="opacity-50" />
                     </Link>
                 </Button>
@@ -127,13 +127,13 @@ export default function ClientServicesPage() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
-                                    {t("my_services")}
+                                    My Services
                                 </h1>
                             </div>
                             <Button asChild className="h-12 w-full sm:w-auto px-8 rounded-xl font-bold bg-[#f37021] hover:bg-[#d9621c] text-white shadow-lg shadow-[#f37021]/20 gap-2">
                                 <Link href="/client/store">
                                     <PlusCircle size={20} />
-                                    {t("order_new_service")}
+                                    Order New Service
                                 </Link>
                             </Button>
                         </div>
@@ -143,7 +143,7 @@ export default function ClientServicesPage() {
                             <div className="relative w-full md:w-80">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder={t("find_service_placeholder") || "Search services, domains, or status..."}
+                                    placeholder="Search services, domains, or status..."
                                     className="pl-11 h-12 rounded-xl bg-card border-border/50 focus:border-primary/50 transition-all font-semibold"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}

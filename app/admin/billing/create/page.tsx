@@ -111,8 +111,8 @@ export default function CreateInvoicePage() {
                                 </Button>
                             </Link>
                             <div>
-                                <h1 className="text-3xl font-bold">{t("create_invoice") || "Create Invoice"}</h1>
-                                <p className="text-muted-foreground">{t("admin_billing_desc") || "Generate a custom invoice for a client."}</p>
+                                <h1 className="text-3xl font-bold">Create Invoice</h1>
+                                <p className="text-muted-foreground">Generate a custom invoice for a client.</p>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@ export default function CreateInvoicePage() {
 
                                 <div className="flex justify-end pt-4 border-t border-border/50">
                                     <div className="text-right">
-                                        <p className="text-sm text-muted-foreground">{t("total") || "Total"}</p>
+                                        <p className="text-sm text-muted-foreground">Total</p>
                                         <p className="text-2xl font-bold">{formatPrice(calculateTotal())}</p>
                                     </div>
                                 </div>

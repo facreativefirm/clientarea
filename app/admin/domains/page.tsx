@@ -196,7 +196,7 @@ export default function DomainListPage() {
                                 className="gap-2 shadow-lg shadow-primary/20"
                             >
                                 <Globe size={16} />
-                                Register Portfolio
+                                Register New Domain
                             </Button>
                         </div>
                     </div>
@@ -204,7 +204,7 @@ export default function DomainListPage() {
                     {/* Quick Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {[
-                            { label: "Total Assets", value: domains.length, icon: Globe, color: "text-blue-500" },
+                            { label: "Total Domains", value: domains.length, icon: Globe, color: "text-blue-500" },
                             { label: "Expiring 30d", value: domains.filter((d: any) => d.status === 'EXPIRED').length, icon: Clock, color: "text-amber-500" },
                             { label: "Pending Setup", value: domains.filter((d: any) => d.status === 'PENDING').length, icon: Calendar, color: "text-purple-500" },
                             { label: "Revenue Share", value: formatPrice(1240), icon: ArrowUpRight, color: "text-emerald-500" },
@@ -286,10 +286,10 @@ export default function DomainListPage() {
                         <SheetContent side="right" className="sm:max-w-4xl overflow-y-auto">
                             <SheetHeader className="mb-8">
                                 <SheetTitle className="text-3xl font-black">
-                                    {editingDomain ? "Manage Domain Asset" : "Register Domain Portfolio"}
+                                    {editingDomain ? "Domain Settings" : "Register New Domain"}
                                 </SheetTitle>
                                 <SheetDescription className="text-lg">
-                                    {editingDomain ? `Updating configuration for ${editingDomain.domainName}` : "Provision new domain assets for your clients efficiently."}
+                                    {editingDomain ? `Updating configuration for ${editingDomain.domainName}` : "Register and setup new domain names for your clients efficiently."}
                                 </SheetDescription>
                             </SheetHeader>
                             <DomainForm

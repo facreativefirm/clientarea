@@ -109,7 +109,7 @@ function NewTicketForm() {
                                 <div>
                                     <div className="flex items-center gap-3">
                                         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                                            {t("open_new_ticket") || "New Support Inquiry"}
+                                            Open New Ticket
                                         </h1>
                                         <Badge variant="warning" className="font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 rounded-lg border-none shadow-sm shadow-amber-500/20">Technical Hub</Badge>
                                     </div>

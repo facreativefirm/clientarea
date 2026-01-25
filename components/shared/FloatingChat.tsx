@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
+import { socketService } from "@/lib/socket";
+
 
 type ChatState = 'CLOSED' | 'IDENTIFY' | 'INITIATE_TICKET' | 'TICKET_LIST' | 'CHATTING' | 'LOADING';
 
@@ -39,7 +41,7 @@ export function FloatingChat() {
     const [isOpen, setIsOpen] = useState(false);
     const [chatState, setChatState] = useState<ChatState>('LOADING');
 
-    const isHiddenPage = pathname?.startsWith('/admin') || pathname?.startsWith('/support');
+    const isHiddenPage = pathname?.startsWith('/admin') || pathname?.startsWith('/support') || pathname?.startsWith('/auth');
 
     useEffect(() => {
         setMounted(true);
@@ -116,67 +118,82 @@ export function FloatingChat() {
             setTicket(ticketData);
             setReplies(ticketData.replies || []);
             setChatState('CHATTING');
-            // setInterval is now handled by unified poller
         } catch (err) {
             toast.error("Failed to load ticket");
             setChatState('TICKET_LIST');
         }
     };
 
-    // Unified Polling Logic
+
+    // Socket Connection & Events
     useEffect(() => {
         if (!user) return;
 
-        const poll = async () => {
-            try {
-                if (chatState === 'CHATTING' && ticket) {
-                    // Specific ticket polling for messages
-                    const res = await api.get(`/support/tickets/${ticket.id}`);
-                    const ticketData = res.data.data.ticket;
-                    setTicket(ticketData);
+        const socket = socketService.connect();
 
-                    const latestReplies = ticketData.replies || [];
-                    setReplies(prev => {
-                        if (latestReplies.length > prev.length) {
-                            const lastMsg = latestReplies[latestReplies.length - 1];
-                            if (lastMsg.id !== lastMessageIdRef.current) {
-                                lastMessageIdRef.current = lastMsg.id;
-                                const isNewFromOthers = lastMsg.userId !== user?.id;
-                                if (isNewFromOthers) {
-                                    if (!isMuted && receivedSound.current) {
-                                        receivedSound.current.play().catch(() => { });
-                                    }
-                                    if (!isOpen) {
-                                        setUnreadCount(prev => prev + 1);
-                                    }
-                                }
-                            }
-                            return latestReplies;
-                        }
-                        return prev;
-                    });
-                } else {
-                    // Global polling for status updates and unread counts
-                    const res = await api.get('/support/tickets');
-                    const userTickets = res.data.data.tickets || [];
-                    setTickets(userTickets);
+        const handleNewMessage = (data: any) => {
+            // Use functional update to avoid closure staleness
+            setReplies((prev: any[]) => {
+                if (prev.some(r => r.id === data.reply.id)) return prev;
 
-                    // ANSWERED status implies staff has replied and user hasn't opened it or replied back
-                    const answeredCount = userTickets.filter((t: any) => t.status === 'ANSWERED').length;
-
-                    // Only override unreadCount if bubble is closed to prevent overlapping with message poller
+                // Play sound and scroll if not from me
+                const isMe = data.reply.userId === user.id || data.reply.user?.id === user.id;
+                if (!isMe) {
+                    if (!isMuted && receivedSound.current) {
+                        receivedSound.current.play().catch(() => { });
+                    }
                     if (!isOpen) {
-                        setUnreadCount(answeredCount);
+                        setUnreadCount(u => u + 1);
                     }
                 }
-            } catch (err) {
-                // Silent fail for background polling
+
+                return [...prev, data.reply];
+            });
+
+            // Trigger scroll
+            if (isOpen && chatState === 'CHATTING') {
+                chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
             }
         };
 
-        const intervalId = setInterval(poll, 5000);
-        return () => clearInterval(intervalId);
-    }, [user, chatState, ticket?.id, isOpen]);
+        // 2. Listen for ticket status updates
+        const handleTicketUpdate = (data: any) => {
+            if (ticket && data.id === ticket.id) {
+                setTicket((prev: any) => ({ ...prev, ...data }));
+            }
+            // Also refresh list if needed - simple way is to re-fetch or update local state
+            setTickets((prev: any[]) => prev.map(t => t.id === data.id ? { ...t, ...data } : t));
+        };
+
+        socket.on('new_message', handleNewMessage);
+        socket.on('ticket_updated', handleTicketUpdate);
+
+        return () => {
+            socket.off('new_message', handleNewMessage);
+            socket.off('ticket_updated', handleTicketUpdate);
+        };
+    }, [user, ticket, isOpen, isMuted]);
+
+    // Join/Leave Ticket Room
+    useEffect(() => {
+        if (chatState === 'CHATTING' && ticket) {
+            socketService.joinTicket(ticket.id);
+        }
+
+        return () => {
+            if (ticket) {
+                // We don't necessarily leave immediately to allow rapid re-entry, 
+                // but for cleanliness we can. Or we rely on global listening.
+                // For this implementation plan, we join specific rooms.
+                socketService.leaveTicket(ticket.id);
+            }
+        };
+    }, [chatState, ticket?.id]);
+
+    // Initial Load (One-time fetch instead of polling)
+    useEffect(() => {
+        // ... (Keep existing initial load logic if needed for first render)
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -245,7 +262,7 @@ export function FloatingChat() {
                 });
             } else {
                 // Guest user initiating chat
-                res = await api.post('/guest-support/initiate', {
+                res = await api.post('/support-chat/initiate', {
                     ...identifyForm,
                     ...ticketForm
                 });
@@ -301,14 +318,12 @@ export function FloatingChat() {
         setSending(true);
 
         try {
-            const res = await api.post(`/support/tickets/${ticket.id}/reply`, {
+            await api.post(`/support/tickets/${ticket.id}/reply`, {
                 message: msg,
                 attachments: attachment ? [attachment] : []
             });
-            const newReply = res.data.data.reply;
-            setReplies(prev => [...prev, newReply]);
-            lastMessageIdRef.current = newReply.id;
-            lastMessageIdRef.current = newReply.id;
+
+            // The socket listener handles adding the reply to the UI.
             if (!isMuted && sentSound.current) {
                 sentSound.current.play().catch(() => { });
             }

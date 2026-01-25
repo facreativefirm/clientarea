@@ -8,6 +8,8 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { socketService } from "@/lib/socket";
+
 
 function timeAgo(dateString: string) {
     const date = new Date(dateString);
@@ -46,15 +48,40 @@ export function FloatingNotifications({ className }: { className?: string }) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Initial fetch and poller
+
+    // WebSocket Integration
     useEffect(() => {
         if (!user) return;
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 5000); // 5s poll as requested
 
-        return () => clearInterval(interval);
+        const socket = socketService.connect();
+
+        const handleNewNotification = (notification: any) => {
+            setNotifications(prev => {
+                // Deduplicate
+                if (prev.some(n => n.id === notification.id)) return prev;
+                return [notification, ...prev.slice(0, 4)];
+            });
+
+            setUnreadCount(prev => prev + 1);
+
+            // Pulse animation
+            setIsPulsing(true);
+            setTimeout(() => setIsPulsing(false), 3000);
+
+            // Optional: Play alert sound if needed
+            const alertSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+            alertSound.play().catch(() => { });
+        };
+
+        socket.on('new_notification', handleNewNotification);
+
+        return () => {
+            socket.off('new_notification', handleNewNotification);
+        };
     }, [user]);
+
 
     // Close on click outside
     useEffect(() => {

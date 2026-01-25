@@ -11,26 +11,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TwoFactorSetup } from "@/components/auth/TwoFactor/TwoFactorSetup";
-import { Shield, User, Lock, Save } from "lucide-react";
+import { Shield, User, Lock, Save, Loader2 } from "lucide-react";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
     const { t } = useLanguage();
     const { user } = useAuthStore();
+    const [isLoading, setIsLoading] = useState(false);
     const [is2FAModalOpen, set2FAModalOpen] = useState(false);
 
-    const { register, handleSubmit } = useForm({
+    const { register, handleSubmit, reset } = useForm({
         defaultValues: {
             firstName: user?.firstName || "",
             lastName: user?.lastName || "",
             email: user?.email || "",
+            phoneNumber: user?.phoneNumber || "",
+            whatsAppNumber: user?.whatsAppNumber || "",
             currentPassword: "",
             newPassword: "",
         }
     });
 
-    const onSubmit = (data: any) => {
-        console.log("Updating profile:", data);
-        alert("Profile update simulation success!");
+    const onSubmit = async (data: any) => {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+            await api.patch(`/users/${user.id}`, {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phoneNumber: data.phoneNumber,
+                whatsAppNumber: data.whatsAppNumber,
+            });
+            toast.success("Profile updated successfully");
+            // Optionally update user in store if you have a method for it
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to update profile");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -41,7 +60,7 @@ export default function ProfilePage() {
                 <main className="lg:pl-75 pt-20 p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-8">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t("my_profile") || "Account Security"}</h1>
+                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Account Security</h1>
                             <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Manage your personal identity, credentials, and authentication preferences.</p>
                         </div>
 
@@ -67,6 +86,16 @@ export default function ProfilePage() {
                                                 <Input {...register("lastName")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
                                             </div>
                                         </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                                                <Input {...register("phoneNumber")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">WhatsApp Number</Label>
+                                                <Input {...register("whatsAppNumber")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                            </div>
+                                        </div>
                                         <div className="space-y-2">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Registered Email</Label>
                                             <Input {...register("email")} disabled className="h-11 rounded-xl bg-secondary/10 border-border/50 opacity-60 font-semibold cursor-not-allowed" />
@@ -74,8 +103,8 @@ export default function ProfilePage() {
                                         </div>
 
                                         <div className="pt-2">
-                                            <Button type="submit" className="h-11 px-8 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2">
-                                                <Save className="w-4 h-4" />
+                                            <Button type="submit" className="h-11 px-8 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2" disabled={isLoading}>
+                                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                 Persist Changes
                                             </Button>
                                         </div>

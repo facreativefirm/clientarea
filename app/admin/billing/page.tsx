@@ -9,7 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/shared/Badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Plus, Download, Loader2, Zap, Cog, ShieldCheck, CheckCircle2, AlertCircle, MoreHorizontal, CheckCircle, Trash2, XCircle, RefreshCcw, History } from "lucide-react";
+import { FileText, Plus, Download, Loader2, Zap, Cog, ShieldCheck, CheckCircle2, AlertCircle, MoreHorizontal, CheckCircle, Trash2, XCircle, RefreshCcw, History, Mail, MessageCircle } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,7 +19,7 @@ import {
 import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, formatLabel } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useSearchParams, useRouter } from "next/navigation";
 import { RefundQueue } from "@/components/admin/billing/RefundQueue";
@@ -151,6 +151,48 @@ function AdminBillingContent() {
         }
     };
 
+    const handleNotifyUser = async (id: number) => {
+        try {
+            toast.loading("Sending notification...", { id: "notify-invoice" });
+            await api.post(`/invoices/${id}/notify`);
+            toast.success("Invoice notification sent successfully", { id: "notify-invoice" });
+        } catch (err: any) {
+            toast.error("Failed to send notification", {
+                id: "notify-invoice",
+                description: err.response?.data?.message || "Internal server error"
+            });
+        }
+    };
+
+
+
+    const handleWhatsAppNotify = (item: any) => {
+        const clientName = item.client?.user?.firstName || "Customer";
+        const invoiceNumber = item.invoiceNumber || item.id;
+        const dueDate = item.dueDate ? new Date(item.dueDate).toLocaleDateString() : 'N/A';
+        const amount = formatPrice(item.totalAmount || 0);
+        const invoiceLink = window.location.origin + "/client/invoices/" + item.id;
+
+        let phoneNumber = item.client?.user?.whatsAppNumber || item.client?.user?.phoneNumber || item.client?.phoneNumber || "";
+
+        if (!phoneNumber) {
+            toast.error("Client WhatsApp or phone number not found");
+            return;
+        }
+
+        let cleanPhone = phoneNumber.replace(/[^\d+]/g, '');
+        if (!cleanPhone.startsWith('+')) {
+            if (cleanPhone.startsWith('880')) cleanPhone = '+' + cleanPhone;
+            else if (cleanPhone.startsWith('0')) cleanPhone = '+88' + cleanPhone;
+            else cleanPhone = '+880' + cleanPhone;
+        }
+
+        const finalPhone = cleanPhone.replace('+', '');
+        const message = `প্রিয় ${clientName}, আপনার ইনভয়েস (#${invoiceNumber}) এর পেমেন্ট এখনো বকেয়া আছে। শেষ তারিখ: ${dueDate}। বকেয়া পরিমাণ: ${amount}। আপনার সেবার ধারাবাহিকতা বজায় রাখতে এবং একাউন্ট সচল রাখতে দ্রুত পেমেন্ট সম্পন্ন করুন।\n\nইনভয়েস লিংক: ${invoiceLink}\n\nধন্যবাদ।`;
+
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    };
+
     const handleVerifyTransaction = async (id: number, action: 'APPROVE' | 'REJECT') => {
         if (!confirm(`Are you sure you want to ${action.toLowerCase()} this transaction?`)) return;
         try {
@@ -240,7 +282,7 @@ function AdminBillingContent() {
             accessorKey: "status" as any,
             cell: (item: any) => (
                 <Badge variant={item.status === 'PAID' ? 'success' : item.status === 'UNPAID' ? 'destructive' : 'default'}>
-                    {item.status}
+                    {formatLabel(item.status)}
                 </Badge>
             )
         },
@@ -250,7 +292,7 @@ function AdminBillingContent() {
             cell: (item: any) => (
                 <div className="flex items-center gap-2">
                     <Link href={`/admin/billing/${item.id}`}>
-                        <Button variant="ghost" size="sm">{t("manage")}</Button>
+                        <Button variant="ghost" size="sm">Manage</Button>
                     </Link>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -258,7 +300,7 @@ function AdminBillingContent() {
                                 <MoreHorizontal className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 bg-card border-white/5">
+                        <DropdownMenuContent align="end" className="w-64 bg-card border-white/5">
                             {item.status !== 'PAID' && (
                                 <DropdownMenuItem
                                     className="gap-2 cursor-pointer text-emerald-500 focus:text-emerald-500 focus:bg-emerald-500/10"
@@ -276,6 +318,24 @@ function AdminBillingContent() {
                                     <XCircle size={14} />
                                     Mark as Unpaid
                                 </DropdownMenuItem>
+                            )}
+                            {item.status !== 'PAID' && (
+                                <>
+                                    <DropdownMenuItem
+                                        className="gap-2 cursor-pointer text-primary focus:text-primary focus:bg-primary/10"
+                                        onClick={() => handleNotifyUser(item.id)}
+                                    >
+                                        <Mail size={14} />
+                                        Send Email Notification
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="gap-2 cursor-pointer text-emerald-500 focus:text-emerald-500 focus:bg-emerald-500/10"
+                                        onClick={() => handleWhatsAppNotify(item)}
+                                    >
+                                        <MessageCircle size={14} />
+                                        Send WhatsApp Reminder
+                                    </DropdownMenuItem>
+                                </>
                             )}
                             <DropdownMenuItem
                                 className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
@@ -300,6 +360,17 @@ function AdminBillingContent() {
                     >
                         <RefreshCcw size={14} />
                     </Button>
+                    {item.status !== 'PAID' && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                            title="WhatsApp Notify"
+                            onClick={() => handleWhatsAppNotify(item)}
+                        >
+                            <MessageCircle size={14} />
+                        </Button>
+                    )}
                 </div>
             )
         }
@@ -330,7 +401,7 @@ function AdminBillingContent() {
             accessorKey: "gateway" as any,
             cell: (item: any) => (
                 <div className="flex flex-col">
-                    <span className="font-semibold">{item.gateway}</span>
+                    <span className="font-semibold">{formatLabel(item.gateway)}</span>
                     {item.gatewayResponse?.senderNumber && (
                         <span className="text-[10px] text-muted-foreground font-mono">
                             From: {item.gatewayResponse.senderNumber}
@@ -354,7 +425,7 @@ function AdminBillingContent() {
             accessorKey: "status" as any,
             cell: (item: any) => (
                 <Badge variant={item.status === 'COMPLETED' || item.status === 'succeeded' || item.status === 'SUCCESS' ? 'success' : item.status === 'PENDING' ? 'warning' : 'default'}>
-                    {item.status}
+                    {formatLabel(item.status)}
                 </Badge>
             )
         },
@@ -421,8 +492,8 @@ function AdminBillingContent() {
             <main className="lg:pl-72 pt-6 p-4 md:p-8 space-y-8">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">{t("billing")}</h1>
-                        <p className="text-muted-foreground">{t("admin_billing_desc")}</p>
+                        <h1 className="text-3xl font-bold">Billing</h1>
+                        <p className="text-muted-foreground">Admin Billing</p>
                     </div>
                     <div className="flex flex-wrap gap-3 w-full md:w-auto">
                         <Link href="/admin/billing/refunds" className="flex-1 md:flex-none">
@@ -434,7 +505,7 @@ function AdminBillingContent() {
                         <Link href="/admin/billing/create" className="flex-1 md:flex-none">
                             <Button className="gap-2 shadow-lg shadow-primary/20 w-full">
                                 <Plus className="w-4 h-4" />
-                                {t("create_invoice")}
+                                Create Invoice
                             </Button>
                         </Link>
                     </div>
@@ -444,29 +515,29 @@ function AdminBillingContent() {
                     <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
                         <TabsList className="mb-6 bg-secondary/30 p-1 rounded-xl w-full justify-start h-auto">
                             <TabsTrigger value="invoices" className="rounded-lg px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                                {t("invoices")}
+                                Invoices
                             </TabsTrigger>
                             <TabsTrigger value="transactions" className="rounded-lg px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                                {t("transactions")}
+                                Transactions
                             </TabsTrigger>
                             <TabsTrigger value="automation" className="rounded-lg px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                                {t("automation")}
+                                Automation
                             </TabsTrigger>
                             <TabsTrigger value="refunds" className="rounded-lg px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                                {t("refunds") || "Refunds"}
+                                Refunds
                             </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="invoices" className="space-y-4">
                             <div className="flex gap-4 mb-4">
                                 <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive flex-1">
-                                    <h3 className="font-bold text-lg">{t("overdue_invoices")}</h3>
-                                    <p className="text-sm opacity-80">{t("immediate_attention")}</p>
+                                    <h3 className="font-bold text-lg">Overdue Invoices</h3>
+                                    <p className="text-sm opacity-80">Immediate attention required</p>
                                     <p className="text-2xl font-bold mt-2">{stats.overdue}</p>
                                 </div>
                                 <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex-1">
-                                    <h3 className="font-bold text-lg">{t("paid_this_month")}</h3>
-                                    <p className="text-sm opacity-80">{t("revenue_collected")}</p>
+                                    <h3 className="font-bold text-lg">Paid This Month</h3>
+                                    <p className="text-sm opacity-80">Revenue collected</p>
                                     <p className="text-2xl font-bold mt-2">{formatPrice(stats.paidThisMonth)}</p>
                                 </div>
                             </div>
@@ -477,7 +548,7 @@ function AdminBillingContent() {
                                 </div>
                             ) : invoices.length === 0 ? (
                                 <div className="text-center py-12 text-muted-foreground">
-                                    <p>{t("no_invoices_found")}</p>
+                                    <p>No invoices found</p>
                                 </div>
                             ) : (
                                 <DataTable columns={invoiceColumns} data={invoices} />
@@ -491,7 +562,7 @@ function AdminBillingContent() {
                                 </div>
                             ) : transactions.length === 0 ? (
                                 <div className="text-center py-12 text-muted-foreground">
-                                    <p>{t("no_transactions_found") || "No transactions found"}</p>
+                                    <p>No transactions found</p>
                                 </div>
                             ) : (
                                 <DataTable columns={transactionColumns} data={transactions} />
@@ -506,8 +577,8 @@ function AdminBillingContent() {
                                             <Zap className="w-6 h-6 text-primary" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-lg">{t("invoice_generation")}</h3>
-                                            <p className="text-sm text-muted-foreground">{t("process_recurring")}</p>
+                                            <h3 className="font-bold text-lg">Invoice Generation</h3>
+                                            <p className="text-sm text-muted-foreground">Process recurring invoices</p>
                                         </div>
                                     </div>
                                     <Button
@@ -516,7 +587,7 @@ function AdminBillingContent() {
                                         disabled={automationLoading !== null}
                                     >
                                         {automationLoading === 'generate' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Cog className="w-4 h-4 mr-2" />}
-                                        {t("generate_due_invoices")}
+                                        Generate Due Invoices
                                     </Button>
                                 </div>
 
@@ -526,8 +597,8 @@ function AdminBillingContent() {
                                             <ShieldCheck className="w-6 h-6 text-destructive" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-lg">{t("cc_capture")}</h3>
-                                            <p className="text-sm text-muted-foreground">{t("attempt_capture_desc")}</p>
+                                            <h3 className="font-bold text-lg">CC Capture</h3>
+                                            <p className="text-sm text-muted-foreground">Attempt capture</p>
                                         </div>
                                     </div>
                                     <Button
@@ -537,7 +608,7 @@ function AdminBillingContent() {
                                         disabled={automationLoading !== null}
                                     >
                                         {automationLoading === 'capture' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                                        {t("attempt_cc_capture")}
+                                        Attempt CC Capture
                                     </Button>
                                 </div>
                             </div>
@@ -546,7 +617,7 @@ function AdminBillingContent() {
                                 <div className="space-y-3">
                                     <h4 className="flex items-center gap-2 font-bold text-sm opacity-60">
                                         <AlertCircle className="w-4 h-4" />
-                                        {t("process_log")}
+                                        Process Log
                                     </h4>
                                     <div className="p-4 rounded-xl bg-black/40 border border-white/5 font-mono text-[10px] space-y-1 max-h-60 overflow-y-auto">
                                         {automationLog.map((log, i) => (

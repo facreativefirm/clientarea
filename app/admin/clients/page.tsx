@@ -41,6 +41,7 @@ export default function AdminClientsPage() {
         }
     };
 
+
     const filteredClients = clients.filter(client =>
         searchTerm === "" ||
         client.user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +82,7 @@ export default function AdminClientsPage() {
             accessorKey: "status" as any,
             cell: (item: any) => (
                 <Badge variant={item.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                    {t(item.status?.toLowerCase()) || item.status}
+                    {item.status?.toLowerCase()}
                 </Badge>
             )
         },
@@ -96,11 +97,8 @@ export default function AdminClientsPage() {
             cell: (item: any) => (
                 <div className="flex gap-2">
                     <Link href={`/admin/clients/${item.id}`}>
-                        <Button variant="ghost" size="sm" className="font-bold">{t("view_profile")}</Button>
+                        <Button variant="ghost" size="sm" className="font-bold">View Profile</Button>
                     </Link>
-                    <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="w-4 h-4" />
-                    </Button>
                 </div>
             )
         }
@@ -116,12 +114,12 @@ export default function AdminClientsPage() {
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
                             Client <span className="text-primary">Directory</span>
                         </h1>
-                        <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">{t("client_base_management")}</p>
+                        <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Client base management</p>
                     </div>
                     <Link href="/admin/clients/add" className="w-full md:w-auto">
                         <Button className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2 w-full md:w-auto">
                             <Plus className="w-4 h-4" />
-                            {t("add_new_client")}
+                            Add New Client
                         </Button>
                     </Link>
                 </div>
@@ -131,7 +129,7 @@ export default function AdminClientsPage() {
                         <div className="relative w-full md:w-96">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder={t("search_clients_placeholder")}
+                                placeholder="Search clients"
                                 className="pl-12 h-12 bg-secondary/20 border-border rounded-xl font-medium focus:ring-primary/20"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -140,7 +138,7 @@ export default function AdminClientsPage() {
                         <div className="flex gap-2 w-full md:w-auto">
                             <Button variant="outline" className="h-12 rounded-xl bg-secondary/30 border-border font-bold gap-2 flex-1 md:flex-none">
                                 <Filter className="w-4 h-4" />
-                                {t("filter")}
+                                Filter
                             </Button>
                         </div>
                     </div>
@@ -161,14 +159,14 @@ export default function AdminClientsPage() {
                     ) : error ? (
                         <div className="text-center py-12 text-destructive">
                             <p className="font-bold mb-4">{error}</p>
-                            <Button onClick={fetchClients} variant="outline" className="rounded-xl border-destructive/50 hover:bg-destructive/10">{t("retry")}</Button>
+                            <Button onClick={fetchClients} variant="outline" className="rounded-xl border-destructive/50 hover:bg-destructive/10">Retry</Button>
                         </div>
                     ) : filteredClients.length === 0 ? (
                         <EmptyState
                             icon={User}
-                            title={t("no_clients_found") || "No clients found."}
-                            description={t("client_base_management") || "You don't have any clients registered in the system yet."}
-                            actionLabel={t("add_new_client")}
+                            title="No clients found."
+                            description="You don't have any clients registered in the system yet."
+                            actionLabel="Add New Client"
                             onAction={() => window.location.href = '/admin/clients/add'}
                         />
                     ) : (

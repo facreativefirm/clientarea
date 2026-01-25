@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore, getSessionToken, setSessionToken } from "@/lib/store/authStore";
+import { useAuthStore, getSessionToken } from "@/lib/store/authStore";
 import { Loader2 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -19,12 +19,12 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
 
     useEffect(() => {
         const checkAuth = async () => {
-
             // Check if we have a session token in cookie
             const sessionToken = getSessionToken();
 
             if (!sessionToken) {
-                router.push("/auth/login");
+                const currentPath = window.location.pathname + window.location.search;
+                router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}`);
                 setIsChecking(false);
                 return;
             }
@@ -40,7 +40,8 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
                 } catch (error: any) {
                     console.warn('[AuthGuard] session expired or invalid:', error.response?.status);
                     setAuthError(error.response?.data?.message || 'Session expired');
-                    router.push("/auth/login");
+                    const currentPath = window.location.pathname + window.location.search;
+                    router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}`);
                     setIsChecking(false);
                     return;
                 }

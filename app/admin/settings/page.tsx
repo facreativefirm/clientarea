@@ -20,7 +20,9 @@ import {
     Clock,
     DollarSign,
     Loader2,
-    Settings2
+    Settings2,
+    Banknote,
+    Zap
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -49,10 +51,13 @@ export default function SystemSettingsPage() {
         smtpFromEmail: "",
         smtpFromName: "WHMCS CRM",
         smtpSecure: "false",
-        phoneNumber: ""
+        phoneNumber: "",
+        taxRate: "5",
+        taxName: "Tax"
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [runningCron, setRunningCron] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -92,10 +97,23 @@ export default function SystemSettingsPage() {
         }
     };
 
+    const handleRunCron = async () => {
+        if (!confirm("Start manual maintenance run? This will process all expiring services and send notifications.")) return;
+        setRunningCron(true);
+        try {
+            const res = await api.post("/system/run-cron");
+            toast.success(res.data.message);
+        } catch (error) {
+            toast.error("Failed to run automated tasks");
+        } finally {
+            setRunningCron(false);
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground">
             <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground animate-pulse">{t("loading")}...</p>
+            <p className="text-muted-foreground animate-pulse">Loading...</p>
         </div>
     );
 
@@ -110,7 +128,7 @@ export default function SystemSettingsPage() {
                         <div className="flex justify-between items-center">
                             <div>
                                 <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
-                                    {t("system_configuration")}
+                                    System Configuration
                                 </h1>
                                 <p className="text-muted-foreground mt-1 text-lg">Manage global application behavior and preferences.</p>
                             </div>
@@ -127,19 +145,19 @@ export default function SystemSettingsPage() {
                         <Tabs defaultValue="general" className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                             <TabsList className="flex flex-col h-auto bg-card/30 backdrop-blur-md p-2 rounded-3xl border border-border/50 lg:col-span-1 border-none self-start">
                                 <TabsTrigger value="general" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
-                                    <Globe size={18} className="mr-3" /> {t("general")}
+                                    <Globe size={18} className="mr-3" /> General
                                 </TabsTrigger>
                                 <TabsTrigger value="localization" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
-                                    <Languages size={18} className="mr-3" /> {t("localization")}
+                                    <Languages size={18} className="mr-3" /> Localization
                                 </TabsTrigger>
                                 <TabsTrigger value="mail" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
-                                    <Mail size={18} className="mr-3" /> {t("mail_settings") || "Mail Settings"}
+                                    <Mail size={18} className="mr-3" /> Mail Settings
                                 </TabsTrigger>
                                 <TabsTrigger value="billing" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
-                                    <CreditCard size={18} className="mr-3" /> {t("billing_tax")}
+                                    <CreditCard size={18} className="mr-3" /> Billing Tax
                                 </TabsTrigger>
                                 <TabsTrigger value="security" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
-                                    <ShieldCheck size={18} className="mr-3" /> {t("security")}
+                                    <ShieldCheck size={18} className="mr-3" /> Security
                                 </TabsTrigger>
                             </TabsList>
 
@@ -148,7 +166,7 @@ export default function SystemSettingsPage() {
                                     <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
                                         <h3 className="text-xl font-black flex items-center gap-2">
                                             <Mail className="text-primary" size={24} />
-                                            {t("smtp_configuration") || "SMTP Configuration"}
+                                            SMTP Configuration
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-3">
@@ -221,11 +239,11 @@ export default function SystemSettingsPage() {
                                     <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
                                         <h3 className="text-xl font-black flex items-center gap-2">
                                             <Settings2 className="text-primary" size={24} />
-                                            {t("core_configuration") || "Core Configuration"}
+                                            Core Configuration
                                         </h3>
                                         <div className="space-y-6">
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("company_name") || "Company Name"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Company Name</Label>
                                                 <Input
                                                     value={settings.appName || ""}
                                                     onChange={(e) => handleUpdateSetting("appName", e.target.value)}
@@ -233,7 +251,7 @@ export default function SystemSettingsPage() {
                                                 />
                                             </div>
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("admin_email") || "Admin Email"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Admin Email</Label>
                                                 <Input
                                                     value={settings.supportEmail || ""}
                                                     onChange={(e) => handleUpdateSetting("supportEmail", e.target.value)}
@@ -241,7 +259,7 @@ export default function SystemSettingsPage() {
                                                 />
                                             </div>
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("company_phone") || "Company Phone Number"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Company Phone Number</Label>
                                                 <Input
                                                     value={settings.phoneNumber || ""}
                                                     onChange={(e) => handleUpdateSetting("phoneNumber", e.target.value)}
@@ -251,14 +269,30 @@ export default function SystemSettingsPage() {
                                                 <p className="text-[10px] text-muted-foreground">Used for WhatsApp integration and contact info.</p>
                                             </div>
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("maintenance_mode") || "Maintenance Mode"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Maintenance Mode</Label>
                                                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                                                    <span className="text-sm font-bold text-muted-foreground">{t("enable_maintenance") || "Enable Maintenance Mode"}</span>
+                                                    <span className="text-sm font-bold text-muted-foreground">Enable Maintenance Mode</span>
                                                     <Switch
                                                         checked={settings.maintenanceMode === "true"}
                                                         onCheckedChange={(val) => handleUpdateSetting("maintenanceMode", val ? "true" : "false")}
                                                     />
                                                 </div>
+                                            </div>
+
+                                            <div className="pt-6 border-t border-border/10">
+                                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Manual Diagnostics</h4>
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={runningCron}
+                                                    onClick={handleRunCron}
+                                                    className="w-full h-14 rounded-2xl border-primary/20 hover:bg-primary/5 text-primary font-bold gap-2"
+                                                >
+                                                    {runningCron ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} />}
+                                                    Force Run Automation (Billing & Expiry)
+                                                </Button>
+                                                <p className="text-[10px] text-muted-foreground mt-2 px-1 italic">
+                                                    Manually triggers the consolidation engine, scans for expiring services, and notifies clients.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -268,11 +302,11 @@ export default function SystemSettingsPage() {
                                     <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
                                         <h3 className="text-xl font-black flex items-center gap-2">
                                             <Globe className="text-primary" size={24} />
-                                            {t("localization_seo") || "Localization & SEO"}
+                                            Localization & SEO
                                         </h3>
                                         <div className="space-y-6">
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("default_language") || "Default Language"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Default Language</Label>
                                                 <Select
                                                     value={settings.defaultLanguage || "english"}
                                                     onValueChange={(val: string) => handleUpdateSetting("defaultLanguage", val)}
@@ -287,7 +321,7 @@ export default function SystemSettingsPage() {
                                                 </Select>
                                             </div>
                                             <div className="space-y-3">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t("default_currency") || "Default Currency"}</Label>
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Default Currency</Label>
                                                 <Select
                                                     value={settings.defaultCurrency || "USD"}
                                                     onValueChange={(val: string) => handleUpdateSetting("defaultCurrency", val)}
@@ -306,11 +340,56 @@ export default function SystemSettingsPage() {
                                     </div>
                                 </TabsContent>
 
+                                <TabsContent value="billing" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
+                                        <h3 className="text-xl font-black flex items-center gap-2">
+                                            <CreditCard className="text-primary" size={24} />
+                                            Billing & Tax Configuration
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tax Identification Name</Label>
+                                                <Input
+                                                    value={settings.taxName || "Tax"}
+                                                    onChange={(e) => handleUpdateSetting("taxName", e.target.value)}
+                                                    placeholder="VAT, GST, Sales Tax..."
+                                                    className="h-14 rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold"
+                                                />
+                                                <p className="text-[10px] text-muted-foreground px-1">Label shown on invoices (e.g. VAT, GST).</p>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Default Tax Rate (%)</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        value={settings.taxRate || "0"}
+                                                        onChange={(e) => handleUpdateSetting("taxRate", e.target.value)}
+                                                        className="h-14 rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold pr-12"
+                                                    />
+                                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">%</div>
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground px-1">Applied to all non-exempt items.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 space-y-3">
+                                            <p className="font-bold flex items-center gap-2 text-primary">
+                                                <Banknote className="w-4 h-4" />
+                                                Note on Progressive Billing
+                                            </p>
+                                            <p className="text-sm text-primary/70">
+                                                The system automatically uses this rate for all new and consolidated renewal invoices.
+                                                Tax exempt clients (set in client groups) will continue to pay 0% regardless of this setting.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
                                 <TabsContent value="security" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-300">
                                     <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
                                         <h3 className="text-xl font-black flex items-center gap-2">
                                             <ShieldCheck className="text-primary" size={24} />
-                                            {t("security_configuration") || "Security Configuration"}
+                                            Security Configuration
                                         </h3>
                                         <div className="space-y-6">
                                             <div className="flex items-start gap-4 p-6 rounded-2xl bg-rose-500/5 border border-rose-500/20">
@@ -342,8 +421,8 @@ export default function SystemSettingsPage() {
                         </Tabs>
                     </div>
                 </main>
-            </div>
-        </AuthGuard>
+            </div >
+        </AuthGuard >
     );
 }
 

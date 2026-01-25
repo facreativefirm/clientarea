@@ -164,7 +164,7 @@ export default function ClientBillingPage() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    {t("billing_financials") || "Billing & Financials"}
+                                    Billing & Financials
                                 </h1>
                             </div>
 
@@ -175,7 +175,7 @@ export default function ClientBillingPage() {
                             <div className="relative w-full md:w-80">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder={t("search_invoice_placeholder")}
+                                    placeholder="Search Invoice"
                                     className="pl-11 h-12 rounded-xl bg-card border-border/50 focus:border-primary/50 text-sm font-semibold"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}

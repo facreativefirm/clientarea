@@ -138,7 +138,7 @@ export default function EditServicePage({ params: paramsPromise }: { params: Pro
                                     </h3>
                                     <div className="space-y-4">
                                         <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Provisioned On</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Created On</p>
                                             <p className="font-bold">{new Date(service.createdAt).toLocaleDateString()}</p>
                                         </div>
                                         <div className="p-4 rounded-2xl bg-white/5 border border-white/5">

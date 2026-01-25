@@ -21,7 +21,7 @@ export function IntelliSearch() {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
-    const { t } = useLanguage();
+    const { language } = useLanguage();
 
     // Mock Search Logic
     useEffect(() => {
@@ -44,7 +44,7 @@ export function IntelliSearch() {
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
-                    placeholder={t("search") + " (Clients, Invoices, Services...)"}
+                    placeholder="Search (Clients, Invoices, Services...)"
                     className="pl-10 h-10 bg-secondary/30 border-white/5 focus-visible:bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary/50 transition-all rounded-full"
                     value={query}
                     onChange={(e) => {

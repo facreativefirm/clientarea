@@ -12,7 +12,7 @@ import { Badge } from "@/components/shared/Badge";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { cn, getCurrencySymbol } from "@/lib/utils";
+import { cn, getCurrencySymbol, formatLabel } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import Link from "next/link";
@@ -103,11 +103,11 @@ export default function AdminOrdersPage() {
                                     item.status === 'FRAUD' ? 'destructive' :
                                         'default'
                         } className="px-3 py-1 rounded-lg font-bold w-fit">
-                            {item.status}
+                            {formatLabel(item.status)}
                         </Badge>
                         {hasPaidInvoice && (
                             <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                                <CheckCircle size={10} /> PAID
+                                <CheckCircle size={10} /> Paid
                             </span>
                         )}
                     </div>
@@ -122,7 +122,7 @@ export default function AdminOrdersPage() {
                     <Link href={`/admin/orders/${item.id}`}>
                         <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl font-bold bg-white/5 border border-border hover:bg-muted group">
                             <Eye size={14} className="mr-2 opacity-50 group-hover:opacity-100" />
-                            {t("details")}
+                            Details
                         </Button>
                     </Link>
                     {item.status === 'PENDING' && (
@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
                                     !item.invoices?.some((inv: any) => inv.status === 'PAID') && "opacity-50 grayscale hover:grayscale-0"
                                 )}
                                 onClick={() => handleUpdateStatus(item.id, 'COMPLETED')}
-                                title={!item.invoices?.some((inv: any) => inv.status === 'PAID') ? "Payment required before activation" : "Mark Active & Provision"}
+                                title={!item.invoices?.some((inv: any) => inv.status === 'PAID') ? "Payment required before activation" : "Mark Active & Setup"}
                             >
                                 <CheckCircle className="w-4 h-4" />
                             </Button>
@@ -174,12 +174,12 @@ export default function AdminOrdersPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h1 className="text-3xl font-bold">{t("order_management") || "Order Management"}</h1>
-                        <p className="text-muted-foreground mt-1">{t("process_orders") || "Review and process new orders."}</p>
+                        <h1 className="text-3xl font-bold">Order Management</h1>
+                        <p className="text-muted-foreground mt-1">Review and process new orders.</p>
                     </div>
                     <Link href="/admin/orders/add" className="w-full md:w-auto">
                         <Button className="shadow-lg shadow-primary/20 gap-2 w-full md:w-auto">
-                            <Plus size={16} /> {t("add_new_order") || "Add New Order"}
+                            <Plus size={16} /> Add New Order
                         </Button>
                     </Link>
                 </div>
@@ -204,17 +204,17 @@ export default function AdminOrdersPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
                             <TabsList className="bg-secondary/50 p-1 rounded-xl h-auto">
-                                <TabsTrigger value="all" className="rounded-lg px-4 py-2 text-sm font-medium">{t("all_orders")}</TabsTrigger>
-                                <TabsTrigger value="pending" className="rounded-lg px-4 py-2 text-sm font-medium">{t("pending")}</TabsTrigger>
-                                <TabsTrigger value="completed" className="rounded-lg px-4 py-2 text-sm font-medium">{t("completed")}</TabsTrigger>
-                                <TabsTrigger value="fraud" className="rounded-lg px-4 py-2 text-sm font-medium" >{t("fraud")}</TabsTrigger>
+                                <TabsTrigger value="all" className="rounded-lg px-4 py-2 text-sm font-medium">All Orders</TabsTrigger>
+                                <TabsTrigger value="pending" className="rounded-lg px-4 py-2 text-sm font-medium">Pending</TabsTrigger>
+                                <TabsTrigger value="completed" className="rounded-lg px-4 py-2 text-sm font-medium">Completed</TabsTrigger>
+                                <TabsTrigger value="fraud" className="rounded-lg px-4 py-2 text-sm font-medium" >Fraud</TabsTrigger>
                             </TabsList>
                         </Tabs>
 
                         <div className="relative w-full md:w-72">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder={t("search_orders_placeholder") || "Search orders..."}
+                                placeholder="Search orders..."
                                 className="pl-10 h-10 rounded-xl bg-background/50 border-border/50"
                             />
                         </div>

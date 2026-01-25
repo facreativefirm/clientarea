@@ -6,17 +6,17 @@ import { Star, Quote } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function TestimonialsSection() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
 
     const testimonials = [
         {
-            content: t("testimonial_1"),
+            content: "Best hosting provider I have ever used. Support is top notch!",
             author: "Sarah Johnson",
             role: "Full Stack Developer",
             avatar: "SJ"
         },
         {
-            content: t("testimonial_2"),
+            content: "Migrating was super easy and my site is 3x faster now.",
             author: "Michael Chen",
             role: "Startup Founder",
             avatar: "MC"
@@ -33,8 +33,8 @@ export function TestimonialsSection() {
         <section className="py-24 bg-white border-t border-gray-50 overflow-hidden">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t("testimonials")}</h2>
-                    <p className="text-lg text-gray-500">{t("trusted_by")}</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Testimonials</h2>
+                    <p className="text-lg text-gray-500">Trusted by Developers</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -134,9 +134,9 @@ export default function ActivityLogsPage() {
                                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-black tracking-[0.2em] px-3">Omniscient Log Engine</Badge>
                                 </div>
                                 <h1 className="text-4xl font-extrabold tracking-tighter bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent italic">
-                                    {t("activity_stream")}
+                                    Activity Stream
                                 </h1>
-                                <p className="text-muted-foreground mt-1 text-lg font-medium">{t("log_engine_desc")}</p>
+                                <p className="text-muted-foreground mt-1 text-lg font-medium">Manage and resolve customer inquiries with enterprise velocity.</p>
                             </div>
                         </div>
 
@@ -145,7 +145,7 @@ export default function ActivityLogsPage() {
                             <div className="relative w-full md:w-96">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder={t("search_logs_placeholder")}
+                                    placeholder="Search Logs"
                                     className="pl-12 h-14 rounded-2xl bg-card/40 border-border/50 focus:border-primary/50 text-sm font-bold"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -153,7 +153,7 @@ export default function ActivityLogsPage() {
                             </div>
                             <div className="flex gap-4">
                                 <Button variant="outline" className="h-14 px-8 rounded-2xl bg-card/40 border-white/5 font-black uppercase text-xs tracking-widest gap-2">
-                                    <Filter size={18} /> {t("advanced_filters")}
+                                    <Filter size={18} /> Advanced Filters
                                 </Button>
                                 <Button
                                     variant="outline"
@@ -175,7 +175,7 @@ export default function ActivityLogsPage() {
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-32 gap-4">
                                     <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                                    <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">{t("aggregating_logs")}</p>
+                                    <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Aggregating Logs</p>
                                 </div>
                             ) : (
                                 <DataTable columns={columns} data={logs.filter(l => l.action.toLowerCase().includes(searchTerm.toLowerCase()) || l.description.toLowerCase().includes(searchTerm.toLowerCase()))} />

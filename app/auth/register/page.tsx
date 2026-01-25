@@ -19,6 +19,7 @@ const registerSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     phoneNumber: z.string().min(1, "Phone number is required"),
+    whatsAppNumber: z.string().min(1, "WhatsApp number is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -62,6 +63,7 @@ export default function RegisterPage() {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 phoneNumber: data.phoneNumber,
+                whatsAppNumber: data.whatsAppNumber,
                 resellerId: isReseller ? resellerId : null,
             });
 
@@ -129,10 +131,17 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="phoneNumber">Phone Number</Label>
-                            <Input id="phoneNumber" placeholder="+8801700000000" {...register("phoneNumber")} />
-                            {errors.phoneNumber && <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.phoneNumber.message}</p>}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="phoneNumber">Phone Number</Label>
+                                <Input id="phoneNumber" placeholder="+8801700000000" {...register("phoneNumber")} />
+                                {errors.phoneNumber && <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.phoneNumber.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="whatsAppNumber">WhatsApp Number</Label>
+                                <Input id="whatsAppNumber" placeholder="+8801700000000" {...register("whatsAppNumber")} />
+                                {errors.whatsAppNumber && <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.whatsAppNumber.message}</p>}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

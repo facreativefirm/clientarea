@@ -170,7 +170,7 @@ export function DomainTLDForm({ initialData, onSuccess, onCancel }: DomainTLDFor
             <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
                 {onCancel && (
                     <Button type="button" variant="ghost" onClick={onCancel} className="h-12 rounded-xl font-bold">
-                        {t("cancel")}
+                        Cancel
                     </Button>
                 )}
                 <Button type="submit" disabled={loading} className="h-12 rounded-xl px-8 font-black shadow-lg shadow-primary/20 gap-2">

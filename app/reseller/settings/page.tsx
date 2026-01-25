@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
 export default function ResellerSettingsPage() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
 
@@ -166,16 +166,16 @@ export default function ResellerSettingsPage() {
                                 <Tabs defaultValue="visuals" className="space-y-8">
                                     <TabsList className="bg-card/40 backdrop-blur-md p-1.5 rounded-2xl border border-border inline-flex h-auto">
                                         <TabsTrigger value="visuals" className="rounded-xl px-6 py-3 font-bold data-[state=active]:bg-primary transition-all">
-                                            <Palette size={18} className="mr-2" /> {t("visual_identity")}
+                                            <Palette size={18} className="mr-2" /> Visual Identity
                                         </TabsTrigger>
                                         <TabsTrigger value="assets" className="rounded-xl px-6 py-3 font-bold data-[state=active]:bg-primary transition-all">
-                                            <ImageIcon size={18} className="mr-2" /> {t("media_assets")}
+                                            <ImageIcon size={18} className="mr-2" /> Media Assets
                                         </TabsTrigger>
                                         <TabsTrigger value="domain" className="rounded-xl px-6 py-3 font-bold data-[state=active]:bg-primary transition-all">
-                                            <Globe size={18} className="mr-2" /> {t("domain_seo")}
+                                            <Globe size={18} className="mr-2" /> Domain & SEO
                                         </TabsTrigger>
                                         <TabsTrigger value="developer" className="rounded-xl px-6 py-3 font-bold data-[state=active]:bg-primary transition-all">
-                                            <Code size={18} className="mr-2" /> {t("custom_dev")}
+                                            <Code size={18} className="mr-2" /> Custom Dev
                                         </TabsTrigger>
                                     </TabsList>
 
@@ -348,7 +348,7 @@ export default function ResellerSettingsPage() {
                                     <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
                                         <div className="flex items-center gap-2">
                                             <Sliders className="text-primary" size={20} />
-                                            <h3 className="text-lg font-black">{t("live_preview")}</h3>
+                                            <h3 className="text-lg font-black">Live Preview</h3>
                                         </div>
                                         <Badge className="bg-emerald-500/10 text-emerald-500 border-none px-3 rounded-full font-black text-[10px]">Real-Time</Badge>
                                     </div>

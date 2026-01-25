@@ -31,7 +31,12 @@ export default function LoginPage() {
 
     React.useEffect(() => {
         if (isAuthenticated && user) {
-            if (user.userType === "ADMIN" || user.userType === "SUPER_ADMIN") {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+
+            if (redirect && redirect.startsWith('/')) {
+                router.push(redirect);
+            } else if (user.userType === "ADMIN" || user.userType === "SUPER_ADMIN") {
                 router.push("/admin");
             } else if (user.userType === "RESELLER") {
                 router.push("/reseller");

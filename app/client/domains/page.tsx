@@ -105,7 +105,7 @@ export default function ClientDomainsPage() {
                 <Button variant="outline" size="sm" asChild className="h-9 px-4 rounded-lg font-bold bg-secondary/30 border-border hover:bg-primary hover:text-white transition-all gap-2 text-[10px] uppercase tracking-widest">
                     <Link href={`/client/domains/${item.id}`}>
                         <Settings size={14} />
-                        {t("manage")}
+                        Manage
                         <ArrowRight size={12} className="opacity-50" />
                     </Link>
                 </Button>
@@ -124,13 +124,13 @@ export default function ClientDomainsPage() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
-                                    {t("my_domains") || "My Domains"}
+                                    My Domains
                                 </h1>
                             </div>
                             <Button asChild className="h-12 w-full sm:w-auto px-8 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2">
                                 <Link href="/client/store">
                                     <PlusCircle size={20} />
-                                    {t("buy_new_domain") || "Register New Domain"}
+                                    Register New Domain
                                 </Link>
                             </Button>
                         </div>
@@ -140,7 +140,7 @@ export default function ClientDomainsPage() {
                             <div className="relative w-full md:w-80">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder={t("search_domains_placeholder") || "Search domains..."}
+                                    placeholder="Search domains..."
                                     className="pl-11 h-12 rounded-xl bg-card border-border/50 focus:border-primary/50 transition-all font-semibold"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}

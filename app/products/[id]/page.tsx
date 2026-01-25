@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
             monthlyPrice: product.monthlyPrice
         };
         addItem(item);
-        toast.success(`${product.name} ${t("added_to_cart")}`);
+        toast.success(`${product.name} added to cart.`);
         router.push("/checkout");
     };
 

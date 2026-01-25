@@ -53,7 +53,7 @@ export default function ContactPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6"
                         >
-                            {t("get_in_touch")}
+                            Get in Touch
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
@@ -61,7 +61,7 @@ export default function ContactPage() {
                             transition={{ delay: 0.1 }}
                             className="text-xl text-gray-500 max-w-2xl mx-auto"
                         >
-                            {t("contact_desc")}
+                            Contact Us
                         </motion.p>
                     </div>
 
@@ -75,25 +75,25 @@ export default function ContactPage() {
                             <form className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-700 ml-1">{t("your_name")}</label>
+                                        <label className="text-sm font-bold text-gray-700 ml-1">Your Name</label>
                                         <Input placeholder="John Doe" className="rounded-2xl h-14 bg-gray-50 border-transparent focus:bg-white focus:ring-primary/20 transition-all border-gray-100" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-700 ml-1">{t("your_email")}</label>
+                                        <label className="text-sm font-bold text-gray-700 ml-1">Your Email</label>
                                         <Input type="email" placeholder="john@example.com" className="rounded-2xl h-14 bg-gray-50 border-transparent focus:bg-white focus:ring-primary/20 transition-all border-gray-100" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">{t("subject")}</label>
+                                    <label className="text-sm font-bold text-gray-700 ml-1">Subject</label>
                                     <Input placeholder="How can we help?" className="rounded-2xl h-14 bg-gray-50 border-transparent focus:bg-white focus:ring-primary/20 transition-all border-gray-100" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">{t("message")}</label>
+                                    <label className="text-sm font-bold text-gray-700 ml-1">Message</label>
                                     <Textarea placeholder="Tell us more about your request..." className="rounded-2xl min-h-[160px] bg-gray-50 border-transparent focus:bg-white focus:ring-primary/20 transition-all border-gray-100" />
                                 </div>
                                 <Button className="w-full md:w-auto px-10 h-14 rounded-2xl font-bold bg-[#f37021] hover:bg-[#d9621c] text-white shadow-lg shadow-[#f37021]/20 hover:scale-[1.02] active:scale-100 transition-all">
                                     <Send className="w-4 h-4 mr-2" />
-                                    {t("send_message")}
+                                    Send Message
                                 </Button>
                             </form>
                         </motion.div>

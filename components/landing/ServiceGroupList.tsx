@@ -13,7 +13,7 @@ import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useRouter } from "next/navigation";
 
 export function ServiceGroupList() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const router = useRouter();
     const { formatPrice } = useSettingsStore();
     const [groups, setGroups] = useState<any[]>([]);
@@ -70,9 +70,9 @@ export function ServiceGroupList() {
                 transition={{ duration: 0.3, ease: "easeOut" }}
             >
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t("choose_solution")}</h2>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Choose Your Solution</h2>
                     <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                        {t("solution_desc")}
+                        Explore our premium hosting and infrastructure offerings.
                     </p>
                 </div>
 
@@ -117,21 +117,21 @@ export function ServiceGroupList() {
 
                                 {minPrice !== null && (
                                     <div className="mb-4">
-                                        <span className="text-sm font-medium text-gray-400">{t("starting_at")} </span>
+                                        <span className="text-sm font-medium text-gray-400">Starting at </span>
                                         <span className="text-lg font-black text-[#f37021]">{formatPrice(minPrice)}</span>
                                     </div>
                                 )}
 
                                 <p className="text-gray-500 mb-8 flex-1 leading-relaxed">
-                                    {group.description || `${t("view_all")} ${group.name} ${t("pricing")}.`}
+                                    {group.description || `View all ${group.name} pricing.`}
                                 </p>
 
                                 <div className="w-full flex items-center justify-between mt-auto pt-6 border-t border-gray-100">
                                     <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                        {productCount} {t("plans_available")}
+                                        {productCount} Plans Available
                                     </span>
                                     <div className="flex items-center gap-2 text-[#f37021] font-bold text-sm group-hover:gap-3 transition-all duration-300">
-                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">{t("see_plans")}</span>
+                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">See Plans</span>
                                         <div className="w-10 h-10 rounded-full bg-[#f37021]/5 flex items-center justify-center group-hover:bg-[#f37021] group-hover:text-white transition-all duration-300">
                                             <ArrowRight size={18} />
                                         </div>

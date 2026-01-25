@@ -33,8 +33,8 @@ export default function AddClientPage() {
                                     </Button>
                                 </Link>
                                 <div>
-                                    <h1 className="text-3xl font-black tracking-tight">{t("add_new_client") || "Add New Client"}</h1>
-                                    <p className="text-muted-foreground">{t("onboard_new_client_desc") || "Initialize a new client profile in the system."}</p>
+                                    <h1 className="text-3xl font-black tracking-tight">Add New Client</h1>
+                                    <p className="text-muted-foreground">Initialize a new client profile in the system.</p>
                                 </div>
                             </div>
                         </div>

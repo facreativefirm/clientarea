@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/language-provider";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 
 export function Footer() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const { settings } = useSettingsStore();
 
     return (
@@ -24,7 +24,7 @@ export function Footer() {
                             </span>
                         </div>
                         <p className="text-gray-500 leading-relaxed text-sm">
-                            BDIX-Optimized NVMe SSD Hosting for ultimate speed. {t("professional_support")} is our impression.
+                            BDIX-Optimized NVMe SSD Hosting for ultimate speed. Professional support is our impression.
                         </p>
                         <div className="flex gap-4">
                             {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
@@ -36,12 +36,12 @@ export function Footer() {
                     </div>
 
                     <div>
-                        <h4 className="font-bold text-gray-900 text-lg mb-6">{t("services")}</h4>
+                        <h4 className="font-bold text-gray-900 text-lg mb-6">Services</h4>
                         <ul className="space-y-3 text-sm">
                             {[
-                                { name: t("hosting"), href: "/#hosting" },
-                                { name: t("domains"), href: "/client/domains" },
-                                { name: t("vps_servers"), href: "/#hosting" },
+                                { name: "Hosting", href: "/#hosting" },
+                                { name: "Domains", href: "/client/domains" },
+                                { name: "VPS Servers", href: "/#hosting" },
                                 { name: "SSL Certificates", href: "/#services" },
                                 { name: "Reseller Program", href: "/reseller" }
                             ].map((item) => (
@@ -56,14 +56,14 @@ export function Footer() {
                     </div>
 
                     <div>
-                        <h4 className="font-bold text-gray-900 text-lg mb-6">{t("support")}</h4>
+                        <h4 className="font-bold text-gray-900 text-lg mb-6">Support</h4>
                         <ul className="space-y-3 text-sm">
                             {[
-                                { name: t("about_us"), href: "/about" },
-                                { name: t("contact_us"), href: "/contact" },
-                                { name: t("privacy_policy"), href: "/privacy" },
-                                { name: t("terms_of_service"), href: "/terms" },
-                                { name: t("faq"), href: "/#faq" }
+                                { name: "About Us", href: "/about" },
+                                { name: "Contact Us", href: "/contact" },
+                                { name: "Privacy Policy", href: "/privacy" },
+                                { name: "Terms of Service", href: "/terms" },
+                                { name: "FAQ", href: "/#faq" }
                             ].map((item) => (
                                 <li key={item.name}>
                                     <Link href={item.href} className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 group">
@@ -77,11 +77,11 @@ export function Footer() {
 
                     <div>
                         <h4 className="font-bold text-gray-900 text-lg mb-6">Newsletter</h4>
-                        <p className="text-gray-500 text-sm mb-4">{t("contact_desc")}</p>
+                        <p className="text-gray-500 text-sm mb-4">Get the latest updates and offers.</p>
                         <form className="flex gap-2">
                             <input
                                 type="email"
-                                placeholder={t("your_email")}
+                                placeholder="Your Email"
                                 className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                             />
                             <button className="bg-secondary text-white rounded-xl px-4 font-bold hover:bg-secondary/90 transition-colors shadow-lg shadow-secondary/20">

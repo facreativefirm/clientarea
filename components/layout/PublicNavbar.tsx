@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 
 export function PublicNavbar() {
     const { user, isAuthenticated } = useAuthStore();
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const { settings } = useSettingsStore();
     const { items } = useCartStore();
 
@@ -36,10 +36,10 @@ export function PublicNavbar() {
     }, []);
 
     const navLinks = [
-        { name: t("home"), href: "/" },
-        { name: t("services"), href: "/#hosting", hasDropdown: true },
-        { name: t("about_us"), href: "/about" },
-        { name: t("contact_us"), href: "/contact" },
+        { name: "Home", href: "/" },
+        { name: "Services", href: "/#hosting", hasDropdown: true },
+        { name: "About Us", href: "/about" },
+        { name: "Contact Us", href: "/contact" },
     ];
 
     const getDashboardLink = () => {
@@ -50,8 +50,8 @@ export function PublicNavbar() {
     };
 
     const getDashboardLabel = () => {
-        if (user?.userType === 'ADMIN' || user?.userType === 'SUPER_ADMIN') return t("admin_panel") || "Admin Panel";
-        return t("client_area") || "Client Area";
+        if (user?.userType === 'ADMIN' || user?.userType === 'SUPER_ADMIN') return "Admin Panel";
+        return "Client Area";
     };
 
     return (
@@ -142,7 +142,7 @@ export function PublicNavbar() {
                             </Link>
                             <Link href="/auth/register">
                                 <Button className="rounded-xl font-bold bg-[#f37021] text-white shadow-lg shadow-[#f37021]/20 hover:bg-[#d9621c] transition-all px-6">
-                                    {t("get_started")}
+                                    Get Started
                                 </Button>
                             </Link>
                         </>
@@ -216,7 +216,7 @@ export function PublicNavbar() {
                                             </Link>
                                             <Link href="/auth/register" className="w-full">
                                                 <Button className="w-full rounded-xl font-bold py-6 text-base shadow-lg shadow-[#f37021]/20 bg-[#f37021] hover:bg-[#d9621c] text-white">
-                                                    {t("get_started")}
+                                                    Get Started
                                                 </Button>
                                             </Link>
                                         </>

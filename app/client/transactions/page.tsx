@@ -104,7 +104,7 @@ export default function TransactionsPage() {
             <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">{t("transactions") || "Transaction History"}</h1>
+                        <h1 className="text-3xl font-bold">Transaction History</h1>
                         <p className="text-muted-foreground">View your recent payments and their status.</p>
                     </div>
                 </div>

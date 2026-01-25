@@ -88,8 +88,8 @@ export default function AddOrderPage() {
                                     </Button>
                                 </Link>
                                 <div>
-                                    <h1 className="text-3xl font-bold">{t("add_new_order") || "Add New Order"}</h1>
-                                    <p className="text-muted-foreground mt-1">{t("manual_order_desc") || "Place a manual order on behalf of a client."}</p>
+                                    <h1 className="text-3xl font-bold">Add New Order</h1>
+                                    <p className="text-muted-foreground mt-1">Place a manual order on behalf of a client.</p>
                                 </div>
                             </div>
                         </div>
@@ -104,11 +104,11 @@ export default function AddOrderPage() {
                                 <div className="glass rounded-[2rem] p-8 space-y-6">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <Package className="text-primary" size={20} />
-                                        {t("order_items") || "Order Items"}
+                                        Order Items
                                     </h3>
 
                                     <div className="space-y-2">
-                                        <Label>{t("select_client") || "Select Client"}</Label>
+                                        <Label>Select Client</Label>
                                         <ClientSelector
                                             value={form.clientId}
                                             onChange={val => setForm({ ...form, clientId: val })}
@@ -116,7 +116,7 @@ export default function AddOrderPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>{t("select_product") || "Select Product"}</Label>
+                                        <Label>Select Product</Label>
                                         <ProductSelector
                                             value={form.productId}
                                             onChange={(val, prod) => {
@@ -133,7 +133,7 @@ export default function AddOrderPage() {
                                             className="space-y-4 pt-4 border-t border-white/5"
                                         >
                                             <div className="space-y-2">
-                                                <Label>{t("domain_name") || "Domain Name (Optional)"}</Label>
+                                                <Label>Domain Name (Optional)</Label>
                                                 <Input
                                                     value={form.domainName}
                                                     onChange={e => setForm({ ...form, domainName: e.target.value })}
@@ -146,7 +146,7 @@ export default function AddOrderPage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>{t("billing_cycle") || "Billing Cycle"}</Label>
+                                                <Label>Billing Cycle</Label>
                                                 <Select
                                                     value={form.billingCycle}
                                                     onValueChange={val => setForm({ ...form, billingCycle: val })}
@@ -169,11 +169,11 @@ export default function AddOrderPage() {
                                 <div className="glass rounded-[2rem] p-8 space-y-6">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <CreditCard className="text-primary" size={20} />
-                                        {t("payment_billing") || "Payment & Billing"}
+                                        Payment & Billing
                                     </h3>
 
                                     <div className="space-y-2">
-                                        <Label>{t("payment_method") || "Payment Method"}</Label>
+                                        <Label>Payment Method</Label>
                                         <Select
                                             value={form.paymentMethod}
                                             onValueChange={val => setForm({ ...form, paymentMethod: val })}
@@ -191,7 +191,7 @@ export default function AddOrderPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>{t("promo_code") || "Promo Code"}</Label>
+                                        <Label>Promo Code</Label>
                                         <Input
                                             value={form.promoCode}
                                             onChange={e => setForm({ ...form, promoCode: e.target.value })}
@@ -205,7 +205,7 @@ export default function AddOrderPage() {
                             <div className="flex justify-end gap-3">
                                 <Link href="/admin/orders">
                                     <Button type="button" variant="outline" className="h-12 px-6 rounded-xl font-medium">
-                                        {t("cancel")}
+                                        Cancel
                                     </Button>
                                 </Link>
                                 <Button
@@ -213,7 +213,7 @@ export default function AddOrderPage() {
                                     className="h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2"
                                 >
                                     {loading ? <Loader2 className="animate-spin" size={18} /> : <ShoppingCart size={18} />}
-                                    {t("place_order") || "Place Order"}
+                                    Place Order
                                 </Button>
                             </div>
                         </form>

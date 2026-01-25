@@ -31,7 +31,7 @@ interface PricingCardProps {
 
 export function PricingCard({ product, index }: PricingCardProps) {
     const { formatPrice } = useSettingsStore();
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const router = useRouter();
     const { addItem } = useCartStore();
 
@@ -98,7 +98,7 @@ export function PricingCard({ product, index }: PricingCardProps) {
             annualPrice: product.annualPrice
         };
         addItem(item);
-        toast.success(`${product.name} ${t("added_to_cart")}`);
+        toast.success(`${product.name} added to cart.`);
         router.push("/checkout");
     };
 

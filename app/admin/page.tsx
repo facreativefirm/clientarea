@@ -16,8 +16,13 @@ import {
     DollarSign,
     Loader2,
     RefreshCw,
-    Search
+    Search,
+    Zap,
+    HeartPulse,
+    Plus
 } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -33,8 +38,9 @@ import {
     Pie
 } from "recharts";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice, getCurrencySymbol } from "@/lib/utils";
 import api from "@/lib/api";
+import { useSettingsStore } from "@/lib/store/settingsStore";
 
 const MetricCard = ({ title, value, change, icon: Icon, trend, loading }: any) => (
     <motion.div
@@ -75,9 +81,15 @@ export default function AdminDashboard() {
     const [clientStats, setClientStats] = useState<any[]>([]);
     const [activityLogs, setActivityLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [runningCron, setRunningCron] = useState(false);
+
+    const { settings, fetchSettings } = useSettingsStore();
+    const currency = settings.defaultCurrency || 'BDT';
+    const currencySymbol = getCurrencySymbol(currency);
 
     useEffect(() => {
         setMounted(true);
+        fetchSettings();
         fetchDashboardData();
     }, []);
 
@@ -120,6 +132,20 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleRunCron = async () => {
+        if (!confirm("Force run all maintenance tasks? This will process expirations, merge invoices and send notifications.")) return;
+        setRunningCron(true);
+        try {
+            const res = await api.post("/system/run-cron");
+            toast.success(res.data.message);
+            fetchDashboardData();
+        } catch (error) {
+            toast.error("Failed to execute maintenance cycle");
+        } finally {
+            setRunningCron(false);
+        }
+    };
+
     if (!mounted) return null;
 
     return (
@@ -135,22 +161,22 @@ export default function AdminDashboard() {
                                 Command <span className="text-primary">Center</span>
                             </h1>
                             <p className="text-muted-foreground text-sm md:text-base font-medium">
-                                {t("operational_intelligence") || "Operational Intelligence & System Overview"}
+                                Operational Intelligence & System Overview
                             </p>
                         </div>
 
                         {/* Metrics Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <MetricCard
-                                title={t("net_revenue") || "Net Revenue"}
-                                value={`$${(Number(stats?.totalRevenue?._sum?.amountPaid || 0) - Number(stats?.payouts?.total || 0)).toFixed(2)}`}
-                                change={stats?.payouts?.total > 0 ? `-$${stats.payouts.total.toFixed(0)} payouts` : "+12.5%"}
+                                title="Net Revenue"
+                                value={formatPrice(Number(stats?.totalRevenue?._sum?.amountPaid || 0) - Number(stats?.payouts?.total || 0), currency)}
+                                change={stats?.payouts?.total > 0 ? `-${formatPrice(stats.payouts.total, currency)} payouts` : "+12.5%"}
                                 icon={DollarSign}
                                 trend={stats?.payouts?.total > 0 ? "down" : "up"}
                                 loading={loading}
                             />
                             <MetricCard
-                                title={t("active_services")}
+                                title="Active Services"
                                 value={stats?.activeServices || '0'}
                                 change="+8.2%"
                                 icon={Users}
@@ -158,7 +184,7 @@ export default function AdminDashboard() {
                                 loading={loading}
                             />
                             <MetricCard
-                                title={t("pending_orders")}
+                                title="Pending Orders"
                                 value={stats?.pendingOrders || '0'}
                                 change="-5.4%"
                                 icon={CreditCard}
@@ -166,7 +192,7 @@ export default function AdminDashboard() {
                                 loading={loading}
                             />
                             <MetricCard
-                                title={t("open_tickets")}
+                                title="Open Tickets"
                                 value={stats?.pendingTickets || '0'}
                                 change="+2.1%"
                                 icon={Ticket}
@@ -185,11 +211,11 @@ export default function AdminDashboard() {
                             >
                                 <div className="flex items-center justify-between mb-8">
                                     <div>
-                                        <h3 className="text-xl font-bold">{t("revenue_growth")}</h3>
-                                        <p className="text-sm text-muted-foreground">{t("monthly_performance")}</p>
+                                        <h3 className="text-xl font-bold">Revenue Growth</h3>
+                                        <p className="text-sm text-muted-foreground">Monthly Performance</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button className="px-3 py-1 text-xs font-medium rounded-lg bg-primary/10 text-primary border border-primary/20">{t("monthly")}</button>
+                                        <button className="px-3 py-1 text-xs font-medium rounded-lg bg-primary/10 text-primary border border-primary/20">Monthly</button>
                                         <button className="px-3 py-1 text-xs font-medium rounded-lg text-muted-foreground hover:bg-muted transition-colors" onClick={fetchDashboardData}>
                                             <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
                                         </button>
@@ -229,7 +255,7 @@ export default function AdminDashboard() {
                                                     axisLine={false}
                                                     tickLine={false}
                                                     tick={{ fill: "#64748b", fontSize: 12 }}
-                                                    tickFormatter={(value) => `$${value}`}
+                                                    tickFormatter={(value) => `${currencySymbol}${value}`}
                                                 />
                                                 <Tooltip
                                                     contentStyle={{
@@ -240,9 +266,9 @@ export default function AdminDashboard() {
                                                         boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
                                                     }}
                                                     formatter={(value: any, name: string | any) => {
-                                                        if (name === "revenue") return [`$${value}`, "Net Revenue"];
-                                                        if (name === "gross") return [`$${value}`, "Gross Revenue"];
-                                                        if (name === "payouts") return [`$${value}`, "Total Payouts"];
+                                                        if (name === "revenue") return [`${currencySymbol}${value}`, "Net Revenue"];
+                                                        if (name === "gross") return [`${currencySymbol}${value}`, "Gross Revenue"];
+                                                        if (name === "payouts") return [`${currencySymbol}${value}`, "Total Payouts"];
                                                         return [value, name];
                                                     }}
                                                 />
@@ -266,8 +292,8 @@ export default function AdminDashboard() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-card border border-border rounded-2xl p-6 md:p-10 shadow-sm"
                             >
-                                <h3 className="text-xl font-bold mb-1">{t("client_distribution")}</h3>
-                                <p className="text-sm text-muted-foreground mb-8">{t("client_segments")}</p>
+                                <h3 className="text-xl font-bold mb-1">Client Distribution</h3>
+                                <p className="text-sm text-muted-foreground mb-8">Client Segments</p>
                                 <div className="h-[250px] w-full relative">
                                     {loading ? (
                                         <div className="flex items-center justify-center h-full">
@@ -301,7 +327,7 @@ export default function AdminDashboard() {
                                             </ResponsiveContainer>
                                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                                 <span className="text-3xl font-bold">{clientStats.reduce((acc, curr) => acc + curr.value, 0)}</span>
-                                                <span className="text-xs text-muted-foreground">{t("total")}</span>
+                                                <span className="text-xs text-muted-foreground">Total</span>
                                             </div>
                                         </>
                                     )}
@@ -332,9 +358,9 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <Activity className="text-primary" size={20} />
-                                        {t("system_activity")}
+                                        System Activity
                                     </h3>
-                                    <button className="text-xs text-primary font-medium hover:underline">{t("view_all")}</button>
+                                    <button className="text-xs text-primary font-medium hover:underline">View All</button>
                                 </div>
                                 <div className="space-y-6">
                                     {loading ? (
@@ -368,7 +394,7 @@ export default function AdminDashboard() {
                                     ) : (
                                         <EmptyState
                                             icon={Activity}
-                                            title={t("no_recent_activity") || "No recent activity"}
+                                            title="No recent activity"
                                             description="System is operational and quiet. No logs found for the current period."
                                         />
                                     )}
@@ -381,17 +407,18 @@ export default function AdminDashboard() {
                                 className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm"
                             >
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold">{t("quick_actions")}</h3>
+                                    <h3 className="text-xl font-bold">Quick Actions</h3>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     {[
-                                        { name: t("add_client"), color: "bg-blue-500/10 text-blue-500", icon: Users },
-                                        { name: t("create_invoice"), color: "bg-emerald-500/10 text-emerald-500", icon: CreditCard },
-                                        { name: t("new_ticket"), color: "bg-amber-500/10 text-amber-500", icon: Ticket },
-                                        { name: t("system_config"), color: "bg-purple-500/10 text-purple-500", icon: Activity },
+                                        { name: "Add Client", color: "bg-blue-500/10 text-blue-500", icon: Users, href: "/admin/clients/add" },
+                                        { name: "Create Invoice", color: "bg-emerald-500/10 text-emerald-500", icon: CreditCard, href: "/admin/billing/create" },
+                                        { name: t("new_ticket"), color: "bg-amber-500/10 text-amber-500", icon: Ticket, href: "/admin/support/new" },
+                                        { name: t("system_config"), color: "bg-purple-500/10 text-purple-500", icon: Activity, href: "/admin/settings" },
                                     ].map((item, iAction: number) => (
-                                        <button
+                                        <Link
                                             key={iAction}
+                                            href={item.href}
                                             className={cn(
                                                 "flex flex-col items-center justify-center p-6 rounded-2xl border border-transparent hover:border-border transition-all duration-300 gap-3 group",
                                                 item.color
@@ -399,13 +426,28 @@ export default function AdminDashboard() {
                                         >
                                             <item.icon size={28} className="group-hover:scale-110 transition-transform" />
                                             <span className="text-sm font-bold">{item.name}</span>
-                                        </button>
+                                        </Link>
                                     ))}
+                                    <button
+                                        onClick={handleRunCron}
+                                        disabled={runningCron}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center p-6 rounded-2xl border border-transparent hover:border-border transition-all duration-300 gap-3 group col-span-2",
+                                            "bg-primary/10 text-primary border-primary/20 shadow-lg shadow-primary/5"
+                                        )}
+                                    >
+                                        {runningCron ? (
+                                            <Loader2 className="w-7 h-7 animate-spin" />
+                                        ) : (
+                                            <HeartPulse size={28} className="group-hover:scale-110 transition-transform" />
+                                        )}
+                                        <span className="text-sm font-bold tracking-tight">Run Maintenance Cycle</span>
+                                    </button>
                                 </div>
                                 <div className="mt-8 p-6 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl border border-primary/20">
-                                    <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2">{t("notice_board")}</h4>
+                                    <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2">Notice Board</h4>
                                     <p className="text-sm text-foreground leading-relaxed font-medium">
-                                        {t("maintenance_notice")}
+                                        Maintenance notice
                                     </p>
                                 </div>
                             </motion.div>

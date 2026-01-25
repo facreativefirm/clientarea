@@ -30,13 +30,68 @@ import { IntelliSearch } from "@/components/admin/IntelliSearch";
 
 import { useUIStore } from "@/lib/store/uiStore";
 
+import { toast } from "sonner";
+import { socketService } from "@/lib/socket";
+
 export function Navbar() {
     const router = useRouter();
     const { theme, setTheme } = useTheme();
-    const { language, toggleLanguage, t } = useLanguage();
+    const { language, toggleLanguage } = useLanguage();
     const { user, logout } = useAuthStore();
     const { items } = useCartStore();
     const { toggleSidebar } = useUIStore();
+
+    // WebSocket Integration (Admin Alerts & Notifications)
+    React.useEffect(() => {
+        if (!user) return;
+
+        const socket = socketService.connect();
+
+        // 1. Specific Admin Ticket Alerts
+        const handleNewTicket = (ticket: any) => {
+            if (!['ADMIN', 'SUPER_ADMIN', 'STAFF'].includes(user.userType)) return;
+
+            toast.info(`New Support Ticket`, {
+                description: `#${ticket.ticketNumber}: ${ticket.subject}`,
+                action: {
+                    label: "View",
+                    onClick: () => router.push(`/admin/support/${ticket.id}`)
+                },
+                duration: 10000
+            });
+
+            // Alert sound
+            const alertSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+            alertSound.play().catch(() => { });
+        };
+
+        // 2. General Notifications (for everyone)
+        const handleNewNotification = (notification: any) => {
+            // Support chat handles its own notifications, so we might want to skip those here 
+            // if we don't want duplicate toasts. But for other things like billing/orders, it's great.
+
+            toast(notification.title, {
+                description: notification.message,
+                icon: <Shield className="w-4 h-4 text-primary" />,
+                action: notification.link ? {
+                    label: "View",
+                    onClick: () => router.push(notification.link!)
+                } : undefined,
+                duration: 8000
+            });
+
+            const alertSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+            alertSound.play().catch(() => { });
+        };
+
+        socket.on('new_ticket', handleNewTicket);
+        socket.on('new_notification', handleNewNotification);
+
+        return () => {
+            socket.off('new_ticket', handleNewTicket);
+            socket.off('new_notification', handleNewNotification);
+        };
+    }, [user, router]);
 
     const handleLogout = () => {
         logout();
@@ -70,7 +125,7 @@ export function Navbar() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                             type="text"
-                            placeholder={t("search")}
+                            placeholder="Search"
                             className="bg-secondary/50 border-none rounded-full pl-10 pr-4 py-1.5 text-sm focus:ring-1 focus:ring-primary w-64 transition-all"
                         />
                     </div>
@@ -159,7 +214,7 @@ export function Navbar() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                             <LogOut className="mr-2 h-4 w-4" />
-                            <span>Log out</span>
+                            <span>Log Out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

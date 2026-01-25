@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/language-provider";
 import { motion } from "framer-motion";
 
 export default function TermsPage() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
 
     const sections = [
         {
@@ -47,9 +47,9 @@ export default function TermsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16"
                     >
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 border-b-4 border-[#f37021] inline-block">{t("terms_of_service")}</h1>
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 border-b-4 border-[#f37021] inline-block">Terms of Service</h1>
                         <p className="text-gray-500 uppercase tracking-widest text-sm font-bold">
-                            {t("last_updated")}: January 15, 2026
+                            Last Updated: January 15, 2026
                         </p>
                     </motion.div>
 

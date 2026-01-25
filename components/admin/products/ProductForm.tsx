@@ -13,7 +13,7 @@ import { Save, Loader2, Wand2, Settings, DollarSign, Package, Server as ServerIc
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/lib/store/settingsStore";
-import { getCurrencySymbol } from "@/lib/utils";
+import { getCurrencySymbol, formatLabel } from "@/lib/utils";
 import { ServiceSelector } from "@/components/shared/ServiceSelector";
 
 interface ProductFormProps {
@@ -24,7 +24,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ onSuccess, onCancel, className, serviceId }: ProductFormProps) {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const { settings } = useSettingsStore();
     const currencyCode = settings.defaultCurrency || 'BDT';
     const symbol = getCurrencySymbol(currencyCode);
@@ -233,7 +233,7 @@ export function ProductForm({ onSuccess, onCancel, className, serviceId }: Produ
                                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${form.pricingModel === m ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-accent"
                                     }`}
                             >
-                                {m}
+                                {formatLabel(m)}
                             </button>
                         ))}
                     </div>
@@ -264,7 +264,7 @@ export function ProductForm({ onSuccess, onCancel, className, serviceId }: Produ
                     <div className="p-4 bg-secondary/10 rounded-xl border border-border flex items-center justify-between">
                         <div className="space-y-1">
                             <Label className="font-bold">Auto Setup</Label>
-                            <p className="text-xs text-muted-foreground">Provision service automatically after payment.</p>
+                            <p className="text-xs text-muted-foreground">Setup service automatically after payment.</p>
                         </div>
                         <Checkbox checked={form.autoSetup} onChange={(e) => setForm({ ...form, autoSetup: e.target.checked })} />
                     </div>

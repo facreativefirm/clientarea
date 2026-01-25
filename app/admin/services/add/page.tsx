@@ -32,8 +32,8 @@ function AddServiceContent() {
                                 </Button>
                             </Link>
                             <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{t("provision_new") || "Provision New Service"}</h1>
-                                <p className="text-muted-foreground">{t("services_hub") || "Manually add a service to a client account."}</p>
+                                <h1 className="text-3xl font-bold tracking-tight">Add New Service</h1>
+                                <p className="text-muted-foreground">Manually add a service to a client account.</p>
                             </div>
                         </div>
 

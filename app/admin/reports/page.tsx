@@ -90,8 +90,8 @@ export default function AdminReportsPage() {
             <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">{t("reports") || "Reports"}</h1>
-                        <p className="text-muted-foreground">{t("admin_reports_desc") || "View system-wide financial and usage statistics."}</p>
+                        <h1 className="text-3xl font-bold">Reports</h1>
+                        <p className="text-muted-foreground">View system-wide financial and usage statistics.</p>
                     </div>
                 </div>
 
@@ -102,7 +102,7 @@ export default function AdminReportsPage() {
                                 <DollarSign className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t("net_revenue") || "Net Revenue"}</p>
+                                <p className="text-sm text-muted-foreground">Net Revenue</p>
                                 <h3 className="text-2xl font-bold">
                                     {currencySymbol}{revenueData?.totalRevenue?.toFixed(2) || '0.00'}
                                 </h3>
@@ -120,7 +120,7 @@ export default function AdminReportsPage() {
                                 <Users className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t("total_clients") || "Total Clients"}</p>
+                                <p className="text-sm text-muted-foreground">Total Clients</p>
                                 <h3 className="text-2xl font-bold">
                                     {clientStats?.totalClients || 0}
                                 </h3>
@@ -128,7 +128,7 @@ export default function AdminReportsPage() {
                         </div>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t("active") || "Active"}</span>
+                                <span className="text-muted-foreground">Active</span>
                                 <span className="font-bold text-emerald-500">
                                     {clientStats?.activeClients || 0}
                                 </span>
@@ -148,7 +148,7 @@ export default function AdminReportsPage() {
                                 <TrendingUp className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t("monthly_growth") || "Monthly Growth"}</p>
+                                <p className="text-sm text-muted-foreground">Monthly Growth</p>
                                 <h3 className="text-2xl font-bold">
                                     {clientStats?.monthlyGrowth || 0}%
                                 </h3>
@@ -190,22 +190,22 @@ export default function AdminReportsPage() {
                     </div>
 
                     <div className="glass rounded-[2rem] p-8">
-                        <h3 className="text-xl font-bold mb-6">{t("client_acquisition") || "Client Acquisition"}</h3>
+                        <h3 className="text-xl font-bold mb-6">Client Acquisition</h3>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("this_month") || "This Month"}</span>
+                                <span className="text-muted-foreground">This Month</span>
                                 <span className="font-bold">
                                     {clientStats?.newThisMonth || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("last_month") || "Last Month"}</span>
+                                <span className="text-muted-foreground">Last Month</span>
                                 <span className="font-bold">
                                     {clientStats?.newLastMonth || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors">
-                                <span className="text-muted-foreground">{t("avg_month") || "Avg. per Month"}</span>
+                                <span className="text-muted-foreground">Avg. per Month</span>
                                 <span className="font-bold">
                                     {clientStats?.averagePerMonth || 0}
                                 </span>

@@ -41,7 +41,7 @@ interface MenuItem {
 export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
-    const { t } = useLanguage();
+    const { language, toggleLanguage } = useLanguage();
     const { user, logout } = useAuthStore();
     const { isSidebarOpen, setSidebarOpen } = useUIStore();
     const [openMenus, setOpenMenus] = useState<string[]>([]);
@@ -63,65 +63,66 @@ export function Sidebar() {
         if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
             return [
                 // ... (existing admin menus)
-                { name: t("dashboard"), icon: LayoutDashboard, href: "/admin" },
+                { name: "Dashboard", icon: LayoutDashboard, href: "/admin" },
                 {
                     name: "User Management",
                     icon: Users,
                     children: [
                         { name: "Internal Requests", href: "/admin/applications" },
-                        { name: t("view_all_clients"), href: "/admin/clients" },
+                        { name: "View All Clients", href: "/admin/clients" },
                         { name: "Resellers", href: "/admin/resellers" },
-                        { name: t("add_new_client"), href: "/admin/clients/add" },
-                        { name: t("client_groups"), href: "/admin/clients/groups" },
+                        { name: "Add New Client", href: "/admin/clients/add" },
+                        { name: "Client Groups", href: "/admin/clients/groups" },
                     ]
                 },
                 {
-                    name: t("orders"),
+                    name: "Orders",
                     icon: ShoppingCart,
                     children: [
-                        { name: t("list_all_orders"), href: "/admin/orders" },
-                        { name: t("pending_orders"), href: "/admin/orders?status=Pending" },
-                        { name: t("add_new_order"), href: "/admin/orders/add" }
+                        { name: "List All Orders", href: "/admin/orders" },
+                        { name: "Pending Orders", href: "/admin/orders?status=Pending" },
+                        { name: "Add New Order", href: "/admin/orders/add" }
                     ]
                 },
                 {
-                    name: t("products"),
+                    name: "Products",
                     icon: ShoppingCart,
                     children: [
-                        { name: t("view_all_products"), href: "/admin/products" },
-                        { name: t("add_new_product"), href: "/admin/products/add" },
-                        { name: t("services") || "Services", href: "/admin/products/services" },
-                        { name: t("add_service") || "Add Service", href: "/admin/products/services/add" }
+                        { name: "View All Products", href: "/admin/products" },
+                        { name: "Add New Product", href: "/admin/products/add" },
+                        { name: "Services", href: "/admin/products/services" },
+                        { name: "Add Service", href: "/admin/products/services/add" }
                     ]
                 },
                 {
-                    name: t("domains"),
+                    name: "Domains",
                     icon: Globe,
                     children: [
-                        { name: t("list_all_domains"), href: "/admin/domains" },
-                        { name: t("register_domain"), href: "/admin/domains/register" },
-                        { name: t("expiring_domains"), href: "/admin/domains/expiring" },
-                        { name: t("tld_pricing"), href: "/admin/domains/tlds" },
-                        { name: t("whois_lookup"), href: "/admin/utilities/whois" }
+                        { name: "List All Domains", href: "/admin/domains" },
+                        { name: "Register Domain", href: "/admin/domains/register" },
+                        { name: "Expiring Domains", href: "/admin/domains/expiring" },
+                        { name: "TLD Pricing", href: "/admin/domains/tlds" },
+                        { name: "WHOIS Lookup", href: "/admin/utilities/whois" }
                     ]
                 },
                 {
-                    name: t("billing"),
+                    name: "Billing",
                     icon: CreditCard,
                     children: [
-                        { name: t("invoices"), href: "/admin/billing" },
-                        { name: t("quotes") || "Quotes", href: "/admin/billing/quotes" },
-                        { name: t("transactions"), href: "/admin/billing?tab=transactions" },
-                        { name: t("refunds") || "Refunds", href: "/admin/billing/refunds" },
-                        { name: t("create_invoice"), href: "/admin/billing/create" },
+                        { name: "Invoices", href: "/admin/billing" },
+                        { name: "Quotes", href: "/admin/billing/quotes" },
+                        { name: "Transactions", href: "/admin/billing?tab=transactions" },
+                        { name: "Refunds", href: "/admin/billing/refunds" },
+                        { name: "Create Invoice", href: "/admin/billing/create" },
                     ]
                 },
                 {
-                    name: t("services"),
+                    name: "Services",
                     icon: Server,
                     children: [
-                        { name: t("list_all_services") || "All Services", href: "/admin/services" },
-                        { name: t("expiring_services") || "Expiring Soon", href: "/admin/services/expiring" }
+                        { name: "All Services", href: "/admin/services" },
+                        { name: "Expiring Soon", href: "/admin/services/expiring" },
+                        { name: "Bulk Setup", href: "/admin/services/bulk" }
                     ]
                 },
                 {
@@ -133,47 +134,47 @@ export function Sidebar() {
                     ]
                 },
                 {
-                    name: t("support"),
+                    name: "Support",
                     icon: LifeBuoy,
                     children: [
-                        { name: t("support_tickets"), href: "/admin/support?tab=tickets" },
-                        { name: t("network_issues_menu"), href: "/admin/support?tab=network" },
-                        { name: t("predefined_replies"), href: "/admin/support?tab=replies" }
+                        { name: "Support Tickets", href: "/admin/support?tab=tickets" },
+                        { name: "Network Status", href: "/admin/support?tab=network" },
+                        { name: "Predefined Replies", href: "/admin/support?tab=replies" }
                     ]
                 },
                 {
-                    name: t("utilities"),
+                    name: "Utilities",
                     icon: Wrench,
                     children: [
-                        { name: t("whois_lookup"), href: "/admin/utilities/whois" },
-                        { name: t("dns_resolver"), href: "/admin/utilities/dns" },
-                        { name: t("tld_sync"), href: "/admin/utilities/tldsync" },
+                        { name: "WHOIS Lookup", href: "/admin/utilities/whois" },
+                        { name: "DNS Resolver", href: "/admin/utilities/dns" },
+                        { name: "TLD Sync", href: "/admin/utilities/tldsync" },
                     ]
                 },
                 {
-                    name: t("security"),
+                    name: "Security",
                     icon: ShieldCheck,
                     children: [
-                        { name: t("banned_ips"), href: "/admin/security/banned-ips" },
-                        { name: t("security_questions"), href: "/admin/security/questions" }
+                        { name: "Banned IPs", href: "/admin/security/banned-ips" },
+                        { name: "Security Questions", href: "/admin/security/questions" }
                     ]
                 },
                 {
                     name: "Sales Team",
                     icon: TrendingUp,
                     children: [
-                        { name: "Overview", href: "/admin/sales-team" },
+                        { name: "Sales Overview", href: "/admin/sales-team" },
                         { name: "Verifications", href: "/admin/sales-team/verifications" },
                         { name: "Withdrawals", href: "/admin/sales-team/withdrawals" },
                     ]
                 },
-                { name: t("reports"), icon: BarChart3, href: "/admin/reports" },
+                { name: "Reports", icon: BarChart3, href: "/admin/reports" },
             ];
         }
 
         if (role === 'RESELLER' && !pathname.startsWith('/client')) {
             return [
-                { name: t("dashboard"), icon: LayoutDashboard, href: "/reseller" },
+                { name: "Dashboard", icon: LayoutDashboard, href: "/reseller" },
                 {
                     name: "Client Relations",
                     icon: Users,
@@ -191,7 +192,7 @@ export function Sidebar() {
                     ]
                 },
                 { name: "Product Catalog", icon: ShoppingCart, href: "/reseller/products" },
-                { name: t("payouts"), icon: Wallet, href: "/reseller/payouts" },
+                { name: "Payouts", icon: Wallet, href: "/reseller/payouts" },
                 { name: "White-Label Config", icon: Zap, href: "/reseller/settings" },
                 { name: "Help & Support", icon: LifeBuoy, href: "/support" },
                 { name: "Switch to Client View", icon: ShieldCheck, href: "/client" },
@@ -200,24 +201,24 @@ export function Sidebar() {
 
         if (role === 'INVESTOR') {
             return [
-                { name: t("dashboard"), icon: LayoutDashboard, href: "/investor" },
+                { name: "Dashboard", icon: LayoutDashboard, href: "/investor" },
                 { name: "My Commissions", icon: DollarSign, href: "/investor/commissions" },
                 { name: "Withdrawals", icon: Wallet, href: "/investor/payouts" },
-                { name: t("profile"), icon: Users, href: "/profile" },
-                { name: t("logout"), icon: LogOut, href: "/auth/login" },
+                { name: "Profile", icon: Users, href: "/profile" },
+                { name: "Logout", icon: LogOut, href: "/auth/login" },
             ];
         }
 
         // Default Client Menu (for CLIENT role or RESELLER in personal view)
         const clientMenu = [
-            { name: t("dashboard"), icon: LayoutDashboard, href: "/client" },
-            { name: t("store"), icon: ShoppingCart, href: "/client/store" },
-            { name: t("services"), icon: Server, href: "/client/services" },
-            { name: t("domains"), icon: Globe, href: "/client/domains" },
-            { name: t("billing"), icon: CreditCard, href: "/client/billing" },
-            { name: t("quotes") || "Quotes", icon: FileText, href: "/client/quotes" },
-            { name: t("transactions") || "Transactions", icon: FileText, href: "/client/transactions" },
-            { name: t("support"), icon: LifeBuoy, href: "/support" },
+            { name: "Dashboard", icon: LayoutDashboard, href: "/client" },
+            { name: "Store", icon: ShoppingCart, href: "/client/store" },
+            { name: "Services", icon: Server, href: "/client/services" },
+            { name: "Domains", icon: Globe, href: "/client/domains" },
+            { name: "Billing", icon: CreditCard, href: "/client/billing" },
+            { name: "Quotes", icon: FileText, href: "/client/quotes" },
+            { name: "Transactions", icon: FileText, href: "/client/transactions" },
+            { name: "Support", icon: LifeBuoy, href: "/support" },
         ];
 
         // If reseller is in client view, add a quick link back to reseller dashboard
@@ -320,14 +321,14 @@ export function Sidebar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all"
                     >
                         <Settings className="w-4 h-4" />
-                        <span>{t("settings")}</span>
+                        <span>Settings</span>
                     </Link>
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
                     >
                         <LogOut className="w-4 h-4" />
-                        <span>{t("logout")}</span>
+                        <span>Logout</span>
                     </button>
                 </div>
             </aside>

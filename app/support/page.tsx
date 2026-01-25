@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export default function SupportPage() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -54,7 +54,7 @@ export default function SupportPage() {
 
     const columns = [
         {
-            header: t("ticket_info"),
+            header: "Ticket Information",
             accessorKey: "subject" as any,
             cell: (item: any) => (
                 <div className="flex items-center gap-3 group">
@@ -73,7 +73,7 @@ export default function SupportPage() {
             )
         },
         {
-            header: t("status"),
+            header: "Status",
             accessorKey: "status" as any,
             cell: (item: any) => (
                 <Badge
@@ -85,7 +85,7 @@ export default function SupportPage() {
             )
         },
         {
-            header: t("last_activity"),
+            header: "Last Activity",
             accessorKey: "updatedAt" as any,
             cell: (item: any) => (
                 <div className="flex items-center gap-2 text-muted-foreground font-semibold text-xs">
@@ -95,12 +95,12 @@ export default function SupportPage() {
             )
         },
         {
-            header: t("actions"),
+            header: "Actions",
             accessorKey: "id" as any,
             cell: (item: any) => (
                 <Button variant="outline" size="sm" asChild className="h-9 px-4 rounded-lg font-bold bg-secondary/30 border-border hover:bg-primary hover:text-white transition-all gap-2 text-[10px] uppercase tracking-widest">
                     <Link href={`/support/${item.id}`}>
-                        {t("view_details")}
+                        View Details
                         <ArrowRight size={12} className="opacity-50" />
                     </Link>
                 </Button>
@@ -119,14 +119,14 @@ export default function SupportPage() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                                    {t("support_center") || "Support Center"}
+                                    Support Center
                                 </h1>
-                                <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">{t("experts_ready") || "Our technical experts are standing by to assist you 24/7."}</p>
+                                <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Our technical experts are standing by to assist you 24/7.</p>
                             </div>
                             <Button className="h-12 w-full sm:w-auto px-8 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2" asChild>
                                 <Link href="/support/new">
                                     <Plus size={20} />
-                                    {t("open_new_ticket")}
+                                    Open New Ticket
                                 </Link>
                             </Button>
                         </div>
@@ -136,14 +136,14 @@ export default function SupportPage() {
                             <div className="relative w-full md:w-80">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder={t("search_tickets_placeholder")}
+                                    placeholder="Search tickets..."
                                     className="pl-11 h-12 rounded-xl bg-card border-border/50 focus:border-primary/50 transition-all font-semibold"
                                 />
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                                 <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl px-5 py-2">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">{t("systems_online") || "Network Status: Optimal"}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">All Systems Operational</span>
                                 </div>
                                 <Button
                                     variant="outline"
@@ -161,14 +161,14 @@ export default function SupportPage() {
                             {/* <motion.div whileHover={{ y: -2 }} className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-3.5">
                                 <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <p className="font-bold text-sm text-emerald-700">{t("priority_support") || "Priority Handling"}</p>
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 font-medium">{t("guaranteed_response") || "Your account includes elite priority response times."}</p>
+                                    <p className="font-bold text-sm text-emerald-700">Priority Handling</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 font-medium">Your account includes elite priority response times.</p>
                                 </div>
                             </motion.div> */}
                             {/* <motion.div whileHover={{ y: -2 }} className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3.5 md:col-span-2">
                                 <AlertCircle className="text-primary shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <p className="font-bold text-sm text-primary">{t("system_announcement") || "Platform Notice"}</p>
+                                    <p className="font-bold text-sm text-primary">Platform Notice</p>
                                     <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 font-medium">Scheduled network performance enhancement in APAC regions on Jan 12th. Minimal latency fluctuations may occur.</p>
                                 </div>
                             </motion.div> */}
@@ -195,11 +195,11 @@ export default function SupportPage() {
                                         <MessageSquare size={32} />
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="font-extrabold text-xl">{t("no_active_tickets") || "No Support History Found"}</p>
-                                        <p className="text-muted-foreground text-sm font-medium">{t("no_tickets_desc") || "You haven't opened any support requests yet."}</p>
+                                        <p className="font-extrabold text-xl">No Active Support Tickets</p>
+                                        <p className="text-muted-foreground text-sm font-medium">You don't have any support inquiries yet. Need help? Open your first ticket.</p>
                                     </div>
                                     <Button className="mt-4 rounded-xl font-bold px-6 py-6 h-auto" variant="outline">
-                                        {t("open_first_ticket") || "Request Assistance Now"}
+                                        Open Your First Ticket
                                     </Button>
                                 </div>
                             )}

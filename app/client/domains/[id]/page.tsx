@@ -128,13 +128,13 @@ export default function ClientDomainDetailPage() {
                         <Tabs defaultValue="overview" className="w-full">
                             <TabsList className="bg-card/50 p-1 rounded-2xl border border-border/50 mb-6">
                                 <TabsTrigger value="overview" className="rounded-xl px-8 font-bold">
-                                    {t("overview") || "Overview"}
+                                    Overview
                                 </TabsTrigger>
                                 <TabsTrigger value="dns" className="rounded-xl px-8 font-bold">
-                                    {t("nameservers") || "Nameservers"}
+                                    Nameservers
                                 </TabsTrigger>
                                 <TabsTrigger value="tools" className="rounded-xl px-8 font-bold">
-                                    {t("management") || "Management"}
+                                    Management
                                 </TabsTrigger>
                             </TabsList>
 
@@ -143,21 +143,21 @@ export default function ClientDomainDetailPage() {
                                     <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
                                         <div className="flex items-center gap-3 text-primary">
                                             <Clock className="w-5 h-5" />
-                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">{t("registration") || "Registration"}</h3>
+                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">Registration</h3>
                                         </div>
                                         <p className="text-2xl font-black">{new Date(domain.createdAt).toLocaleDateString()}</p>
                                     </div>
                                     <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
                                         <div className="flex items-center gap-3 text-warning">
                                             <Activity className="w-5 h-5" />
-                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">{t("expiry_date") || "Expiry Date"}</h3>
+                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">Expiry Date</h3>
                                         </div>
                                         <p className="text-2xl font-black">{new Date(domain.expiryDate).toLocaleDateString()}</p>
                                     </div>
                                     <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
                                         <div className="flex items-center gap-3 text-success">
                                             <ShieldCheck className="w-5 h-5" />
-                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">{t("auto_renewal") || "Auto Renewal"}</h3>
+                                            <h3 className="font-bold uppercase tracking-widest text-[10px]">Auto Renewal</h3>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <p className="text-2xl font-black">{domain.autoRenew ? "Enabled" : "Disabled"}</p>
@@ -170,7 +170,7 @@ export default function ClientDomainDetailPage() {
                                 <div className="bg-card border border-border rounded-3xl p-8 space-y-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h3 className="text-xl font-bold">{t("nameserver_management") || "Nameserver Management"}</h3>
+                                            <h3 className="text-xl font-bold">Nameserver Management</h3>
                                             <p className="text-sm text-muted-foreground mt-1">Configure where your domain points to.</p>
                                         </div>
                                     </div>
@@ -276,7 +276,7 @@ function RenewalDialog({ t, loading, onRenew }: { t: any, loading: boolean, onRe
                     className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2 w-full md:w-auto transition-all active:scale-95"
                 >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw size={18} />}
-                    {t("renew_now") || "Renew Domain"}
+                    Renew Domain
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

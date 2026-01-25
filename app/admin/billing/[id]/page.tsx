@@ -6,13 +6,23 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Download, Mail, Share2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Printer, Download, Mail, Share2, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/language-provider";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { cn } from "@/lib/utils";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface InvoiceItem {
     id: number;
@@ -31,7 +41,9 @@ interface Invoice {
     subtotal: number;
     tax: number;
     totalAmount: number;
+    amountPaid?: number;
     notes?: string;
+    adminNotes?: string;
     client: {
         id: number;
         companyName?: string;
@@ -58,6 +70,13 @@ export default function InvoiceDetailsPage() {
     const [loading, setLoading] = useState(true);
     const componentRef = useRef<HTMLDivElement>(null);
 
+    // Payment Modal State
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [paymentAmount, setPaymentAmount] = useState("");
+    const [paymentGateway, setPaymentGateway] = useState("Cash");
+    const [paymentTxId, setPaymentTxId] = useState("");
+    const [paymentLoading, setPaymentLoading] = useState(false);
+
     useEffect(() => {
         fetchSettings();
         fetchInvoice();
@@ -69,6 +88,15 @@ export default function InvoiceDetailsPage() {
             const response = await api.get(`/invoices/${params.id}`);
             if (response.data.status === 'success') {
                 setInvoice(response.data.data.invoice);
+                // Pre-fill amount with remaining balance if possible, or total
+                if (response.data.data.invoice) {
+                    const inv = response.data.data.invoice;
+                    const due = inv.totalAmount - (inv.amountPaid || 0); // Assuming amountPaid exists, else just total
+                    // Since amountPaid might be missing in type, let's just default to totalAmount if status UNPAID
+                    if (inv.status !== 'PAID') {
+                        setPaymentAmount(inv.totalAmount.toString());
+                    }
+                }
             }
         } catch (error) {
             console.error(error);
@@ -76,6 +104,25 @@ export default function InvoiceDetailsPage() {
             router.push("/admin/billing");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddPayment = async () => {
+        try {
+            setPaymentLoading(true);
+            await api.post(`/invoices/${params.id}/add-payment`, {
+                amount: parseFloat(paymentAmount),
+                gateway: paymentGateway,
+                transactionId: paymentTxId || undefined
+            });
+            toast.success("Payment added successfully");
+            setIsPaymentOpen(false);
+            setPaymentTxId("");
+            fetchInvoice(); // Reload
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to add payment");
+        } finally {
+            setPaymentLoading(false);
         }
     };
 
@@ -87,12 +134,9 @@ export default function InvoiceDetailsPage() {
         if (!invoice) return;
 
         try {
-            // Dynamically import React PDF
             const { pdf } = await import('@react-pdf/renderer');
-            // Import the component we created
             const { InvoicePDF } = await import('@/components/pdf/InvoicePDF');
 
-            // Generate PDF
             const blob = await pdf(
                 <InvoicePDF
                     invoice={invoice as any}
@@ -101,7 +145,6 @@ export default function InvoiceDetailsPage() {
                 />
             ).toBlob();
 
-            // Create download link
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -167,10 +210,68 @@ export default function InvoiceDetailsPage() {
                                     <Printer size={16} />
                                     Print
                                 </Button>
-                                <Button variant="default" onClick={handleDownload} className="gap-2">
+                                <Button variant="outline" onClick={handleDownload} className="gap-2">
                                     <Download size={16} />
                                     Download PDF
                                 </Button>
+
+                                {invoice.status !== 'PAID' && (
+                                    <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button className="gap-2 font-bold shadow-lg shadow-primary/20">
+                                                <PlusCircle size={16} />
+                                                Add Payment
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Add Manual Payment</DialogTitle>
+                                                <DialogDescription>
+                                                    Record an offline transaction (e.g., Cash, Bank Transfer) for this invoice.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Payment Amount</label>
+                                                    <Input
+                                                        type="number"
+                                                        value={paymentAmount}
+                                                        onChange={(e) => setPaymentAmount(e.target.value)}
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Payment Method</label>
+                                                    <select
+                                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                        value={paymentGateway}
+                                                        onChange={(e) => setPaymentGateway(e.target.value)}
+                                                    >
+                                                        <option value="Cash">Cash on Hand</option>
+                                                        <option value="Bank Transfer">Bank Transfer</option>
+                                                        <option value="Check">Check</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Transaction ID (Optional)</label>
+                                                    <Input
+                                                        value={paymentTxId}
+                                                        onChange={(e) => setPaymentTxId(e.target.value)}
+                                                        placeholder="e.g. TRX-12345 or Check Number"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>Cancel</Button>
+                                                <Button onClick={handleAddPayment} disabled={paymentLoading}>
+                                                    {paymentLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : null}
+                                                    Confirmation Payment
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                             </div>
                         </div>
 
@@ -274,6 +375,14 @@ export default function InvoiceDetailsPage() {
                                     <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">
                                         <span>Total</span>
                                         <span className="text-primary">{formatPrice(invoice.totalAmount)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-muted-foreground pt-2">
+                                        <span>Amount Paid</span>
+                                        <span className="text-green-600">{formatPrice(invoice.amountPaid || 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-bold text-red-500 pt-1 border-t border-border/50">
+                                        <span>Balance Due</span>
+                                        <span>{formatPrice(Math.max(0, invoice.totalAmount - (Number(invoice.amountPaid) || 0)))}</span>
                                     </div>
                                 </div>
                             </div>

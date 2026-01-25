@@ -39,6 +39,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { socketService } from "@/lib/socket";
+
 
 export default function TicketDetailsPage() {
     const { t } = useLanguage();
@@ -62,39 +64,71 @@ export default function TicketDetailsPage() {
         receivedSound.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
     }, []);
 
+
+    // WebSocket Integration
     useEffect(() => {
+        if (!id || !user) return;
         fetchTicket();
 
-        // Admin Sync Engine (Real-time polling)
-        const pollInterval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                syncTicket();
+        const socket = socketService.connect();
+
+        socketService.joinTicket(id as string);
+
+        const handleNewMessage = (data: any) => {
+            // Use functional updates to avoid closure staleness
+            setTicket((prev: any) => {
+                if (!prev || data.reply.ticketId !== prev.id) return prev;
+
+                // Prevent duplicate messages
+                if (prev.replies?.some((r: any) => r.id === data.reply.id)) return prev;
+
+                // Play sound if not my message
+                const isMe = data.reply.userId === user?.id || data.reply.user?.id === user?.id;
+                if (!isMe) {
+                    if (receivedSound.current) {
+                        receivedSound.current.play().catch(() => { });
+                    }
+                }
+
+                return {
+                    ...prev,
+                    replies: [...(prev?.replies || []), data.reply]
+                };
+            });
+
+            // Trigger scroll
+            scrollToBottom();
+        };
+
+        const handleTicketUpdate = (data: any) => {
+            if (data.id === parseInt(id as string)) {
+                setTicket((prev: any) => ({ ...prev, ...data }));
             }
-        }, 5000);
+        };
 
-        return () => clearInterval(pollInterval);
-    }, [id]);
+        socket.on('new_message', handleNewMessage);
+        socket.on('ticket_updated', handleTicketUpdate);
 
-    // Presence Heartbeat: Notify backend that we are actively viewing this ticket
+        return () => {
+            socketService.leaveTicket(id as string);
+            socket.off('new_message', handleNewMessage);
+            socket.off('ticket_updated', handleTicketUpdate);
+        };
+    }, [id, user]);
+
+    // Optional: Keep presence for legacy reasons or remove. 
+    // Sockets naturally handle "who is online", but the DB presence is used by current notification logic.
     useEffect(() => {
         if (!id) return;
-
         const updatePresence = async () => {
             try {
                 if (document.visibilityState === 'visible') {
                     await api.post(`/support/tickets/${id}/presence`);
                 }
-            } catch (err) {
-                // Silent presence failure
-            }
+            } catch (err) { }
         };
-
-        // Immediate ping
         updatePresence();
-
-        // Heartbeat every 10s
-        const presenceInterval = setInterval(updatePresence, 10000);
-
+        const presenceInterval = setInterval(updatePresence, 30000); // Slower heartbeat since we have sockets
         return () => clearInterval(presenceInterval);
     }, [id]);
 
@@ -156,27 +190,22 @@ export default function TicketDetailsPage() {
 
         setSubmitting(true);
         try {
-            const response = await api.post(`/support/tickets/${id}/reply`, {
+            const res = await api.post(`/support/tickets/${ticket.id}/reply`, {
                 message: replyMessage,
                 isInternalNote: isInternal,
                 attachments: selectedImage ? [selectedImage] : []
             });
 
-            // Optimistic update: Add the reply immediately to the list
-            setTicket((prev: any) => ({
-                ...prev,
-                replies: [...(prev?.replies || []), response.data.data.reply]
-            }));
+            // The socket listener handles adding the reply to the UI.
+            // We just handle the sound here.
+            if (sentSound.current) { // Assuming 'isMuted' is not defined here, so playing unconditionally
+                sentSound.current.play().catch(() => { });
+            }
 
             setReplyMessage("");
             setIsInternal(false);
             setSelectedImage(null);
             toast.success(isInternal ? "Internal note added" : "Reply sent successfully");
-
-            if (sentSound.current) {
-                sentSound.current.play().catch(() => { });
-            }
-
             scrollToBottom();
         } catch (err) {
             console.error("Error sending reply:", err);

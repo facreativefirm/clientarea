@@ -20,7 +20,7 @@ export interface DomainFormProps {
 }
 
 export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps) {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [tlds, setTlds] = useState<any[]>([]);
 
@@ -66,15 +66,25 @@ export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps
         setLoading(true);
         try {
             const payload = { ...form };
-            // If editing, we might want to send expiryDate directly instead of regPeriod
+            // If editing, we update
             if (initialData?.id) {
                 await api.patch(`/domains/${initialData.id}`, payload);
                 toast.success("Domain asset updated");
+                if (onSuccess) onSuccess();
             } else {
-                await api.post("/domains/register", payload);
-                toast.success("Domain discovery complete");
+                // Registering: Backend now creates Invoice + PENDING domain
+                const res = await api.post("/domains/register", payload);
+                const { invoice } = res.data.data;
+
+                toast.success("Domain registered successfully! Invoice generated.", {
+                    action: {
+                        label: 'View Invoice',
+                        onClick: () => window.location.href = `/admin/billing/${invoice.id}`
+                    }
+                });
+
+                if (onSuccess) onSuccess();
             }
-            if (onSuccess) onSuccess();
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save domain");
         } finally {
@@ -108,7 +118,7 @@ export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-xs uppercase text-muted-foreground font-black tracking-widest">Asset Status</Label>
+                                <Label className="text-xs uppercase text-muted-foreground font-black tracking-widest">Domain Status</Label>
                                 <Select
                                     value={form.status}
                                     onValueChange={val => setForm({ ...form, status: val })}
@@ -224,12 +234,12 @@ export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps
             <div className="flex justify-end gap-3 pt-6 border-t mt-6">
                 {onCancel && (
                     <Button type="button" variant="ghost" onClick={onCancel} className="h-12 px-6 rounded-xl font-bold">
-                        {t("cancel")}
+                        Cancel
                     </Button>
                 )}
                 <Button disabled={loading} className="h-12 px-8 rounded-xl font-black shadow-lg shadow-primary/20 gap-2">
                     {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                    {initialData ? "Update Domain Asset" : "Register Domain Portfolio"}
+                    {initialData ? "Save Changes" : "Register New Domain"}
                 </Button>
             </div>
         </form>

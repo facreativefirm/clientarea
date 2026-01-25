@@ -6,34 +6,34 @@ import { Zap, Shield, Headphones, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function FeaturesSection() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
 
     const features = [
         {
             icon: Zap,
-            title: t("feature_speed_title"),
-            description: t("feature_speed_desc"),
+            title: "Fast BDIX-optimized NVMe",
+            description: "BDIX-optimized NVMe SSD storage ensure your website loads instantly for local visitors.",
             color: "text-[#f37021]",
             bg: "bg-[#f37021]/10"
         },
         {
             icon: Shield,
-            title: t("feature_security_title"),
-            description: t("feature_security_desc"),
+            title: "Ironclad Security",
+            description: "Advanced DDoS protection, Imunify360, and automated hourly database backups.",
             color: "text-emerald-500",
             bg: "bg-emerald-500/10"
         },
         {
             icon: Headphones,
-            title: t("feature_support_title"),
-            description: t("feature_support_desc"),
+            title: "Professional Support",
+            description: "Engineers, not just support agents, available 24/7 in Bangla & English.",
             color: "text-blue-500",
             bg: "bg-blue-500/10"
         },
         {
             icon: Activity,
-            title: t("feature_uptime_title"),
-            description: t("feature_uptime_desc"),
+            title: "Transparent Uptime",
+            description: "We provide live benchmark reports so you can see our real-world performance.",
             color: "text-purple-500",
             bg: "bg-purple-500/10"
         }
@@ -43,8 +43,8 @@ export function FeaturesSection() {
         <section className="py-24 bg-gray-50/50" id="features">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16 max-w-2xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t("why_choose_us")}</h2>
-                    <p className="text-lg text-gray-500">{t("why_choose_desc")}</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose Us</h2>
+                    <p className="text-lg text-gray-500">We provide the best hosting solutions with enterprise-grade infrastructure.</p>
                 </div>
 
                 <motion.div

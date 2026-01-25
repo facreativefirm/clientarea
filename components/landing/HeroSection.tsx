@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export function HeroSection() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
     const router = useRouter();
     const { addItem } = useCartStore();
     const [domain, setDomain] = useState("");
@@ -118,8 +118,8 @@ export function HeroSection() {
                             transition={{ duration: 0.7 }}
                             className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold text-white tracking-tight leading-[1.05]"
                         >
-                            {t("hero_title_1")} <br />
-                            <span className="text-white">{t("hero_title_accent")}</span>
+                            Build Your Digital <br />
+                            <span className="text-white">Empire Today</span>
                         </motion.h1>
 
                         <motion.div
@@ -131,10 +131,10 @@ export function HeroSection() {
                             <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-secondary rounded-full" />
                             <div className="space-y-4">
                                 <p className="text-xl text-white/90 leading-relaxed font-normal max-w-2xl">
-                                    {t("retention_reputation")}
+                                    Retention is our Reputation: Long-standing loyal client base is our proof.
                                 </p>
                                 <p className="text-lg font-medium text-secondary cursor-pointer hover:text-secondary/80 transition-all">
-                                    {t("verify_buy")}
+                                    Check Live Benchmark reports — Then decide.
                                 </p>
                             </div>
                         </motion.div>

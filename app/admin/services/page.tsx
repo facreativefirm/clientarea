@@ -8,11 +8,10 @@ import { useLanguage } from "@/components/language-provider";
 import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/shared/Badge";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
     Server,
     Search,
-    Filter,
     RefreshCw,
     Loader2,
     Globe,
@@ -20,18 +19,23 @@ import {
     ShieldCheck,
     ArrowUpRight,
     User,
-    Settings
+    Settings,
+    Plus,
+    Filter
 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, formatLabel } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Skeleton } from "@/components/shared/Skeleton";
 
 function AdminServicesContent() {
     const { t } = useLanguage();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type');
 
@@ -42,35 +46,31 @@ function AdminServicesContent() {
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        if (typeParam && categories.length > 0) {
-            // Recursive search for the category slug in the tree
-            const findNode = (nodes: any[]): any | null => {
-                for (const node of nodes) {
-                    if (node.slug.toLowerCase() === typeParam.toLowerCase() ||
-                        node.slug.toLowerCase().replace(/-/g, '') === typeParam.toLowerCase()) {
-                        return node;
-                    }
-                    if (node.subServices?.length) {
-                        const result = findNode(node.subServices);
-                        if (result) return result;
-                    }
-                }
-                return null;
-            };
-
-            const match = findNode(categories);
-            if (match) setFilter(match.slug);
-            else setFilter(typeParam);
-        } else if (typeParam) {
-            setFilter(typeParam);
-        }
-    }, [typeParam, categories]);
-
-    useEffect(() => {
         fetchData();
     }, []);
 
-    // Memoize the allowed slugs for the current filter (including all descendants)
+    useEffect(() => {
+        if (typeParam) setFilter(typeParam);
+    }, [typeParam]);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [servicesRes, categoriesRes] = await Promise.all([
+                api.get("/services"),
+                api.get("/products/services")
+            ]);
+            setServices(servicesRes.data.data.services || []);
+            setCategories(categoriesRes.data.data.services || []);
+        } catch (err) {
+            console.error("Error fetching data:", err);
+            toast.error("Failed to load services list");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Flatten logic for categories to handle nested filtering if needed
     const allowedSlugs = React.useMemo(() => {
         if (filter === 'all') return [];
 
@@ -98,96 +98,93 @@ function AdminServicesContent() {
         return slugs;
     }, [filter, categories]);
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [servicesRes, categoriesRes] = await Promise.all([
-                api.get("/services"),
-                api.get("/products/services")
-            ]);
-            setServices(servicesRes.data.data.services || []);
-            setCategories(categoriesRes.data.data.services || []);
-        } catch (err) {
-            console.error("Error fetching data:", err);
-            toast.error("Failed to load global services registry");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const filteredServices = services.filter(s => {
+        const domainMatch = (s.domain || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const clientMatch = `${s.client?.user?.firstName} ${s.client?.user?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+        const productMatch = (s.product?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = domainMatch || clientMatch || productMatch;
+
+        const matchesType = filter === 'all' ||
+            allowedSlugs.includes(s.product?.productService?.slug?.toLowerCase()) ||
+            s.product?.productType === filter;
+
+        return matchesSearch && matchesType;
+    });
 
     const columns = [
         {
-            header: "Product / Domain",
-            accessorKey: "domain" as any,
+            header: t("product_service") || "Product / Service",
+            accessorKey: "product",
             cell: (item: any) => (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-300 group-hover:scale-110",
-                        item.product?.productType === 'HOSTING' ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                            item.product?.productType === 'RESELLER' ? "bg-purple-500/10 border-purple-500/20 text-purple-400" :
-                                item.product?.productType === 'VPS' ? "bg-orange-500/10 border-orange-500/20 text-orange-400" :
-                                    "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                        "w-10 h-10 rounded-xl flex items-center justify-center border transition-colors",
+                        item.product?.productType === 'HOSTING' ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
+                            item.product?.productType === 'RESELLER' ? "bg-purple-500/10 border-purple-500/20 text-purple-500" :
+                                item.product?.productType === 'VPS' ? "bg-orange-500/10 border-orange-500/20 text-orange-500" :
+                                    "bg-primary/10 border-primary/20 text-primary"
                     )}>
-                        {item.product?.productType === 'HOSTING' ? <Globe size={20} /> :
-                            item.product?.productType === 'RESELLER' ? <Database size={20} /> :
-                                item.product?.productType === 'VPS' ? <Server size={20} /> :
-                                    <ShieldCheck size={20} />}
+                        {item.product?.productType === 'HOSTING' ? <Globe size={18} /> :
+                            item.product?.productType === 'RESELLER' ? <Database size={18} /> :
+                                item.product?.productType === 'VPS' ? <Server size={18} /> :
+                                    <ShieldCheck size={18} />}
                     </div>
                     <div>
-                        <p className="font-black text-foreground text-lg tracking-tight">{item.product?.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{item.domain || "no domain"}</p>
+                        <p className="font-bold text-sm">{item.product?.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{item.domain || "No Domain"}</p>
                     </div>
                 </div>
             )
         },
         {
-            header: "Client Entity",
-            accessorKey: "client" as any,
+            header: t("client") || "Client",
+            accessorKey: "client",
             cell: (item: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                        <User size={14} className="text-muted-foreground" />
+                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center">
+                        <User size={12} className="text-muted-foreground" />
                     </div>
-                    <span className="font-bold text-sm tracking-tight">
+                    <span className="font-bold text-sm tracking-tight text-foreground/80">
                         {item.client?.user?.firstName} {item.client?.user?.lastName}
                     </span>
                 </div>
             )
         },
         {
-            header: "Renewal Cycle",
-            accessorKey: "nextDueDate" as any,
+            header: t("next_due_date") || "Next Due Date",
+            accessorKey: "nextDueDate",
             cell: (item: any) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-sm text-white/80">
-                        {item.nextDueDate ? new Date(item.nextDueDate).toLocaleDateString() : "N/A"}
+                    <span className="font-bold text-sm">
+                        {item.nextDueDate ? new Date(item.nextDueDate).toLocaleDateString() : t("none")}
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase">{item.billingCycle} cycle</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase">{formatLabel(item.billingCycle) || "No Cycle"}</span>
                 </div>
             )
         },
         {
-            header: "Infrastructure Status",
-            accessorKey: "status" as any,
+            header: t("status") || "Status",
+            accessorKey: "status",
             cell: (item: any) => (
-                <Badge variant={item.status === 'ACTIVE' ? 'success' : item.status === 'PENDING' ? 'warning' : 'destructive'} className="px-4 py-1.5 rounded-xl font-black text-[10px] tracking-[0.2em]">
-                    {item.status}
+                <Badge
+                    variant={item.status === 'ACTIVE' ? 'success' : item.status === 'PENDING' ? 'warning' : 'destructive'}
+                    className="px-3 py-1 rounded-lg font-bold text-[10px]"
+                >
+                    {formatLabel(item.status) || "Unknown"}
                 </Badge>
             )
         },
         {
-            header: "Protocol",
-            accessorKey: "id" as any,
+            header: t("actions") || "Actions",
+            accessorKey: "id",
             cell: (item: any) => (
                 <div className="flex gap-2">
                     <Link href={`/admin/services/${item.id}`}>
-                        <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl bg-white/5 border-white/10 hover:bg-primary hover:text-white transition-all">
-                            <Settings size={16} />
-                        </Button>
+                        <Button variant="ghost" size="sm" className="font-bold">Manage</Button>
                     </Link>
                     <Link href={`/admin/clients/${item.clientId}`}>
-                        <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl bg-white/5 border-white/10 hover:bg-white/10">
-                            <ArrowUpRight size={16} />
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <ArrowUpRight size={14} />
                         </Button>
                     </Link>
                 </div>
@@ -195,98 +192,84 @@ function AdminServicesContent() {
         }
     ];
 
-    const filteredServices = services.filter(s => {
-        const domainMatch = (s.domain || "").toLowerCase().includes(searchTerm.toLowerCase());
-        const clientMatch = `${s.client?.user?.firstName} ${s.client?.user?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSearch = domainMatch || clientMatch;
-
-        // Match by ProductService slug hierarchy or productType
-        const matchesType = filter === 'all' ||
-            allowedSlugs.includes(s.product?.service?.slug?.toLowerCase()) ||
-            s.product?.productType === filter;
-        return matchesSearch && matchesType;
-    });
-
     return (
         <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN", "STAFF"]}>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8">
-                    <div className="max-w-7xl mx-auto space-y-12">
-                        {/* Header */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                            <div>
-                                <h1 className="text-4xl font-extrabold tracking-tighter bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent italic">
-                                    {t("infrastructure") || "Infrastructure"}
-                                </h1>
-                                <p className="text-muted-foreground mt-1 text-lg font-medium">Master command for all active hosting, VPS, and reseller deployments.</p>
-                            </div>
-                            <Link href="/admin/services/add" className="w-full md:w-auto">
-                                <Button className="h-16 px-10 rounded-[2rem] font-black text-lg gap-3 shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 w-full md:w-auto">
-                                    <Server size={24} /> {t("provision_new") || "Provision New"}
-                                </Button>
-                            </Link>
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Client Services</h1>
+                            <p className="text-muted-foreground">Manage and monitor all active client services and instances.</p>
                         </div>
+                        <Link href="/admin/services/add">
+                            <Button className="gap-2 shadow-lg shadow-primary/20">
+                                <Plus size={18} />
+                                Add New Service
+                            </Button>
+                        </Link>
+                    </div>
 
-                        {/* Controls & Tabs */}
-                        <div className="flex flex-col space-y-8">
-                            <Tabs value={filter} className="w-full" onValueChange={setFilter}>
-                                <TabsList className="bg-card/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-border h-16 inline-flex gap-2">
-                                    <TabsTrigger
-                                        value="all"
-                                        className="rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full"
-                                    >
-                                        {t("all")} {t("services")}
-                                    </TabsTrigger>
+                    {/* Integrated Controls & Table */}
+                    <div className="glass rounded-[2rem] p-6 space-y-6">
+                        <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+                            <Tabs value={filter} onValueChange={setFilter} className="w-full lg:w-auto">
+                                <TabsList className="bg-secondary/50 p-1 rounded-xl h-12">
+                                    <TabsTrigger value="all" className="rounded-lg px-4 font-bold text-xs">All</TabsTrigger>
                                     {categories.map((cat) => (
-                                        <TabsTrigger
-                                            key={cat.id}
-                                            value={cat.slug}
-                                            className="rounded-[1.5rem] px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full"
-                                        >
+                                        <TabsTrigger key={cat.id} value={cat.slug} className="rounded-lg px-4 font-bold text-xs">
                                             {cat.name}
                                         </TabsTrigger>
                                     ))}
                                 </TabsList>
                             </Tabs>
 
-                            <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-                                <div className="relative w-full md:w-96">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <div className="flex items-center gap-3 w-full lg:w-auto">
+                                <div className="relative flex-1 lg:w-72">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="Search by Domain or Client..."
-                                        className="pl-12 h-14 rounded-2xl bg-card/40 border-border/50 focus:border-primary/50 text-sm font-bold"
+                                        placeholder="Search domain or client..."
+                                        className="pl-10 h-11 rounded-xl bg-secondary/30 border-none focus:ring-1 focus:ring-primary font-medium"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="icon"
-                                    className="h-14 w-14 rounded-2xl bg-card/40 border-white/5 hover:bg-card"
+                                    className="h-11 w-11 rounded-xl hover:bg-secondary"
                                     onClick={fetchData}
                                 >
-                                    <RefreshCw className={cn("w-5 h-5 text-muted-foreground", loading && "animate-spin")} />
+                                    <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
                                 </Button>
                             </div>
                         </div>
 
-                        {/* Inventory Table */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-card/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] overflow-hidden p-8"
-                        >
-                            {loading ? (
-                                <div className="flex flex-col items-center justify-center py-24 gap-4">
-                                    <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                                    <p className="text-muted-foreground font-black uppercase tracking-widest text-xs animate-pulse tracking-[0.3em]">Querying Core Node Registry...</p>
-                                </div>
-                            ) : (
-                                <DataTable columns={columns} data={filteredServices} />
-                            )}
-                        </motion.div>
+                        {loading ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                    <div key={i} className="flex gap-4 p-4 items-center bg-white/5 rounded-2xl border border-white/5">
+                                        <Skeleton className="w-12 h-12 rounded-xl" />
+                                        <div className="space-y-2 flex-1">
+                                            <Skeleton className="h-4 w-1/4" />
+                                            <Skeleton className="h-3 w-1/6" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : filteredServices.length === 0 ? (
+                            <EmptyState
+                                icon={Server}
+                                title="No Services Found"
+                                description="There are no active services matching your current filter."
+                                actionLabel="Add New Service"
+                                onAction={() => router.push("/admin/services/add")}
+                            />
+                        ) : (
+                            <DataTable columns={columns} data={filteredServices} />
+                        )}
                     </div>
                 </main>
             </div>
@@ -305,4 +288,3 @@ export default function AdminServicesPage() {
         </Suspense>
     );
 }
-

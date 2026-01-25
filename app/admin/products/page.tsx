@@ -123,7 +123,7 @@ export default function ProductsPage() {
             cell: (item: any) => (
                 <div className="flex gap-2">
                     <Link href={`/admin/products/${item.id}`}>
-                        <Button variant="ghost" size="sm" className="font-bold">{t("manage") || "Manage"}</Button>
+                        <Button variant="ghost" size="sm" className="font-bold">Manage</Button>
                     </Link>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10">
                         <Trash2 size={16} />
@@ -141,8 +141,8 @@ export default function ProductsPage() {
                 <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold">{t("products") || "Products"}</h1>
-                            <p className="text-muted-foreground">{t("product_description") || "Manage your product catalog."}</p>
+                            <h1 className="text-3xl font-bold">Products</h1>
+                            <p className="text-muted-foreground">Manage your product catalog.</p>
                         </div>
                         <div className="flex gap-2 w-full md:w-auto">
                             <Sheet open={serviceSheetOpen} onOpenChange={setServiceSheetOpen}>
@@ -167,7 +167,7 @@ export default function ProductsPage() {
                                 <SheetTrigger asChild>
                                     <Button className="gap-2 shadow-lg shadow-primary/20 flex-1 md:flex-none">
                                         <Plus className="w-4 h-4" />
-                                        {t("add_new_product") || "Add Product"}
+                                        Add Product
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="right" className="sm:max-w-2xl overflow-y-auto">
@@ -200,9 +200,9 @@ export default function ProductsPage() {
                         ) : products.length === 0 ? (
                             <EmptyState
                                 icon={Package}
-                                title={t("no_products_found") || "No Products Found"}
+                                title="No Products Found"
                                 description="Your catalog is empty. Start by adding a new product."
-                                actionLabel={t("add_new_product") || "Add Product"}
+                                actionLabel="Add Product"
                                 onAction={() => window.location.href = '/admin/products/add'}
                             />
                         ) : (

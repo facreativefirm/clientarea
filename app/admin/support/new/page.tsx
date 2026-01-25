@@ -97,7 +97,7 @@ export default function NewTicketPage() {
                             </Button>
                             <div>
                                 <h1 className="text-3xl font-bold">
-                                    {t("open_new_ticket") || "Open New Ticket"}
+                                    Open New Ticket
                                 </h1>
                                 <p className="text-muted-foreground mt-1">Create a new support request for a client.</p>
                             </div>

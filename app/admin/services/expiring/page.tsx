@@ -84,10 +84,10 @@ export default function ExpiringServicesPage() {
         const serviceName = item.product?.name || "Service";
         const daysLeft = Math.ceil((new Date(item.nextDueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
         const dueAmount = formatPrice(item.amount);
-        let phoneNumber = item.client?.user?.phoneNumber || item.client?.phoneNumber || "";
+        let phoneNumber = item.client?.user?.whatsAppNumber || item.client?.user?.phoneNumber || item.client?.phoneNumber || "";
 
         if (!phoneNumber) {
-            toast.error("Client phone number not found");
+            toast.error("Client WhatsApp or phone number not found");
             return;
         }
 

@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/language-provider";
 import { motion } from "framer-motion";
 
 export default function PrivacyPage() {
-    const { t } = useLanguage();
+    const { language } = useLanguage();
 
     const sections = [
         {
@@ -47,9 +47,9 @@ export default function PrivacyPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16"
                     >
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 border-b-4 border-[#f37021] inline-block">{t("privacy_policy")}</h1>
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 border-b-4 border-[#f37021] inline-block">Privacy Policy</h1>
                         <p className="text-gray-500 uppercase tracking-widest text-sm font-bold">
-                            {t("last_updated")}: January 15, 2026
+                            Last Updated: January 15, 2026
                         </p>
                     </motion.div>
 

@@ -31,6 +31,15 @@ export function getCurrencySymbol(code: string): string {
   return symbols[code] || code;
 }
 
+export function formatLabel(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(/[_\-]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 type DecimalValue = {
   toString: () => string;
 };

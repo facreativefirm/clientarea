@@ -63,7 +63,7 @@ export default function EditClientPage({ params: paramsPromise }: { params: Prom
                                 </Link>
                                 <div>
                                     <h1 className="text-3xl font-black tracking-tight italic">
-                                        {t("edit_client_profile") || "Edit Client Profile"}
+                                        Edit Client Profile
                                     </h1>
                                     <p className="text-muted-foreground">
                                         {client?.user?.firstName} {client?.user?.lastName} &bull; {client?.user?.email}

@@ -7,6 +7,8 @@ interface User {
     userType: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'RESELLER' | 'CLIENT' | 'INVESTOR';
     firstName?: string;
     lastName?: string;
+    phoneNumber?: string;
+    whatsAppNumber?: string;
     status: string;
 }
 
