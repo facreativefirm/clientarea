@@ -54,7 +54,7 @@ export function Sidebar() {
 
     const handleLogout = () => {
         logout();
-        router.push("/auth/login");
+        router.push("/");
     };
 
     const getMenuItems = (): MenuItem[] => {
@@ -205,7 +205,7 @@ export function Sidebar() {
                 { name: "My Commissions", icon: DollarSign, href: "/investor/commissions" },
                 { name: "Withdrawals", icon: Wallet, href: "/investor/payouts" },
                 { name: "Profile", icon: Users, href: "/profile" },
-                { name: "Logout", icon: LogOut, href: "/auth/login" },
+                { name: "Logout", icon: LogOut, href: "/" },
             ];
         }
 
@@ -218,7 +218,6 @@ export function Sidebar() {
             { name: "Billing", icon: CreditCard, href: "/client/billing" },
             { name: "Quotes", icon: FileText, href: "/client/quotes" },
             { name: "Transactions", icon: FileText, href: "/client/transactions" },
-            { name: "Support", icon: LifeBuoy, href: "/support" },
         ];
 
         // If reseller is in client view, add a quick link back to reseller dashboard

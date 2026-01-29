@@ -62,6 +62,7 @@ export default function ProductDetailPage() {
             name: product.name,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
             price: product.monthlyPrice,
+            setupFee: product.setupFee,
             billingCycle: "MONTHLY",
             quantity: 1,
             monthlyPrice: product.monthlyPrice

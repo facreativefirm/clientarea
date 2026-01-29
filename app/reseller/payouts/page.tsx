@@ -218,8 +218,11 @@ export default function ResellerPayoutsPage() {
                                                 <SelectContent className="rounded-xl border-border">
                                                     <SelectItem value="bKash" className="font-bold">bKash</SelectItem>
                                                     <SelectItem value="Nagad" className="font-bold">Nagad</SelectItem>
-                                                    <SelectItem value="Bank Transfer" className="font-bold">Bank Transfer</SelectItem>
                                                     <SelectItem value="Rocket" className="font-bold">Rocket</SelectItem>
+                                                    <SelectItem value="BRAC BANK" className="font-bold">BRAC BANK</SelectItem>
+                                                    <SelectItem value="CITY BANK PLC" className="font-bold">CITY BANK PLC</SelectItem>
+                                                    <SelectItem value="UCB" className="font-bold">UCB</SelectItem>
+                                                    <SelectItem value="PUBALI BANK PLC" className="font-bold">PUBALI BANK PLC</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

@@ -97,6 +97,7 @@ export default function ProductsPage() {
             id: String(product.id),
             name: product.name,
             price: price,
+            setupFee: product.setupFee ? Number(product.setupFee) : 0,
             quantity: 1,
             billingCycle: billingCycle,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
@@ -271,6 +272,11 @@ export default function ProductsPage() {
                                                 </span>
                                                 <span className="text-muted-foreground font-bold text-sm tracking-tight">/mo</span>
                                             </div>
+                                            {product.setupFee && Number(product.setupFee) > 0 && (
+                                                <p className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
+                                                    + {formatPrice(product.setupFee)} Setup Fee
+                                                </p>
+                                            )}
                                             {billingCycle === 'annually' && (
                                                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-2">
                                                     Billed annually • Save {formatPrice((Number(product.monthlyPrice) * 12) - (price * 12))}/yr

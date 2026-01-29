@@ -108,7 +108,7 @@ export function ServiceGroupList() {
                                 }}
                                 whileHover={{ y: -5 }}
                                 className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-200/40 hover:shadow-2xl hover:border-primary/20 cursor-pointer group flex flex-col items-start transition-all duration-300"
-                                onClick={() => router.push(`/services/${group.slug}`)}
+                                onClick={() => router.push(`/public/services/${group.slug}`)}
                             >
                                 <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center text-primary mb-8 group-hover:scale-105 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                                     <Icon size={32} />

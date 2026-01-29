@@ -527,7 +527,7 @@ function StoreCheckoutContent() {
                                             <Link href={`/client/checkout?invoiceId=${completedOrder?.id}`} className="flex-1">
                                                 <Button className="w-full h-11 rounded-lg font-bold text-sm bg-primary text-white shadow-lg">Pay Invoice</Button>
                                             </Link>
-                                            <Link href="/client/dashboard" className="flex-1">
+                                            <Link href="/client" className="flex-1">
                                                 <Button variant="outline" className="w-full h-11 rounded-lg font-bold text-sm border-border text-foreground hover:bg-muted/50">Go to Portal</Button>
                                             </Link>
                                         </div>

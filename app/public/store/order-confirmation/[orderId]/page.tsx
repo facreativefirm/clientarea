@@ -157,7 +157,7 @@ export default function StoreOrderConfirmationPage() {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/client/dashboard" className="flex-1">
+                            <Link href="/client" className="flex-1">
                                 <Button size="lg" className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest gap-2 shadow-xl shadow-primary/20">
                                     <LayoutDashboard size={18} />
                                     Go to Dashboard

@@ -261,18 +261,18 @@ export default function ClientInvoiceDetailsPage() {
                                     </thead>
                                     <tbody className="divide-y divide-border/10">
                                         {invoice.items.map((item: any) => (
-                                            <tr key={item.id}>
-                                                <td className="py-4">
-                                                    <p className="font-medium">{item.description}</p>
+                                            <tr key={item.id} className="border-b border-border/5">
+                                                <td className="py-4 pr-4">
+                                                    <p className="font-semibold text-sm">{item.description}</p>
                                                 </td>
-                                                <td className="py-4 text-center text-muted-foreground">
+                                                <td className="py-4 text-center text-muted-foreground text-sm">
                                                     {item.quantity}
                                                 </td>
-                                                <td className="py-4 text-right text-muted-foreground">
+                                                <td className="py-4 text-right text-muted-foreground text-sm">
                                                     {formatPrice(item.unitPrice)}
                                                 </td>
-                                                <td className="py-4 text-right font-medium">
-                                                    {formatPrice(item.total || (item.quantity * item.unitPrice))}
+                                                <td className="py-4 text-right font-bold text-sm text-primary">
+                                                    {formatPrice(item.totalAmount || item.total || (item.quantity * item.unitPrice))}
                                                 </td>
                                             </tr>
                                         ))}

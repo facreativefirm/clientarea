@@ -22,7 +22,8 @@ import {
     Loader2,
     Settings2,
     Banknote,
-    Zap
+    Zap,
+    Wallet
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,12 @@ export default function SystemSettingsPage() {
         smtpSecure: "false",
         phoneNumber: "",
         taxRate: "5",
-        taxName: "Tax"
+        taxName: "Tax",
+        nagadEnabled: "false",
+        nagadMerchantId: "",
+        nagadPublicKey: "",
+        nagadPrivateKey: "",
+        nagadRunMode: "sandbox"
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -149,6 +155,9 @@ export default function SystemSettingsPage() {
                                 </TabsTrigger>
                                 <TabsTrigger value="localization" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
                                     <Languages size={18} className="mr-3" /> Localization
+                                </TabsTrigger>
+                                <TabsTrigger value="payments" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
+                                    <Wallet size={18} className="mr-3" /> Payment Gateways
                                 </TabsTrigger>
                                 <TabsTrigger value="mail" className="w-full justify-start rounded-2xl px-6 py-4 font-bold transition-all data-[state=active]:bg-primary/20 data-[state=active]:text-primary mb-2">
                                     <Mail size={18} className="mr-3" /> Mail Settings
@@ -413,6 +422,88 @@ export default function SystemSettingsPage() {
                                                     placeholder="192.168.1.1&#10;10.0.0.1"
                                                 />
                                                 <p className="text-xs text-muted-foreground italic">One IP address per line. Leave empty for all.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="payments" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div className="bg-card/40 border border-border rounded-[2.5rem] p-10 space-y-8">
+                                        <h3 className="text-xl font-black flex items-center gap-2">
+                                            <Wallet className="text-primary" size={24} />
+                                            Payment Gateways
+                                        </h3>
+
+                                        <div className="space-y-6">
+                                            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                                                <div className="flex items-center gap-4 border-b border-white/10 pb-4 mb-4">
+                                                    <div className="w-12 h-12 rounded-xl bg-[#f37021]/10 flex items-center justify-center border border-[#f37021]/20">
+                                                        <span className="font-black text-[#f37021]">N</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-lg font-bold">Nagad Payment Gateway</h4>
+                                                        <p className="text-sm text-muted-foreground">Configure your Nagad Merchant credentials.</p>
+                                                    </div>
+                                                    <div className="ml-auto">
+                                                        <Switch
+                                                            checked={settings.nagadEnabled === "true"}
+                                                            onCheckedChange={(val) => handleUpdateSetting("nagadEnabled", val ? "true" : "false")}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-3">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Merchant ID</Label>
+                                                        <Input
+                                                            value={settings.nagadMerchantId || ""}
+                                                            onChange={(e) => handleUpdateSetting("nagadMerchantId", e.target.value)}
+                                                            placeholder="688..."
+                                                            className="h-14 rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Environment Mode</Label>
+                                                        <Select
+                                                            value={settings.nagadRunMode || "sandbox"}
+                                                            onValueChange={(val: string) => handleUpdateSetting("nagadRunMode", val)}
+                                                        >
+                                                            <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-border font-bold">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="bg-card border-border rounded-xl">
+                                                                <SelectItem value="sandbox">Sandbox (Test Mode)</SelectItem>
+                                                                <SelectItem value="production">Production (Live)</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Merchant Private Key</Label>
+                                                    <textarea
+                                                        value={settings.nagadPrivateKey || ""}
+                                                        onChange={(e) => handleUpdateSetting("nagadPrivateKey", e.target.value)}
+                                                        className="w-full h-32 rounded-2xl bg-white/5 border border-border/50 p-4 font-mono text-xs focus:outline-none focus:border-primary/50 transition-all"
+                                                        placeholder="-----BEGIN PRIVATE KEY-----..."
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nagad Public Key</Label>
+                                                    <textarea
+                                                        value={settings.nagadPublicKey || ""}
+                                                        onChange={(e) => handleUpdateSetting("nagadPublicKey", e.target.value)}
+                                                        className="w-full h-32 rounded-2xl bg-white/5 border border-border/50 p-4 font-mono text-xs focus:outline-none focus:border-primary/50 transition-all"
+                                                        placeholder="-----BEGIN PUBLIC KEY-----..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                                                <p className="text-sm text-blue-400">
+                                                    More payment gateways will be available in future updates.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

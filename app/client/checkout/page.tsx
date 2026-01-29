@@ -25,7 +25,8 @@ import {
     Globe,
     CheckCircle2,
     XCircle,
-    Receipt
+    Receipt,
+    AlertCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
@@ -65,38 +66,75 @@ function CheckoutContent() {
 
     const MANUAL_METHODS = [
         {
-            id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Instant)', icon: Smartphone, type: 'manual',
+            id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
             instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Send Money".\n3. Enter: 017XXXXXX (Personal Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. নম্বর দিন: ০১৭XXXXXX (পার্সোনাল)।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. আপনার পিন দিয়ে কনফার্ম করুন।'
+                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #\n6. Confirm with your PIN.',
+                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. আপনার পিন দিয়ে কনফার্ম করুন।'
             }
         },
         {
-            id: 'nagad_manual', name: 'Nagad Merchant', desc: 'Merchant Pay (Zero Charge)', icon: Smartphone, type: 'manual',
+            id: 'nagad_manual', name: 'Nagad Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
             instructions: {
-                en: '1. Open Nagad App or Dial *167#.\n2. Select "Payment".\n3. Enter Merchant: 018XXXXXXXX.\n4. Amount: Use Total Amount.\n5. Counter: 1\n6. Reference: Your Invoice #',
-                bn: '১. নগদ অ্যাপ খুলুন বা *১৬৭# ডায়াল করুন।\n২. "Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর: ০১৮XXXXXXXX।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. কাউন্টার: ১\n৬. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
+                en: '1. Open Nagad App or Dial *167#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
+                bn: '১. নগদ অ্যাপ খুলুন বা *১৬৭# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
             }
         },
         {
-            id: 'rocket_manual', name: 'Rocket Personal', desc: 'Send Money (1.8% Charge)', icon: Smartphone, type: 'manual',
+            id: 'rocket_manual', name: 'Rocket Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
             instructions: {
-                en: '1. Open Rocket App or Dial *322#.\n2. Select "Send Money".\n3. Enter: 019XXXXXXXXX.\n4. Amount: Total + 1.8% Charge.\n5. Reference: Your Invoice #',
-                bn: '১. রকেট অ্যাপ খুলুন বা *৩২২# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. রকেট নম্বর দিন: ০১৯XXXXXXXXX।\n৪. পরিমাণ: মোট টাকা + ১.৮% চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
+                en: '1. Open Rocket App or Dial *322#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
+                bn: '১. রকেট অ্যাপ খুলুন বা *৩২২# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. রকেট নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
             }
         },
         {
-            id: 'bank', name: 'Bank Transfer', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
             instructions: {
-                en: 'Bank Name: The City Bank Ltd\nAccount Name: WHMCS Fusion\nAccount Number: 1234567890\nBranch: Main Branch\nRef: Your Invoice #',
-                bn: 'ব্যাংকের নাম: দি সিটি ব্যাংক লিঃ\nঅ্যাকাউন্টের নাম: WHMCS Fusion\nঅ্যাকাউন্ট নম্বর: ১২৩৪৫৬৭৮৯০\nশাখা: মেইন ব্রাঞ্চ\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
+                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
+                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
+            }
+        },
+        {
+            id: 'bank_brac', name: 'BRAC BANK', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
+            instructions: {
+                en: 'Bank Name: BRAC BANK\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 2050400590002\nBranch: Agrabad Branch, Chattogram\nRef: Your Invoice #',
+                bn: 'ব্যাংকের নাম: ব্র্যাক ব্যাংক\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ২০৫০৪০০৫৯০০০২\nশাখা: আগ্রাবাদ শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
+            }
+        },
+        {
+            id: 'bank_city', name: 'CITY BANK PLC', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
+            instructions: {
+                en: 'Bank Name: CITY BANK PLC\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 1224295297001\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
+                bn: 'ব্যাংকের নাম: সিটি ব্যাংক পিএলসি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ১২২৪২৯৫২৯৭০০১\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
+            }
+        },
+        {
+            id: 'bank_ucb', name: 'UCB', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
+            instructions: {
+                en: 'Bank Name: UCB\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 0522112000002158\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
+                bn: 'ব্যাংকের নাম: ইউসিবি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ০৫২২১১২০০০০০০২১৫৮\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
+            }
+        },
+        {
+            id: 'bank_pubali', name: 'PUBALI BANK PLC', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
+            instructions: {
+                en: 'Bank Name: PUBALI BANK PLC\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 1502901041810\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
+                bn: 'ব্যাংকের নাম: পূবালী ব্যাংক পিএলসি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ১৫০২৯০১০৪১৮১০\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
             }
         }
     ];
 
+    const AUTOMATED_METHODS = [
+        {
+            id: 'nagad_auto', name: 'Nagad', desc: 'Fast & Secure (Automated)', icon: Zap, type: 'auto'
+        }
+    ];
+
+    const ALL_PAYMENT_METHODS = [...AUTOMATED_METHODS, ...MANUAL_METHODS];
+
     useEffect(() => {
         if (invoiceId) {
             fetchInvoice(parseInt(invoiceId));
+            setStep(3);
         }
     }, [invoiceId]);
 
@@ -167,6 +205,17 @@ function CheckoutContent() {
             setLoading(true);
 
             if (invoiceId && invoice) {
+                // Automated Nagad
+                if (paymentMethod === 'nagad_auto') {
+                    const res = await api.post("/payments/nagad/initiate", {
+                        invoiceId: invoice.id
+                    });
+                    if (res.data.status === 'success') {
+                        window.location.href = res.data.data.redirectUrl;
+                        return;
+                    }
+                }
+
                 const selectedMethod = MANUAL_METHODS.find(m => m.id === paymentMethod);
                 if (selectedMethod) {
                     if (!trxId || !senderNumber) {
@@ -220,9 +269,27 @@ function CheckoutContent() {
                 resellerId: isWhiteLabel ? ownerId : null,
             });
 
-            setCompletedOrder(response.data.data.order);
+            const order = response.data.data.order;
+            setCompletedOrder(order);
             toast.success("Order placed successfully!");
             clearCart();
+
+            // Redirect immediately if Nagad Automated is selected
+            if (paymentMethod === 'nagad_auto' && order.invoices?.[0]?.id) {
+                try {
+                    const initRes = await api.post("/payments/nagad/initiate", {
+                        invoiceId: order.invoices[0].id
+                    });
+                    if (initRes.data.status === 'success') {
+                        window.location.href = initRes.data.data.redirectUrl;
+                        return;
+                    }
+                } catch (initErr) {
+                    console.error("Critical: Failed to auto-initiate Nagad after order creation", initErr);
+                    // Fallback to step 4 if initiation fails
+                }
+            }
+
             setStep(4);
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to process order.");
@@ -358,6 +425,11 @@ function CheckoutContent() {
                                                             </div>
                                                             <div className="text-right">
                                                                 <p className="font-bold text-sm">{formatPrice(item.price)}</p>
+                                                                {item.setupFee && Number(item.setupFee) > 0 && (
+                                                                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                                                                        + {formatPrice(item.setupFee)} {t('setup_fee')}
+                                                                    </p>
+                                                                )}
                                                                 <button onClick={() => removeItem(item.cartId!)} className="text-muted-foreground hover:text-destructive transition-colors mt-1">
                                                                     <Trash2 size={14} />
                                                                 </button>
@@ -465,101 +537,138 @@ function CheckoutContent() {
 
                                 {step === 3 && (
                                     <motion.div key="step3" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-4">
-                                        <div className="bg-card border rounded-2xl p-6 space-y-6">
-                                            <h3 className="text-sm font-bold flex items-center gap-2">
-                                                <CreditCard size={16} className="text-primary" />
-                                                Select Payment Method
-                                            </h3>
+                                        <div className="bg-card border rounded-3xl p-6 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                                                    <CreditCard size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-bold">Payment Method</h3>
+                                                    <p className="text-xs text-muted-foreground">Select how you want to pay</p>
+                                                </div>
+                                            </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {[
-                                                    { id: 'card', name: 'Card / Global', desc: 'Secure Checkout', icon: CreditCard },
-                                                    ...MANUAL_METHODS
-                                                ].map((method) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                {paymentMethod === 'mobile' && !invoiceId && (
+                                                    <div className="col-span-full mb-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-start gap-3">
+                                                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                                        <p className="text-[11px] text-amber-700 font-medium">Automatic bKash is only available for existing invoices. For new orders, please use manual methods below.</p>
+                                                    </div>
+                                                )}
+                                                {ALL_PAYMENT_METHODS.map((method) => (
                                                     <button
                                                         key={method.id}
                                                         onClick={() => setPaymentMethod(method.id)}
                                                         className={cn(
-                                                            "p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group",
-                                                            paymentMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/20"
+                                                            "p-4 rounded-xl border transition-all group relative overflow-hidden text-left",
+                                                            paymentMethod === method.id
+                                                                ? "border-[#f37021] bg-[#f37021]/5"
+                                                                : "border-border bg-muted/20 hover:border-primary/20"
                                                         )}
                                                     >
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <div className={cn("p-2 rounded-lg", paymentMethod === method.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                                                                <method.icon size={18} />
+                                                        {paymentMethod === method.id && (
+                                                            <div className="absolute top-2 right-2">
+                                                                <CheckCircle2 size={16} className="text-[#f37021]" />
                                                             </div>
-                                                            {paymentMethod === method.id && <CheckCircle2 size={16} className="text-primary" />}
+                                                        )}
+                                                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-all", paymentMethod === method.id ? "bg-[#f37021] text-white" : "bg-primary/10 text-primary")}>
+                                                            <method.icon size={18} />
                                                         </div>
-                                                        <p className="text-xs font-bold">{method.name}</p>
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <p className="font-bold text-sm">{method.name}</p>
+                                                            {method.type === 'auto' && (
+                                                                <span className="text-[8px] font-black uppercase tracking-tighter bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">Fast</span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-[10px] text-muted-foreground">{method.desc}</p>
                                                     </button>
                                                 ))}
-                                            </div>
 
-                                            {MANUAL_METHODS.find(m => m.id === paymentMethod) && (
-                                                <div className="p-4 rounded-xl bg-muted/40 border space-y-4 animate-in fade-in slide-in-from-top-2">
-                                                    <div>
-                                                        <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2">How to Pay:</p>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[11px] leading-relaxed">
-                                                            {(() => {
-                                                                const method = MANUAL_METHODS.find(m => m.id === paymentMethod);
-                                                                if (!method) return null;
-
-                                                                const refValue = invoice?.invoiceNumber || (invoiceId ? `#${invoiceId}` : 'Your Invoice #');
-
-                                                                const enInstructions = method.instructions.en.replace('Your Invoice #', refValue);
-                                                                const bnInstructions = method.instructions.bn.replace('আপনার ইনভয়েস নম্বর ব্যবহার করুন', refValue).replace('আপনার ইনভয়েস নম্বর', refValue);
-
-                                                                return (
-                                                                    <>
-                                                                        <div className="bg-card p-3 rounded-lg border whitespace-pre-line">{enInstructions}</div>
-                                                                        <div className="bg-card p-3 rounded-lg border text-primary font-sans whitespace-pre-line">{bnInstructions}</div>
-                                                                    </>
-                                                                );
-                                                            })()}
-                                                        </div>
-                                                    </div>
-
-                                                    {invoiceId && (
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Transaction ID / TXNID</Label>
-                                                                <Input
-                                                                    placeholder="Enter proof ID"
-                                                                    className="h-10 rounded-xl font-bold uppercase"
-                                                                    value={trxId}
-                                                                    onChange={(e) => setTrxId(e.target.value)}
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sender Account / Phone</Label>
-                                                                <Input
-                                                                    placeholder="e.g. 017XXXXXXXX"
-                                                                    className="h-10 rounded-xl"
-                                                                    value={senderNumber}
-                                                                    onChange={(e) => setSenderNumber(e.target.value)}
-                                                                />
-                                                            </div>
+                                                {/* Global Card Option */}
+                                                <button
+                                                    onClick={() => setPaymentMethod('card')}
+                                                    className={cn(
+                                                        "p-4 rounded-2xl border-2 transition-all text-left relative group bg-gradient-to-br",
+                                                        paymentMethod === 'card'
+                                                            ? "from-primary/10 to-transparent border-primary"
+                                                            : "from-transparent to-transparent border-border hover:border-primary/20"
+                                                    )}
+                                                >
+                                                    {paymentMethod === 'card' && (
+                                                        <div className="absolute top-3 right-3 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-white">
+                                                            <CheckCircle2 size={12} strokeWidth={3} />
                                                         </div>
                                                     )}
-                                                </div>
-                                            )}
+                                                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors", paymentMethod === 'card' ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                                                        <Globe size={20} />
+                                                    </div>
+                                                    <p className="font-bold text-sm mb-0.5">Card / Global</p>
+                                                    <p className="text-[10px] text-muted-foreground">Stripe, VISA, Mastercard</p>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="bg-card border rounded-2xl p-6 text-center space-y-4">
-                                            <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
-                                                By clicking below, you agree to our terms. Services will be activated {paymentMethod === 'card' ? 'instantly' : 'after we verify your payment manualy'}.
-                                            </p>
+
+                                        <AnimatePresence>
+                                            {paymentMethod === 'card' && (
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary/20">
+                                                        <ShieldCheck size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">Secure Global Payment</p>
+                                                        <p className="text-xs text-muted-foreground">You will be redirected to Stripe to finish your payment securely.</p>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
+                                            {invoiceId && paymentMethod && paymentMethod !== 'card' && !AUTOMATED_METHODS.some(m => m.id === paymentMethod) && (
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-card border rounded-2xl p-5 shadow-sm space-y-4 overflow-hidden">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <ShieldCheck size={18} className="text-primary" />
+                                                        <h4 className="text-sm font-bold">Proof of Payment</h4>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <Label className="text-xs font-bold text-muted-foreground">Transaction ID / TrxID</Label>
+                                                            <Input
+                                                                placeholder="Enter Transaction ID"
+                                                                className="h-10 rounded-xl font-bold uppercase"
+                                                                value={trxId}
+                                                                onChange={(e) => setTrxId(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label className="text-xs font-bold text-muted-foreground">Your Account / Phone Number</Label>
+                                                            <Input
+                                                                placeholder="e.g. 01712345678"
+                                                                className="h-10 rounded-xl font-bold"
+                                                                value={senderNumber}
+                                                                onChange={(e) => setSenderNumber(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        <div className="bg-card border rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                                                    <Lock size={18} />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sm">Secure Transaction</p>
+                                                    <p className="text-[10px] text-muted-foreground">SSL encrypted payment processing</p>
+                                                </div>
+                                            </div>
                                             <Button
                                                 onClick={handleCompleteOrder}
-                                                className="w-full h-12 rounded-xl font-bold gap-2 text-md bg-[#f37021] hover:bg-[#d9621c] text-white shadow-lg shadow-[#f37021]/20"
                                                 disabled={loading}
+                                                size="lg"
+                                                className="w-full sm:w-auto rounded-xl px-10 h-12 font-bold text-sm shadow-lg shadow-primary/20"
                                             >
-                                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                                    <>
-                                                        <Zap size={18} />
-                                                        {invoiceId ? "Confirm Payment" : "Place Order Now"}
-                                                    </>
-                                                )}
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" fill="currentColor" />}
+                                                Complete Order
                                             </Button>
                                         </div>
                                     </motion.div>
@@ -576,7 +685,7 @@ function CheckoutContent() {
 
                                         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm px-6">
                                             <Button asChild className="flex-1 rounded-xl h-11 font-bold">
-                                                <Link href={`/client/checkout?invoiceId=${completedOrder?.id}`}>
+                                                <Link href={`/client/checkout?invoiceId=${completedOrder?.invoices?.[0]?.id || completedOrder?.id}`}>
                                                     Make The Payment
                                                 </Link>
                                             </Button>
@@ -589,6 +698,93 @@ function CheckoutContent() {
                         {/* Order Summary Sidebar */}
                         {step !== 4 && (
                             <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+                                <AnimatePresence mode="wait">
+                                    {paymentMethod && ALL_PAYMENT_METHODS.find(m => m.id === paymentMethod) && (
+                                        <motion.div
+                                            key={paymentMethod}
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="bg-card border rounded-2xl overflow-hidden shadow-md"
+                                        >
+                                            {(() => {
+                                                const method = ALL_PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                                                if (!method) return null;
+
+                                                if (method.type === 'auto') {
+                                                    return (
+                                                        <>
+                                                            <div className="bg-emerald-500 p-4 flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                                                                    <Zap size={18} fill="currentColor" />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/70 leading-none mb-1">Instant Payment</h4>
+                                                                    <p className="text-xs text-white font-bold">Automated Verification</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-6 text-center space-y-4">
+                                                                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 border border-emerald-500/20">
+                                                                    <CheckCircle2 size={24} />
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                                                                    Payment will be verified instantly. You will be redirected to Nagad secure checkout.
+                                                                </p>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                }
+
+                                                const refValue = invoice?.invoiceNumber || (invoiceId ? `#${invoiceId}` : 'Your Invoice #');
+                                                const enInstr = (method as any).instructions.en.replace('Your Invoice #', refValue);
+                                                const bnInstr = (method as any).instructions.bn.replace('আপনার ইনভয়েস নম্বর ব্যবহার করুন', refValue).replace('আপনার ইনভয়েস নম্বর', refValue);
+
+                                                return (
+                                                    <>
+                                                        <div className="bg-primary p-4 flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-primary-foreground/20 flex items-center justify-center text-primary-foreground">
+                                                                <Zap size={18} fill="currentColor" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/70 leading-none mb-1">How to Pay</h4>
+                                                                <p className="text-xs text-primary-foreground font-bold truncate max-w-[150px]">{method.name}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="p-5 space-y-5">
+                                                            <div className="space-y-3">
+                                                                <span className="text-[9px] font-bold uppercase tracking-widest text-primary bg-primary/5 px-2 py-0.5 rounded">English Guide</span>
+                                                                <div className="space-y-2.5">
+                                                                    {enInstr.split('\n').map((line: string, idx: number) => (
+                                                                        <div key={idx} className="flex gap-2.5 items-start">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                                            <p className="text-[11px] text-foreground/80 font-medium leading-relaxed">{line.replace(/^\d\.\s*/, '')}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="h-px bg-border w-full" />
+
+                                                            <div className="space-y-3 font-sans">
+                                                                <span className="text-[9px] font-bold uppercase tracking-widest text-primary bg-primary/5 px-2 py-0.5 rounded">বাংলা নির্দেশিকা</span>
+                                                                <div className="space-y-2.5">
+                                                                    {bnInstr.split('\n').map((line: string, idx: number) => (
+                                                                        <div key={idx} className="flex gap-2.5 items-start">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                                            <p className="text-[11px] text-foreground/90 font-medium leading-loose">{line.replace(/^\d\.\s*/, '')}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
                                 <div className="bg-card border rounded-2xl p-5 shadow-sm">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
                                         <Receipt size={14} /> Price Summary
@@ -596,7 +792,7 @@ function CheckoutContent() {
 
                                     <div className="space-y-3 pb-4 border-b">
                                         {(() => {
-                                            const subtotal = invoiceId && invoice ? parseFloat(invoice.subtotal) : items.reduce((acc, i) => acc + (typeof i.price === 'string' ? parseFloat(i.price) : (i.price || 0)), 0);
+                                            const subtotal = invoiceId && invoice ? parseFloat(invoice.subtotal) : items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0);
                                             const discount = promoCode === 'SAVE20' ? subtotal * 0.2 : 0;
                                             const discountedSubtotal = subtotal - discount;
                                             const tax = invoiceId && invoice ? parseFloat(invoice.taxAmount) : discountedSubtotal * 0.05;

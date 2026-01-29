@@ -36,10 +36,10 @@ export function PublicNavbar() {
     }, []);
 
     const navLinks = [
-        { name: "Home", href: "/" },
-        { name: "Services", href: "/#hosting", hasDropdown: true },
-        { name: "About Us", href: "/about" },
-        { name: "Contact Us", href: "/contact" },
+        { name: "Home", href: "/public" },
+        { name: "Services", href: "/public/#hosting", hasDropdown: true },
+        { name: "About Us", href: "/public/about" },
+        { name: "Contact Us", href: "/public/contact" },
     ];
 
     const getDashboardLink = () => {
@@ -57,7 +57,7 @@ export function PublicNavbar() {
     return (
         <nav className="fixed top-0 w-full z-50 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
             <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 group">
+                <Link href="/public" className="flex items-center gap-2 group">
                     <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
                         <Shield className="w-5 h-5" />
                     </div>
@@ -93,7 +93,7 @@ export function PublicNavbar() {
                                     {services.map((service) => (
                                         <Link
                                             key={service.id}
-                                            href={`/services/${service.slug}`}
+                                            href={`/public/services/${service.slug}`}
                                             className="p-3 rounded-xl hover:bg-primary/5 flex items-center gap-3 transition-colors group/item"
                                         >
                                             <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">
@@ -188,7 +188,7 @@ export function PublicNavbar() {
                                                     {services.map((service) => (
                                                         <Link
                                                             key={service.id}
-                                                            href={`/services/${service.slug}`}
+                                                            href={`/public/services/${service.slug}`}
                                                             className="text-sm font-bold text-gray-500 hover:text-primary py-2"
                                                         >
                                                             {service.name}

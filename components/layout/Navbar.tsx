@@ -95,7 +95,7 @@ export function Navbar() {
 
     const handleLogout = () => {
         logout();
-        router.push("/auth/login");
+        router.push("/");
     };
 
     const getInitials = (name: string) => {
@@ -207,7 +207,7 @@ export function Navbar() {
                             </>
                         )}
 
-                        <DropdownMenuItem onClick={() => router.push("/settings")}>
+                        <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Settings</span>
                         </DropdownMenuItem>

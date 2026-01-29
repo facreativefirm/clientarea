@@ -39,10 +39,10 @@ export function Footer() {
                         <h4 className="font-bold text-gray-900 text-lg mb-6">Services</h4>
                         <ul className="space-y-3 text-sm">
                             {[
-                                { name: "Hosting", href: "/#hosting" },
+                                { name: "Hosting", href: "/public/#hosting" },
                                 { name: "Domains", href: "/client/domains" },
-                                { name: "VPS Servers", href: "/#hosting" },
-                                { name: "SSL Certificates", href: "/#services" },
+                                { name: "VPS Servers", href: "/public/#hosting" },
+                                { name: "SSL Certificates", href: "/public/#services" },
                                 { name: "Reseller Program", href: "/reseller" }
                             ].map((item) => (
                                 <li key={item.name}>
@@ -59,11 +59,11 @@ export function Footer() {
                         <h4 className="font-bold text-gray-900 text-lg mb-6">Support</h4>
                         <ul className="space-y-3 text-sm">
                             {[
-                                { name: "About Us", href: "/about" },
-                                { name: "Contact Us", href: "/contact" },
-                                { name: "Privacy Policy", href: "/privacy" },
-                                { name: "Terms of Service", href: "/terms" },
-                                { name: "FAQ", href: "/#faq" }
+                                { name: "About Us", href: "/public/about" },
+                                { name: "Contact Us", href: "/public/contact" },
+                                { name: "Privacy Policy", href: "/public/privacy" },
+                                { name: "Terms of Service", href: "/public/terms" },
+                                { name: "FAQ", href: "/public/#faq" }
                             ].map((item) => (
                                 <li key={item.name}>
                                     <Link href={item.href} className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 group">

@@ -32,7 +32,7 @@ export function FloatingPortal() {
 
             {/* Show Notifications only on dashboard routes, shifted left to avoid overlap */}
             {isDashboardRoute && (
-                <FloatingNotifications className="right-12 bottom-25" />
+                <FloatingNotifications className="right-30 bottom-6" />
             )}
         </>
     );

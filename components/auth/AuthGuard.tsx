@@ -24,7 +24,7 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
 
             if (!sessionToken) {
                 const currentPath = window.location.pathname + window.location.search;
-                router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}`);
+                router.push(`/?redirect=${encodeURIComponent(currentPath)}`);
                 setIsChecking(false);
                 return;
             }
@@ -41,7 +41,10 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
                     console.warn('[AuthGuard] session expired or invalid:', error.response?.status);
                     setAuthError(error.response?.data?.message || 'Session expired');
                     const currentPath = window.location.pathname + window.location.search;
-                    router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}`);
+                    // If the user was trying to access a protected route and got kicked out, we should send them to the login page (root /)
+                    // but we might want to preserve the redirect param if needed. 
+                    // Since the login page is now at /, we redirect there.
+                    router.push(`/?redirect=${encodeURIComponent(currentPath)}`);
                     setIsChecking(false);
                     return;
                 }

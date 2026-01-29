@@ -7,6 +7,7 @@ export interface CartItem {
     name: string;
     type: 'HOSTING' | 'DOMAIN' | 'SSL' | 'OTHER';
     price: number;
+    setupFee?: number;
     billingCycle: string;
     domainName?: string;
     quantity: number;
@@ -63,7 +64,8 @@ export const useCartStore = create<CartState>()(
             total: () => {
                 const subtotal = get().items.reduce((acc, item) => {
                     const price = typeof item.price === 'string' ? parseFloat(item.price) : (item.price || 0);
-                    return acc + (price * (item.quantity || 1));
+                    const setupFee = typeof item.setupFee === 'string' ? parseFloat(item.setupFee) : (item.setupFee || 0);
+                    return acc + (price * (item.quantity || 1)) + setupFee;
                 }, 0);
 
                 if (get().promoCode === 'SAVE20') return subtotal * 0.8;

@@ -41,6 +41,7 @@ interface Product {
     price?: number | string;
     monthlyPrice?: number | string;
     annualPrice?: number | string;
+    setupFee?: number | string;
     description: string;
     specs?: any;
 }
@@ -156,6 +157,7 @@ export default function StoreFront() {
             name: product.name,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
             price: typeof price === 'string' ? parseFloat(price) : price,
+            setupFee: product.setupFee ? (typeof product.setupFee === 'string' ? parseFloat(product.setupFee) : product.setupFee) : 0,
             billingCycle: billingCycle as any,
             quantity: 1,
             monthlyPrice: typeof product.monthlyPrice === 'string' ? parseFloat(product.monthlyPrice) : product.monthlyPrice,
@@ -382,6 +384,9 @@ export default function StoreFront() {
                                                             <div className="space-y-0.5">
                                                                 <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Rate / UNIT</p>
                                                                 <p className="text-xl font-black text-foreground">{formatPrice(product.monthlyPrice || product.price || 0)}<span className="text-[11px] text-muted-foreground font-bold ml-1 opacity-60">/mo</span></p>
+                                                                {product.setupFee && Number(product.setupFee) > 0 && (
+                                                                    <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">+ {formatPrice(product.setupFee)} Setup</p>
+                                                                )}
                                                             </div>
                                                             <Button
                                                                 onClick={() => handleAddToCart(product)}
