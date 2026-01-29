@@ -149,6 +149,7 @@ export function Sidebar() {
                         { name: "WHOIS Lookup", href: "/admin/utilities/whois" },
                         { name: "DNS Resolver", href: "/admin/utilities/dns" },
                         { name: "TLD Sync", href: "/admin/utilities/tldsync" },
+                        { name: "Import/Export", href: "/admin/utilities/import-export" },
                     ]
                 },
                 {
