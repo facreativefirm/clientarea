@@ -10,7 +10,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
     settings: {
-        appName: 'WHMCS CRM', // Default
+        appName: 'FA CRM', // Default
     },
     loading: false,
     fetchSettings: async () => {

@@ -19,8 +19,8 @@ const tiroBangla = Tiro_Bangla({
 });
 
 export const metadata: Metadata = {
-  title: "WHMCS CRM | Production Ready",
-  description: "Next-gen WHMCS CRM for hosting and services.",
+  title: "FA Creative CRM | Production Ready",
+  description: "Next-gen FA Creative CRM for hosting and services.",
 };
 
 export default function RootLayout({

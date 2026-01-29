@@ -22,7 +22,7 @@ export function TestimonialsSection() {
             avatar: "MC"
         },
         {
-            content: "Reliability is key for our business, and WHMCS CRM delivers 100%.",
+            content: "Reliability is key for our business, and FA CRM delivers 100%.",
             author: "Alex Rivera",
             role: "CTO, TechCorp",
             avatar: "AR"

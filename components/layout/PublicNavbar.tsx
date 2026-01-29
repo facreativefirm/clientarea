@@ -62,7 +62,7 @@ export function PublicNavbar() {
                         <Shield className="w-5 h-5" />
                     </div>
                     <span className="text-xl font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors">
-                        {settings.appName || 'WHMCS CRM'}
+                        {settings.appName || 'FA Creative CRM'}
                     </span>
                 </Link>
 
@@ -172,7 +172,7 @@ export function PublicNavbar() {
                                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
                                         <Shield className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xl font-bold text-gray-900">{settings.appName || 'WHMCS CRM'}</span>
+                                    <span className="text-xl font-bold text-gray-900">{settings.appName || 'FA CRM'}</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     {navLinks.map((link) => (

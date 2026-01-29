@@ -20,7 +20,7 @@ export function Footer() {
                                 <Shield className="w-5 h-5" />
                             </div>
                             <span className="text-xl font-bold text-gray-900">
-                                {settings.appName || 'WHMCS CRM'}
+                                {settings.appName || 'FA CRM'}
                             </span>
                         </div>
                         <p className="text-gray-500 leading-relaxed text-sm">
@@ -93,7 +93,7 @@ export function Footer() {
 
                 <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-gray-400 text-center md:text-left">
-                        &copy; {new Date().getFullYear()} {settings.appName || 'WHMCS CRM'}. All rights reserved.
+                        &copy; {new Date().getFullYear()} {settings.appName || 'FA CRM'}. All rights reserved.
                     </p>
                 </div>
             </div>

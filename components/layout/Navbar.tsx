@@ -110,7 +110,7 @@ export function Navbar() {
                         <Shield className="w-6 h-6" />
                     </div>
                     <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:block">
-                        WHMCS CRM
+                        FA CRM
                     </h1>
                 </div>
 

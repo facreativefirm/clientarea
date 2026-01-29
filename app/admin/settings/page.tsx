@@ -38,7 +38,7 @@ import { motion } from "framer-motion";
 export default function SystemSettingsPage() {
     const { t } = useLanguage();
     const [settings, setSettings] = useState({
-        appName: "WHMCS CRM",
+        appName: "FA CRM",
         supportEmail: "support@whmcscrm.com",
         maintenanceMode: "false",
         defaultLanguage: "english",
@@ -50,7 +50,7 @@ export default function SystemSettingsPage() {
         smtpUser: "",
         smtpPass: "",
         smtpFromEmail: "",
-        smtpFromName: "WHMCS CRM",
+        smtpFromName: "FA CRM",
         smtpSecure: "false",
         phoneNumber: "",
         taxRate: "5",

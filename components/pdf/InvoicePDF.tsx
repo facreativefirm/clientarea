@@ -199,7 +199,7 @@ interface InvoicePDFProps {
     currencyCode?: string;
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'WHMCS CRM', currencyCode = 'USD' }) => {
+export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA CRM', currencyCode = 'USD' }) => {
     const formatValue = (amount: number | string) => {
         const value = Number(amount).toFixed(2);
         const symbols: Record<string, string> = {
