@@ -25,6 +25,7 @@ import { useCartStore } from "@/lib/store/cartStore";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import api from "@/lib/api";
 import { motion } from "framer-motion";
+import { getProductDisplayPrice, calculateCartPrice } from "@/lib/productUtils";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -71,30 +72,31 @@ export default function StoreProductDetailPage() {
 
     const getPrice = () => {
         if (!product) return 0;
-        const monthly = Number(product.monthlyPrice);
+        const display = getProductDisplayPrice(product);
         if (billingCycle === 'annually') {
-            const annualBase = product.annualPrice ? Number(product.annualPrice) : (monthly * 12 * 0.9);
-            return annualBase / 12;
+            const annual = Number(product.annualPrice);
+            if (annual > 0) return annual / 12;
+            const monthly = Number(product.monthlyPrice);
+            return monthly > 0 ? monthly : display.price;
         }
-        return monthly;
+        return display.price;
     };
 
     const handleAddToCart = () => {
         if (!product) return;
-        const monthly = Number(product.monthlyPrice);
-        const cartPrice = billingCycle === 'annually'
-            ? (product.annualPrice ? Number(product.annualPrice) : (monthly * 12 * 0.9))
-            : monthly;
+        const display = getProductDisplayPrice(product);
+        const cycle = billingCycle === 'annually' ? 'ANNUALLY' : 'MONTHLY';
+        const price = calculateCartPrice(product, cycle) || display.price;
 
         addItem({
             id: String(product.id),
             name: product.name,
-            price: cartPrice,
+            price: price,
             quantity: 1,
-            billingCycle: billingCycle,
+            billingCycle: cycle as any,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
-            monthlyPrice: Number(product.monthlyPrice),
-            annualPrice: product.annualPrice ? Number(product.annualPrice) : (Number(product.monthlyPrice) * 12 * 0.9)
+            monthlyPrice: Number(product.monthlyPrice) || (display.billingCycle === 'MONTHLY' ? display.price : 0),
+            annualPrice: Number(product.annualPrice) || (display.billingCycle === 'ANNUALLY' ? display.price : 0)
         });
         toast.success(`${product.name} added to cart!`);
         router.push("/store/cart");
@@ -253,7 +255,9 @@ export default function StoreProductDetailPage() {
                                         </p>
                                         <div className="flex items-baseline gap-2">
                                             <span className="text-7xl font-black tracking-tighter text-foreground">{formatPrice(currentPrice)}</span>
-                                            <span className="text-muted-foreground font-black text-xl">/mo</span>
+                                            <span className="text-muted-foreground font-black text-xl">
+                                                /{billingCycle === 'annually' ? 'mo' : getProductDisplayPrice(product).cycle}
+                                            </span>
                                         </div>
                                         {billingCycle === 'annually' && (
                                             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mt-4 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit">

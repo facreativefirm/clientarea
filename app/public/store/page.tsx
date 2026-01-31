@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Server, Zap, Shield, Clock, CheckCircle2, Star } from "lucide-react";
 import { useStore } from "@/components/store/StoreProvider";
+import { getProductDisplayPrice } from "@/lib/productUtils";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useSettingsStore } from "@/lib/store/settingsStore";
@@ -40,11 +41,17 @@ export default function StorePage() {
     }, []);
 
     // Group products by service
-    const productsByService = services.map(service => ({
-        ...service,
-        products: products.filter(p => p.serviceId === service.id),
-        minPrice: Math.min(...products.filter(p => p.serviceId === service.id).map(p => Number(p.monthlyPrice) || 0))
-    })).filter(s => s.products.length > 0);
+    const productsByService = services.map(service => {
+        const serviceProducts = products.filter(p => p.serviceId === service.id);
+        const prices = serviceProducts.map(p => getProductDisplayPrice(p).price);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+        return {
+            ...service,
+            products: serviceProducts,
+            minPrice: minPrice
+        };
+    }).filter(s => s.products.length > 0);
 
     return (
         <div className="min-h-screen">

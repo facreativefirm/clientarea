@@ -127,7 +127,7 @@ export default function ClientInvoiceDetailsPage() {
     const contact = invoice.client.contacts?.[0];
 
     return (
-        <AuthGuard allowedRoles={["CLIENT"]}>
+        <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300 print:bg-white print:text-black">
                 <div className="print:hidden">
                     <Navbar />

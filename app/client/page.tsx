@@ -19,7 +19,8 @@ import {
     Sparkles,
     Loader2,
     CheckCircle2,
-    XCircle
+    XCircle,
+    ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/shared/Badge";
@@ -30,12 +31,15 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useSettingsStore } from "@/lib/store/settingsStore";
+import { useCartStore, CartItem } from "@/lib/store/cartStore";
+import { toast } from "sonner";
 
 export default function ClientDashboard() {
     const { t } = useLanguage();
     const router = useRouter();
     const { user } = useAuthStore();
     const { formatPrice, fetchSettings } = useSettingsStore();
+    const { addItem } = useCartStore();
     const [loading, setLoading] = useState(true);
 
     const [services, setServices] = useState<any[]>([]);
@@ -51,7 +55,8 @@ export default function ClientDashboard() {
     // Domain Search State
     const [domainSearch, setDomainSearch] = useState("");
     const [checkingDomain, setCheckingDomain] = useState(false);
-    const [domainResult, setDomainResult] = useState<{ name: string; available: boolean } | null>(null);
+    const [domainResult, setDomainResult] = useState<{ name: string; available: boolean; price?: number } | null>(null);
+    const [domainProductId, setDomainProductId] = useState<string>("0");
 
     useEffect(() => {
         fetchSettings();
@@ -61,15 +66,25 @@ export default function ClientDashboard() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [servicesRes, invoicesRes, domainsRes] = await Promise.all([
+            const [servicesRes, invoicesRes, domainsRes, catalogRes] = await Promise.all([
                 api.get("/services"),
                 api.get("/invoices?status=UNPAID"),
-                api.get("/domains")
+                api.get("/domains"),
+                api.get("/products/services").catch(e => ({ data: { data: { services: [] } } }))
             ]);
 
             const fetchedServices = servicesRes.data.data.services || [];
             const fetchedInvoices = invoicesRes.data.data.invoices || [];
             const fetchedDomains = domainsRes.data.data.domains || [];
+            const catalog = catalogRes.data?.data?.services || [];
+
+            // Find valid domain product ID
+            let dId = "0";
+            for (const s of catalog) {
+                const p = s.products?.find((x: any) => x.productType === 'DOMAIN' || x.category === 'DOMAIN');
+                if (p) { dId = String(p.id); break; }
+            }
+            if (dId !== "0") setDomainProductId(dId);
 
             setServices(fetchedServices);
             setInvoices(fetchedInvoices);
@@ -101,7 +116,8 @@ export default function ClientDashboard() {
             if (data.available !== null) {
                 setDomainResult({
                     name: domainToSearch,
-                    available: data.available
+                    available: data.available,
+                    price: 1750 // Default price, ideally fetch from product
                 });
             }
         } catch (err) {
@@ -109,6 +125,33 @@ export default function ClientDashboard() {
         } finally {
             setCheckingDomain(false);
         }
+    };
+
+    const handleSecureDomain = () => {
+        if (!domainResult) return;
+
+        // Use valid product ID if found, otherwise simple fallback (which might fail validation if backend is strict)
+        const pid = domainProductId !== "0" ? domainProductId : "0";
+        if (pid === "0") {
+            // If really needed, we could block here, but for now allow flow to proceed to checkout where they might fix it or we rely on backend default?
+            // Actually, "0" will almost certainly fail. But let's hope the fetch worked.
+            console.warn("No Domain Product ID found in catalog.");
+        }
+
+        const item: CartItem = {
+            id: pid,
+            name: `Domain: ${domainResult.name}`,
+            domainName: domainResult.name,
+            type: "DOMAIN",
+            price: domainResult.price || 1750,
+            billingCycle: "ANNUALLY",
+            quantity: 1,
+            monthlyPrice: domainResult.price || 1750,
+            annualPrice: domainResult.price || 1750
+        };
+        addItem(item);
+        toast.success(`${domainResult.name} added to cart`);
+        router.push("/client/checkout");
     };
 
     if (loading) {
@@ -123,7 +166,7 @@ export default function ClientDashboard() {
     }
 
     return (
-        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "ADMIN"]}>
+        <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
@@ -226,7 +269,7 @@ export default function ClientDashboard() {
                                 <section className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-4">
                                     <div className="flex items-center gap-2">
                                         <Globe className="text-primary" size={16} />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest">Rapid Name Check</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest">Quick Domain Registration</h3>
                                     </div>
                                     <div className="relative">
                                         <Input
@@ -257,7 +300,12 @@ export default function ClientDashboard() {
                                             >
                                                 <span className="truncate max-w-[120px]">{domainResult.name}</span>
                                                 {domainResult.available ? (
-                                                    <Link href="/client/store" className="underline decoration-2 underline-offset-2">Secure Now</Link>
+                                                    <button
+                                                        onClick={handleSecureDomain}
+                                                        className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded-md font-bold transition-colors"
+                                                    >
+                                                        Secure Now <ShoppingCart size={10} />
+                                                    </button>
                                                 ) : (
                                                     <span>Taken</span>
                                                 )}

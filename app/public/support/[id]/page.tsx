@@ -232,7 +232,7 @@ export default function TicketDetailPage() {
     );
 
     return (
-        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "ADMIN", "STAFF"]}>
+        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "STAFF"]}>
             <div className="min-h-screen bg-background text-foreground flex flex-col h-screen overflow-hidden">
                 <Navbar />
                 <Sidebar />

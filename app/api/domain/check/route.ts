@@ -2,29 +2,34 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const domain = searchParams.get('domain');
+    const rawDomain = searchParams.get('domain');
 
-    if (!domain) {
+    if (!rawDomain) {
         return NextResponse.json({ error: 'Domain is required' }, { status: 400 });
+    }
+
+    // --- SANITIZATION BLUNDER FIX ---
+    // Strip protocol (http://, https://), trailing slash, path, and 'www.' prefix
+    let domain = rawDomain.trim().toLowerCase()
+        .replace(/^(https?:\/\/)/, '') // Remove protocol
+        .split('/')[0]                // Remove path/query
+        .replace(/^www\./, '');        // Remove www.
+
+    if (!domain.includes('.')) {
+        return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 });
     }
 
     const tld = domain.split('.').pop()?.toLowerCase();
     let rdapUrl = "";
 
     if (tld === 'com' || tld === 'net') {
-        rdapUrl = `https://rdap.verisign.com/${tld}/v1/domain/${domain.toLowerCase()}`;
+        rdapUrl = `https://rdap.verisign.com/${tld}/v1/domain/${domain}`;
     } else if (tld === 'org') {
-        rdapUrl = `https://rdap.publicinterestregistry.org/rdap/v1/domain/${domain.toLowerCase()}`;
-    } else if (tld === 'net') {
-        rdapUrl = `https://rdap.verisign.com/net/v1/domain/${domain.toLowerCase()}`;
+        // Updated URL format for PIR (.org) - Removed /v1/ which caused Bad Request
+        rdapUrl = `https://rdap.publicinterestregistry.org/rdap/domain/${domain}`;
     } else {
-        // Fallback for others if possible or return error
-        // Many registries have their own. For simplicity, we stick to the ones we know.
-        // Or we could use a generic bootstrap service, but let's stick to the prompt's focus.
-        return NextResponse.json({
-            available: null,
-            error: "TLD not supported by RDAP proxy yet"
-        }, { status: 400 });
+        // Fallback to rdap.org for other TLDs
+        rdapUrl = `https://rdap.org/domain/${domain}`;
     }
 
     try {

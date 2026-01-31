@@ -51,31 +51,32 @@ export default function EditClientPage({ params: paramsPromise }: { params: Prom
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="pl-0 md:pl-75 pt-20 p-8">
-                    <div className="max-w-4xl mx-auto space-y-8">
+                <main className="pl-0 md:pl-75 pt-20 p-8 flex justify-center">
+                    <div className="w-full max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Header */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between bg-card/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white/5 shadow-xl">
                             <div className="flex items-center gap-4">
                                 <Link href={`/admin/clients/${id}`}>
-                                    <Button variant="ghost" size="icon" className="rounded-full">
+                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/50">
                                         <ArrowLeft size={20} />
                                     </Button>
                                 </Link>
                                 <div>
-                                    <h1 className="text-3xl font-black tracking-tight italic">
-                                        Edit Client Profile
+                                    <h1 className="text-3xl font-bold tracking-tight">
+                                        Edit Profile
                                     </h1>
-                                    <p className="text-muted-foreground">
-                                        {client?.user?.firstName} {client?.user?.lastName} &bull; {client?.user?.email}
+                                    <p className="text-muted-foreground flex items-center gap-2">
+                                        <span className="font-medium text-foreground">{client?.user?.firstName} {client?.user?.lastName}</span>
+                                        <span className="opacity-20">|</span>
+                                        <span>ID: {client?.id}</span>
+                                        <span className="opacity-20">|</span>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{client?.status}</span>
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-card/40 border border-white/5 backdrop-blur-3xl rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
-                            {/* Decorative background element */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-50" />
-
+                        <div className="glass rounded-[2.5rem] p-1 border border-white/5 shadow-2xl relative overflow-hidden overflow-y-auto">
                             <ClientForm
                                 initialData={client}
                                 onSuccess={() => router.push(`/admin/clients/${id}`)}

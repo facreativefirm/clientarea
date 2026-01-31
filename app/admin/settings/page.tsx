@@ -93,11 +93,15 @@ export default function SystemSettingsPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await api.put("/settings", settings);
+            console.log("[DEBUG] Testing auth permissions...");
+            await api.post("/settings/test-auth");
+            console.log("[DEBUG] Auth test passed, sending settings payload...");
+            await api.post("/settings", settings);
             toast.success("Settings updated successfully");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Save settings error:", error);
-            toast.error("Failed to save settings");
+            const message = error.response?.data?.message || "Failed to save settings";
+            toast.error(message);
         } finally {
             setSaving(false);
         }

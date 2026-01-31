@@ -10,64 +10,87 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Navbar } from "@/components/layout/Navbar";
 
 export default function ImportExportPage() {
     const [activeTab, setActiveTab] = useState("clients");
 
     return (
-        <div className="p-6 space-y-6 max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        Data Management
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                        Import and export system data in CSV format.
-                    </p>
-                </div>
+        <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+            <div className="min-h-screen bg-background text-foreground">
+                <Navbar />
+                <Sidebar />
+                <main className="lg:pl-72 pt-20 p-4 md:p-8">
+                    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
+                                    Data Management
+                                </h1>
+                                <p className="text-muted-foreground mt-1 text-lg">
+                                    Import and export system data in CSV format.
+                                </p>
+                            </div>
+                        </div>
+
+                        <Tabs defaultValue="clients" onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="grid w-full grid-cols-4 max-w-lg mb-8">
+                                <TabsTrigger value="clients">Clients</TabsTrigger>
+                                <TabsTrigger value="product_services">Service Groups</TabsTrigger>
+                                <TabsTrigger value="products">Products</TabsTrigger>
+                                <TabsTrigger value="invoices">Invoices</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="clients">
+                                <ImportExportPanel
+                                    type="clients"
+                                    title="Client Database"
+                                    description="Manage client records. Importing will automatically create User accounts (login credentials) for new clients."
+                                    exportLabel="Export Clients CSV"
+                                    importLabel="Import Clients CSV"
+                                    importWarning="Rows must include Email. A User account will be created for each row. Default password is 'ChangeMe123!'."
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="product_services">
+                                <ImportExportPanel
+                                    type="product_services"
+                                    title="Product Service Groups"
+                                    description="Manage categories and groupings for your products and services."
+                                    exportLabel="Export Groups CSV"
+                                    importLabel="Import Groups CSV"
+                                    importWarning="Ensure ParentService (if any) matches an existing Service Group Slug."
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="products">
+                                <ImportExportPanel
+                                    type="products"
+                                    title="Product Catalog"
+                                    description="Manage products, services, and pricing."
+                                    exportLabel="Export Products CSV"
+                                    importLabel="Import Products CSV"
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="invoices">
+                                <ImportExportPanel
+                                    type="invoices"
+                                    title="Invoices & Billing"
+                                    description="Export invoice history for accounting."
+                                    exportLabel="Export Invoices CSV"
+                                    importLabel="Import Invoices CSV"
+                                    disableImport={true}
+                                    importWarning="Importing invoices requires matching Client Emails. Ensure clients exist first."
+                                />
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </main>
             </div>
-
-            <Tabs defaultValue="clients" onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-md mb-8">
-                    <TabsTrigger value="clients">Clients</TabsTrigger>
-                    <TabsTrigger value="products">Products</TabsTrigger>
-                    <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="clients">
-                    <ImportExportPanel
-                        type="clients"
-                        title="Client Database"
-                        description="Manage client records. Importing will automatically create User accounts (login credentials) for new clients."
-                        exportLabel="Export Clients CSV"
-                        importLabel="Import Clients CSV"
-                        importWarning="Rows must include Email. A User account will be created for each row. Default password is 'ChangeMe123!'."
-                    />
-                </TabsContent>
-
-                <TabsContent value="products">
-                    <ImportExportPanel
-                        type="products"
-                        title="Product Catalog"
-                        description="Manage products, services, and pricing."
-                        exportLabel="Export Products CSV"
-                        importLabel="Import Products CSV"
-                    />
-                </TabsContent>
-
-                <TabsContent value="invoices">
-                    <ImportExportPanel
-                        type="invoices"
-                        title="Invoices & Billing"
-                        description="Export invoice history for accounting."
-                        exportLabel="Export Invoices CSV"
-                        importLabel="Import Invoices CSV"
-                        disableImport={true} // Import invoices is complex, maybe disable for now? Or keep enabled but warn.
-                        importWarning="Importing invoices requires matching Client Emails. Ensure clients exist first."
-                    />
-                </TabsContent>
-            </Tabs>
-        </div>
+        </AuthGuard>
     );
 }
 
@@ -163,6 +186,8 @@ function ImportExportPanel({ type, title, description, exportLabel, importLabel,
             csvContent = 'Name,Type,MonthlyPrice,AnnualPrice\n"Basic Web Hosting",HOSTING,9.99,99.99\n"Premium VPS",VPS,29.99,299.99';
         } else if (type === 'invoices') {
             csvContent = 'InvoiceNumber,ClientEmail,Total,Status,DueDate\nINV-1001,john@example.com,50.00,UNPAID,2025-12-31';
+        } else if (type === 'product_services') {
+            csvContent = 'Name,Slug,Description,ParentServiceSlug,DisplayOrder,IconClass\n"Web Hosting",web-hosting,"Various shared hosting plans",,1,Server\n"Dedicated Servers",servers,"High performance machines",,2,Cpu';
         }
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

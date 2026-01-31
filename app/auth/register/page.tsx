@@ -10,8 +10,10 @@ import { Loader2, UserPlus, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
+import { PasswordStrength } from "@/components/shared/PasswordStrength";
 
 const registerSchema = z.object({
     username: z.string().min(3, "Username must be at least 3 characters"),
@@ -20,8 +22,15 @@ const registerSchema = z.object({
     lastName: z.string().min(1, "Last name is required"),
     phoneNumber: z.string().min(1, "Phone number is required"),
     whatsAppNumber: z.string().min(1, "WhatsApp number is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string()
+    password: z.string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "Must include a capital letter")
+        .regex(/[0-9]/, "Must include a number")
+        .regex(/[^A-Za-z0-9]/, "Must include a symbol"),
+    confirmPassword: z.string(),
+    agreeToTerms: z.literal(true, {
+        message: "You must agree to the terms and privacy policy",
+    }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
@@ -47,6 +56,8 @@ export default function RegisterPage() {
     const {
         register,
         handleSubmit,
+        watch,
+        setValue,
         formState: { errors },
     } = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
@@ -148,6 +159,7 @@ export default function RegisterPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
                                 <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
+
                                 {errors.password && <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.password.message}</p>}
                             </div>
                             <div className="space-y-2">
@@ -155,6 +167,29 @@ export default function RegisterPage() {
                                 <Input id="confirmPassword" type="password" placeholder="••••••••" {...register("confirmPassword")} />
                                 {errors.confirmPassword && <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.confirmPassword.message}</p>}
                             </div>
+                        </div>
+
+                        <PasswordStrength password={watch("password")} className="mt-2" />
+
+                        <div className="space-y-4">
+                            <div className="flex items-start space-x-3 bg-secondary/10 p-4 rounded-2xl border border-white/5">
+                                <Checkbox
+                                    id="agreeToTerms"
+                                    className="mt-1 border-primary/50"
+                                    {...register("agreeToTerms")}
+                                />
+                                <Label htmlFor="agreeToTerms" className="text-sm leading-tight text-muted-foreground cursor-pointer select-none">
+                                    I have read and agree to the{" "}
+                                    <Link href="/terms" className="text-primary font-bold hover:underline">Terms & Conditions</Link>,{" "}
+                                    <Link href="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>, and{" "}
+                                    <Link href="/refund" className="text-primary font-bold hover:underline">Refund Policy</Link>
+                                </Label>
+                            </div>
+                            {errors.agreeToTerms && (
+                                <p className="text-[11px] font-bold text-red-500 uppercase tracking-wider px-1">
+                                    {errors.agreeToTerms.message}
+                                </p>
+                            )}
                         </div>
 
                         <Button

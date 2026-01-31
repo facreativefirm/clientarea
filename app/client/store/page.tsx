@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useLanguage } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useCartStore, CartItem } from "@/lib/store/cartStore";
+import { getProductDisplayPrice, calculateCartPrice } from "@/lib/productUtils";
 import {
     Server,
     Globe,
@@ -70,6 +71,7 @@ export default function StoreFront() {
     const [domainSearch, setDomainSearch] = useState("");
     const [checkingDomain, setCheckingDomain] = useState(false);
     const [domainResult, setDomainResult] = useState<{ name: string; available: boolean; price: number } | null>(null);
+    const [defaultDomainProductId, setDefaultDomainProductId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSettings();
@@ -80,11 +82,25 @@ export default function StoreFront() {
         try {
             setLoading(true);
             const response = await api.get("/products/services");
-            setServices(response.data.data.services || []);
+            const srvs = response.data.data.services || [];
+            setServices(srvs);
+
+            // Find a default domain product ID for ad-hoc registrations
+            // Flatten all products from all services and find one with category/type 'DOMAIN'
+            let domainProdId = null;
+            for (const s of srvs) {
+                const dProd = s.products.find((p: any) => p.productType === 'DOMAIN' || p.category === 'DOMAIN');
+                if (dProd) {
+                    domainProdId = dProd.id;
+                    break;
+                }
+            }
+            if (domainProdId) setDefaultDomainProductId(String(domainProdId));
+
         } catch (err) {
             console.error("Error fetching product services:", err);
             // Fallback for demo
-            setServices([
+            const demoServices = [
                 {
                     id: 1,
                     name: "Web Hosting",
@@ -110,11 +126,13 @@ export default function StoreFront() {
                     description: "Protect and register your online identity.",
                     slug: "security-domains",
                     products: [
-                        { id: "4", name: ".COM Domain", category: "DOMAIN", monthlyPrice: 12.99, annualPrice: 12.99, description: "Global standard for business websites." },
+                        { id: "4", name: ".COM Domain", category: "DOMAIN", productType: "DOMAIN", monthlyPrice: 12.99, annualPrice: 12.99, description: "Global standard for business websites." },
                         { id: "5", name: "PositiveSSL", category: "SSL", monthlyPrice: 15.00, annualPrice: 15.00, description: "Domain validated certificate for secure data transfer." },
                     ]
                 }
-            ]);
+            ];
+            setServices(demoServices);
+            setDefaultDomainProductId("4");
         } finally {
             setLoading(false);
         }
@@ -147,10 +165,10 @@ export default function StoreFront() {
         }
     };
 
-    const handleAddToCart = (product: any, billingCycle: string = "MONTHLY") => {
-        const price = billingCycle === "ANNUALLY"
-            ? (product.annualPrice || (typeof product.monthlyPrice === 'string' ? parseFloat(product.monthlyPrice) : product.monthlyPrice) * 12)
-            : (product.monthlyPrice || product.price || 0);
+    const handleAddToCart = (product: any, billingCycle?: string) => {
+        const display = getProductDisplayPrice(product);
+        const cycle = billingCycle || display.billingCycle;
+        const price = calculateCartPrice(product, cycle);
 
         const item: CartItem = {
             id: product.id.toString(),
@@ -170,13 +188,23 @@ export default function StoreFront() {
 
     const handleAddDomainToCart = () => {
         if (!domainResult) return;
+
+        // Use the discovered domain product ID, or fallback to 0 if absolutely none found (though backend will reject 0)
+        // If no domain product exists in the DB, this logic relies on creating one first.
+        const productId = defaultDomainProductId || (services.find(s => s.products.some(p => p.category === 'DOMAIN'))?.products.find(p => p.category === 'DOMAIN')?.id) || "0";
+
+        if (productId === "0") {
+            toast.error("Configuration Error: No Domain Product found in catalog. Please contact support.");
+            return;
+        }
+
         const item: CartItem = {
-            id: `dom-${Date.now()}`,
+            id: String(productId), // Use VALID Product ID
             name: `Domain: ${domainResult.name}`,
             domainName: domainResult.name,
             type: "DOMAIN",
             price: domainResult.price,
-            billingCycle: "YEARLY",
+            billingCycle: "ANNUALLY", // Domains are usually yearly
             quantity: 1,
             monthlyPrice: domainResult.price,
             annualPrice: domainResult.price
@@ -185,6 +213,7 @@ export default function StoreFront() {
         toast.success(`${domainResult.name} added to cart.`);
         setDomainResult(null);
         setDomainSearch("");
+        router.push("/client/checkout");
     };
 
     const filteredServices = services
@@ -382,8 +411,18 @@ export default function StoreFront() {
 
                                                         <div className="mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
                                                             <div className="space-y-0.5">
-                                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Rate / UNIT</p>
-                                                                <p className="text-xl font-black text-foreground">{formatPrice(product.monthlyPrice || product.price || 0)}<span className="text-[11px] text-muted-foreground font-bold ml-1 opacity-60">/mo</span></p>
+                                                                {(() => {
+                                                                    const display = getProductDisplayPrice(product);
+                                                                    return (
+                                                                        <>
+                                                                            <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Rate / {display.label}</p>
+                                                                            <p className="text-xl font-black text-foreground">
+                                                                                {formatPrice(display.price)}
+                                                                                <span className="text-[11px] text-muted-foreground font-bold ml-1 opacity-60">/{display.cycle}</span>
+                                                                            </p>
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                                 {product.setupFee && Number(product.setupFee) > 0 && (
                                                                     <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">+ {formatPrice(product.setupFee)} Setup</p>
                                                                 )}

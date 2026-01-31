@@ -109,7 +109,7 @@ export default function SupportPage() {
     ];
 
     return (
-        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "ADMIN", "STAFF"]}>
+        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "STAFF"]}>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />

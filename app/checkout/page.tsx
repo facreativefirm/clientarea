@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function PublicCheckoutContent() {
     const { t } = useLanguage();
@@ -62,6 +63,7 @@ function PublicCheckoutContent() {
     const [checkingDomainId, setCheckingDomainId] = useState<string | null>(null);
 
     const [completedOrder, setCompletedOrder] = useState<any>(null);
+    const [agreeToPolicies, setAgreeToPolicies] = useState(false);
 
     const MANUAL_METHODS = [
         {
@@ -173,11 +175,11 @@ function PublicCheckoutContent() {
             const data = await response.json();
 
             if (data.available === true) {
-                updateDomainName(itemId, finalName);
-                toast.success(`Domain ${finalName} is available!`);
+                updateDomainName(itemId, data.name);
+                toast.success(`Domain ${data.name} is available!`);
                 setDomainTargetItem(null);
             } else if (data.available === false) {
-                toast.error(`Domain ${finalName} is already taken.`);
+                toast.error(`Domain ${data.name} is already taken.`);
             } else {
                 toast.error(data.error || "Could not verify domain.");
             }
@@ -193,6 +195,11 @@ function PublicCheckoutContent() {
         if (!isAuthenticated) {
             toast.error("Please login to continue");
             router.push(`/auth/login?redirect=/checkout`);
+            return;
+        }
+
+        if (!agreeToPolicies) {
+            toast.error("Please agree to our Terms, Privacy, and Refund policies to continue.");
             return;
         }
 
@@ -386,28 +393,35 @@ function PublicCheckoutContent() {
                                                                     <div className="flex items-center gap-3">
                                                                         <h4 className="font-black text-xl text-white tracking-tight leading-none group-hover:text-[#f37021] transition-colors">{item.name}</h4>
                                                                         {/* Billing Switcher */}
-                                                                        {(item.monthlyPrice && item.annualPrice) && (
-                                                                            <div className="flex items-center bg-white/5 rounded-lg p-0.5 border border-white/10">
-                                                                                <button
-                                                                                    onClick={() => updateItem(item.cartId!, { billingCycle: 'MONTHLY', price: item.monthlyPrice! })}
-                                                                                    className={cn(
-                                                                                        "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
-                                                                                        item.billingCycle === 'MONTHLY' ? "bg-[#f37021] text-white" : "text-white/40 hover:text-white"
-                                                                                    )}
-                                                                                >
-                                                                                    Monthly
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => updateItem(item.cartId!, { billingCycle: 'ANNUALLY', price: item.annualPrice! })}
-                                                                                    className={cn(
-                                                                                        "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
-                                                                                        item.billingCycle === 'ANNUALLY' ? "bg-[#f37021] text-white" : "text-white/40 hover:text-white"
-                                                                                    )}
-                                                                                >
-                                                                                    Annual
-                                                                                </button>
-                                                                            </div>
-                                                                        )}
+                                                                        {(() => {
+                                                                            const monthly = Number(item.monthlyPrice || 0);
+                                                                            const annual = Number(item.annualPrice || 0);
+                                                                            if (monthly > 0 && annual > 0) {
+                                                                                return (
+                                                                                    <div className="flex items-center bg-white/5 rounded-lg p-0.5 border border-white/10">
+                                                                                        <button
+                                                                                            onClick={() => updateItem(item.cartId!, { billingCycle: 'MONTHLY', price: monthly })}
+                                                                                            className={cn(
+                                                                                                "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
+                                                                                                item.billingCycle === 'MONTHLY' ? "bg-[#f37021] text-white" : "text-white/40 hover:text-white"
+                                                                                            )}
+                                                                                        >
+                                                                                            Monthly
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() => updateItem(item.cartId!, { billingCycle: 'ANNUALLY', price: annual })}
+                                                                                            className={cn(
+                                                                                                "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
+                                                                                                item.billingCycle === 'ANNUALLY' ? "bg-[#f37021] text-white" : "text-white/40 hover:text-white"
+                                                                                            )}
+                                                                                        >
+                                                                                            Annual
+                                                                                        </button>
+                                                                                    </div>
+                                                                                );
+                                                                            }
+                                                                            return null;
+                                                                        })()}
                                                                     </div>
                                                                     <div className="flex flex-wrap gap-2 items-center mt-3">
                                                                         <Badge className="bg-white/10 text-white/80 border-none font-black uppercase tracking-widest text-[9px] px-3 py-1">
@@ -607,8 +621,21 @@ function PublicCheckoutContent() {
                                             )}
                                         </AnimatePresence>
 
-                                        <div className="bg-[#162a31] border border-white/10 rounded-xl p-6 text-center shadow-lg">
-                                            <p className="text-xs text-white/40 mb-4 font-medium">By clicking complete, you agree to our terms.</p>
+                                        <div className="bg-[#162a31] border border-white/10 rounded-xl p-6 shadow-lg space-y-4">
+                                            <div className="flex items-start gap-3 text-left bg-white/5 p-4 rounded-xl border border-white/5">
+                                                <Checkbox
+                                                    id="agreeCheckout"
+                                                    checked={agreeToPolicies}
+                                                    onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
+                                                    className="mt-1"
+                                                />
+                                                <Label htmlFor="agreeCheckout" className="text-[11px] leading-relaxed text-white/60 cursor-pointer select-none">
+                                                    I have read and agree to the{" "}
+                                                    <Link href="/terms" className="text-[#f37021] font-bold hover:underline">Terms & Conditions</Link>,{" "}
+                                                    <Link href="/privacy" className="text-[#f37021] font-bold hover:underline">Privacy Policy</Link>, and{" "}
+                                                    <Link href="/refund" className="text-[#f37021] font-bold hover:underline">Refund Policy</Link>.
+                                                </Label>
+                                            </div>
                                             <Button
                                                 onClick={handleCompleteOrder}
                                                 disabled={loading}

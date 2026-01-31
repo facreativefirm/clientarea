@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useLanguage } from "@/components/language-provider";
 import { useCartStore, CartItem } from "@/lib/store/cartStore";
+import { getProductDisplayPrice, calculateCartPrice } from "@/lib/productUtils";
 import { toast } from "sonner";
 
 interface Product {
@@ -87,12 +88,13 @@ export function PricingCard({ product, index }: PricingCardProps) {
     };
 
     const handleOrder = () => {
+        const display = getProductDisplayPrice(product);
         const item: CartItem = {
             id: product.id.toString(),
             name: product.name,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType as string) ? 'HOSTING' : 'OTHER')) as any,
-            price: product.monthlyPrice || product.price || 0,
-            billingCycle: 'MONTHLY',
+            price: calculateCartPrice(product, display.billingCycle),
+            billingCycle: display.billingCycle,
             quantity: 1,
             monthlyPrice: product.monthlyPrice,
             annualPrice: product.annualPrice
@@ -123,26 +125,36 @@ export function PricingCard({ product, index }: PricingCardProps) {
 
                 {/* Price */}
                 <div className="mb-8">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-sm text-gray-400 line-through">
-                            {formatPrice(product.monthlyPrice * 2)}
-                        </span>
-                    </div>
-                    <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-xl text-gray-600">$</span>
-                        <span className="text-5xl font-bold text-gray-900 tracking-tight">
-                            {(product.monthlyPrice / 100).toFixed(2).split('.')[0]}
-                        </span>
-                        <span className="text-2xl font-bold text-gray-900">
-                            .{(product.monthlyPrice / 100).toFixed(2).split('.')[1]}
-                        </span>
-                        <span className="text-gray-500 text-base font-medium">/mo</span>
-                    </div>
-                    {product.annualPrice && (
-                        <p className="text-sm text-gray-500 mt-2">
-                            Renews at {formatPrice(product.annualPrice)}/mo for 2 years. Cancel anytime.
-                        </p>
-                    )}
+                    {(() => {
+                        const display = getProductDisplayPrice(product);
+                        const parts = display.price.toFixed(2).split('.');
+                        return (
+                            <>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-sm text-gray-400 line-through">
+                                        {formatPrice(display.price * 1.5)}
+                                    </span>
+                                </div>
+                                <div className="flex items-baseline gap-1 mt-1">
+                                    <span className="text-xl text-gray-600">
+                                        {formatPrice(0).replace(/[0-9.]/g, '')}
+                                    </span>
+                                    <span className="text-5xl font-bold text-gray-900 tracking-tight">
+                                        {parts[0]}
+                                    </span>
+                                    <span className="text-2xl font-bold text-gray-900">
+                                        .{parts[1]}
+                                    </span>
+                                    <span className="text-gray-500 text-base font-medium">/{display.cycle}</span>
+                                </div>
+                                {display.billingCycle === 'ANNUALLY' && (
+                                    <p className="text-sm text-emerald-600 font-bold mt-2">
+                                        Billed annually. Professional access protocol.
+                                    </p>
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
 
                 {/* Action Button */}

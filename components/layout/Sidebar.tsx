@@ -316,13 +316,15 @@ export function Sidebar() {
                 </div>
 
                 <div className="border-t border-white/5 mt-4 pt-4 space-y-1">
-                    <Link
-                        href="/admin/settings"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all"
-                    >
-                        <Settings className="w-4 h-4" />
-                        <span>Settings</span>
-                    </Link>
+                    {['ADMIN', 'SUPER_ADMIN'].includes(user?.userType || '') && (
+                        <Link
+                            href="/admin/settings"
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all"
+                        >
+                            <Settings className="w-4 h-4" />
+                            <span>Settings</span>
+                        </Link>
+                    )}
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"

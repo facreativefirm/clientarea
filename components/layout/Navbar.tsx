@@ -207,10 +207,12 @@ export function Navbar() {
                             </>
                         )}
 
-                        <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
-                        </DropdownMenuItem>
+                        {['ADMIN', 'SUPER_ADMIN'].includes(user?.userType || '') && (
+                            <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
+                                <Settings className="mr-2 h-4 w-4" />
+                                <span>Settings</span>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                             <LogOut className="mr-2 h-4 w-4" />

@@ -84,7 +84,7 @@ export default function ClientDomainDetailPage() {
     if (!domain) return null;
 
     return (
-        <AuthGuard allowedRoles={["CLIENT", "RESELLER", "ADMIN"]}>
+        <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />

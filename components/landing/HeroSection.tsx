@@ -50,7 +50,7 @@ export function HeroSection() {
 
             if (data.available !== null) {
                 setResult({
-                    name: domainToSearch,
+                    name: data.name, // Use sanitized name from API
                     available: data.available,
                     price: 1750 // Matches the display price for .com
                 });

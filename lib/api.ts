@@ -51,7 +51,8 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Don't redirect if it's a login/register attempt failure
             const isAuthRequest = error.config?.url?.includes('/auth/login') ||
-                error.config?.url?.includes('/auth/register');
+                error.config?.url?.includes('/auth/register') ||
+                error.config?.url?.includes('/auth/update-me');
 
             if (!isAuthRequest && typeof window !== 'undefined') {
                 const currentPath = window.location.pathname;

@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/lib/store/settingsStore";
+import { getProductDisplayPrice } from "@/lib/productUtils";
 import {
     Sheet,
     SheetContent,
@@ -50,7 +51,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await api.get("/products");
+            const response = await api.get("/products?admin=true");
             setProducts(response.data.data.products || []);
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -87,7 +88,7 @@ export default function ProductsPage() {
                     <div>
                         <p className="font-bold">{item.name}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Tag size={10} /> {item.service?.name || "Uncategorized"}
+                            <Tag size={10} /> {item.productService?.name || "Uncategorized"}
                         </p>
                     </div>
                 </div>
@@ -96,12 +97,17 @@ export default function ProductsPage() {
         {
             header: t("pricing") || "Pricing",
             accessorKey: "monthlyPrice",
-            cell: (item: any) => (
-                <div className="flex flex-col">
-                    <span className="font-bold">{formatPrice(item.monthlyPrice)}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase">{item.pricingModel}</span>
-                </div>
-            )
+            cell: (item: any) => {
+                const display = getProductDisplayPrice(item);
+                return (
+                    <div className="flex flex-col">
+                        <span className="font-bold text-primary">{formatPrice(display.price)}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
+                            {display.label} {item.pricingModel}
+                        </span>
+                    </div>
+                );
+            }
         },
         {
             header: t("stock") || "Stock",

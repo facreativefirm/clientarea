@@ -35,6 +35,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InlineAuth } from "@/components/auth/InlineAuth";
 
 function StoreCheckoutContent() {
@@ -61,6 +62,7 @@ function StoreCheckoutContent() {
     const [checkingDomainId, setCheckingDomainId] = useState<string | null>(null);
 
     const [completedOrder, setCompletedOrder] = useState<any>(null);
+    const [agreeToPolicies, setAgreeToPolicies] = useState(false);
 
     const MANUAL_METHODS = [
         {
@@ -126,17 +128,17 @@ function StoreCheckoutContent() {
             const finalName = val.includes(".") ? val : `${val}.com`;
             // Note: In a real app, this should check domain availability via a registrar API
             // For now, mirroring the existing check functionality
-            const response = await api.get(`/domain/check?domain=${finalName}`);
-            const data = response.data.data;
+            const response = await fetch(`/api/domain/check?domain=${finalName}`);
+            const data = await response.json();
 
             if (data?.available === true) {
-                updateDomainName(itemId, finalName);
-                toast.success(`Domain ${finalName} is available!`);
+                updateDomainName(itemId, data.name);
+                toast.success(`Domain ${data.name} is available!`);
                 setDomainTargetItem(null);
             } else if (data?.available === false) {
-                toast.error(`Domain ${finalName} is already taken.`);
+                toast.error(`Domain ${data.name} is already taken.`);
             } else {
-                toast.error(data?.message || "Could not verify domain.");
+                toast.error(data?.error || data?.message || "Could not verify domain.");
             }
         } catch (error) {
             console.error("Checkout domain check error:", error);
@@ -149,6 +151,11 @@ function StoreCheckoutContent() {
     const handleCompleteOrder = async () => {
         if (!isAuthenticated) {
             setStep(2);
+            return;
+        }
+
+        if (!agreeToPolicies) {
+            toast.error("Please agree to our Terms, Privacy, and Refund policies to continue.");
             return;
         }
 
@@ -494,19 +501,35 @@ function StoreCheckoutContent() {
                                         </AnimatePresence>
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row justify-between items-center bg-card rounded-xl p-6 gap-4 shadow-lg border border-border mt-6">
-                                        <button onClick={() => setStep(1)} className="text-muted-foreground hover:text-primary font-bold uppercase tracking-wide text-xs flex items-center gap-2 mx-auto sm:mx-0 transition-all">
-                                            <ArrowLeft size={16} /> Edit Deployment
-                                        </button>
-                                        <Button
-                                            onClick={handleCompleteOrder}
-                                            disabled={loading}
-                                            className="w-full sm:w-auto rounded-lg px-8 h-11 font-bold text-sm bg-primary hover:bg-primary/90 text-white shadow-lg flex items-center gap-2"
-                                        >
-                                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                                <>Run Deployment Protocol <Zap size={16} fill="currentColor" /></>
-                                            )}
-                                        </Button>
+                                    <div className="bg-card rounded-xl p-6 shadow-lg border border-border mt-6 space-y-6">
+                                        <div className="flex items-start gap-4 text-left bg-muted/30 p-4 rounded-2xl border">
+                                            <Checkbox
+                                                id="agreeStore"
+                                                checked={agreeToPolicies}
+                                                onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
+                                                className="mt-1"
+                                            />
+                                            <Label htmlFor="agreeStore" className="text-xs leading-relaxed text-muted-foreground cursor-pointer select-none">
+                                                I have read and agree to the{" "}
+                                                <Link href="/terms" className="text-primary font-bold hover:underline">Terms & Conditions</Link>,{" "}
+                                                <Link href="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>, and{" "}
+                                                <Link href="/refund" className="text-primary font-bold hover:underline">Refund Policy</Link>.
+                                            </Label>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                                            <button onClick={() => setStep(1)} className="text-muted-foreground hover:text-primary font-bold uppercase tracking-wide text-xs flex items-center gap-2 transition-all">
+                                                <ArrowLeft size={16} /> Edit Deployment
+                                            </button>
+                                            <Button
+                                                onClick={handleCompleteOrder}
+                                                disabled={loading}
+                                                className="w-full sm:w-auto rounded-lg px-8 h-11 font-bold text-sm bg-primary hover:bg-primary/90 text-white shadow-lg flex items-center gap-2"
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                                    <>Run Deployment Protocol <Zap size={16} fill="currentColor" /></>
+                                                )}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}

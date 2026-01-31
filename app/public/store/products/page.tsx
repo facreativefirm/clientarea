@@ -25,6 +25,7 @@ import api from "@/lib/api";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { toast } from "sonner";
+import { getProductDisplayPrice, calculateCartPrice } from "@/lib/productUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -78,20 +79,23 @@ export default function ProductsPage() {
     });
 
     const getPrice = (product: any) => {
-        const monthly = Number(product.monthlyPrice);
+        const display = getProductDisplayPrice(product);
         if (billingCycle === 'annually') {
-            // Use annualPrice if available, otherwise apply 10% discount to monthly * 12
-            const annualBase = product.annualPrice ? Number(product.annualPrice) : (monthly * 12 * 0.9);
-            return annualBase / 12; // Display as per month for annual
+            // If annually is selected, try to show annual price / 12
+            const annual = Number(product.annualPrice);
+            if (annual > 0) return annual / 12;
+
+            // If no annual price, show monthly
+            const monthly = Number(product.monthlyPrice);
+            return monthly > 0 ? monthly : display.price;
         }
-        return monthly;
+        return display.price;
     };
 
     const handleAddToCart = (product: any) => {
-        const monthly = Number(product.monthlyPrice);
-        const price = billingCycle === 'annually'
-            ? (product.annualPrice ? Number(product.annualPrice) : (monthly * 12 * 0.9))
-            : monthly;
+        const display = getProductDisplayPrice(product);
+        const cycle = billingCycle === 'annually' ? 'ANNUALLY' : 'MONTHLY';
+        const price = calculateCartPrice(product, cycle) || display.price;
 
         addItem({
             id: String(product.id),
@@ -99,10 +103,10 @@ export default function ProductsPage() {
             price: price,
             setupFee: product.setupFee ? Number(product.setupFee) : 0,
             quantity: 1,
-            billingCycle: billingCycle,
+            billingCycle: cycle as any,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
-            monthlyPrice: Number(product.monthlyPrice),
-            annualPrice: product.annualPrice ? Number(product.annualPrice) : (Number(product.monthlyPrice) * 12 * 0.9)
+            monthlyPrice: Number(product.monthlyPrice) || (display.billingCycle === 'MONTHLY' ? display.price : 0),
+            annualPrice: Number(product.annualPrice) || (display.billingCycle === 'ANNUALLY' ? display.price : 0)
         });
         toast.success(`${product.name} added to cart!`);
     };
@@ -268,9 +272,11 @@ export default function ProductsPage() {
                                         <div className="mb-10">
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-4xl font-black text-foreground tracking-tighter">
-                                                    {formatPrice(billingCycle === 'annually' ? (price) : price)}
+                                                    {formatPrice(price)}
                                                 </span>
-                                                <span className="text-muted-foreground font-bold text-sm tracking-tight">/mo</span>
+                                                <span className="text-muted-foreground font-bold text-sm tracking-tight">
+                                                    /{billingCycle === 'annually' ? 'mo' : getProductDisplayPrice(product).cycle}
+                                                </span>
                                             </div>
                                             {product.setupFee && Number(product.setupFee) > 0 && (
                                                 <p className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">

@@ -1,27 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
-import { useLanguage } from "@/components/language-provider";
 import { useAuthStore } from "@/lib/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TwoFactorSetup } from "@/components/auth/TwoFactor/TwoFactorSetup";
-import { Shield, User, Lock, Save, Loader2 } from "lucide-react";
+import {
+    Shield,
+    User,
+    Lock,
+    Save,
+    Loader2,
+    Mail,
+    Phone,
+    Smartphone,
+    KeyRound,
+    UserCheck,
+    AlertCircle,
+    ArrowLeft
+} from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import Link from "next/link";
+import { PasswordStrength } from "@/components/shared/PasswordStrength";
 
 export default function ProfilePage() {
-    const { t } = useLanguage();
-    const { user } = useAuthStore();
+    const { user, updateUser } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
     const [is2FAModalOpen, set2FAModalOpen] = useState(false);
 
-    const { register, handleSubmit, reset } = useForm({
+    const { register, handleSubmit, reset, watch } = useForm({
         defaultValues: {
             firstName: user?.firstName || "",
             lastName: user?.lastName || "",
@@ -30,23 +44,84 @@ export default function ProfilePage() {
             whatsAppNumber: user?.whatsAppNumber || "",
             currentPassword: "",
             newPassword: "",
+            confirmPassword: "",
         }
     });
 
-    const onSubmit = async (data: any) => {
-        if (!user) return;
+    // Reset form when user data changes (fixes sync/reload issues)
+    useEffect(() => {
+        if (user) {
+            reset({
+                firstName: user.firstName || "",
+                lastName: user.lastName || "",
+                email: user.email || "",
+                phoneNumber: user.phoneNumber || "",
+                whatsAppNumber: user.whatsAppNumber || "",
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            });
+        }
+    }, [user, reset]);
+
+    // Handle profile info update
+    const onUpdateProfile = async (data: any) => {
         setIsLoading(true);
         try {
-            await api.patch(`/users/${user.id}`, {
+            const response = await api.patch("/auth/update-me", {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 phoneNumber: data.phoneNumber,
                 whatsAppNumber: data.whatsAppNumber,
             });
-            toast.success("Profile updated successfully");
-            // Optionally update user in store if you have a method for it
+
+            if (response.data.status === 'success') {
+                updateUser(response.data.data.user);
+                toast.success("Profile updated successfully");
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to update profile");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle password change with explicit verification phase
+    const onUpdatePassword = async (data: any) => {
+        if (!data.currentPassword) {
+            return toast.error("Verification Required: Please enter your current master key");
+        }
+
+        if (!data.newPassword) {
+            return toast.error("Invalid Entry: Please define a new access key");
+        }
+
+        // Strong Password Validation: 8+ chars, Capital, Number, Symbol
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!passwordRegex.test(data.newPassword)) {
+            return toast.error("Security Standard Not Met: New key must be 8+ characters and include a Capital letter, a Number, and a Symbol (@, #, !, etc.)");
+        }
+
+        if (data.newPassword !== data.confirmPassword) {
+            return toast.error("Credential Mismatch: The repeat key does not match the original");
+        }
+
+        setIsLoading(true);
+        const toastId = toast.loading("Verifying current credentials...");
+
+        try {
+            const response = await api.patch("/auth/update-me", {
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword,
+            });
+
+            if (response.data.status === 'success') {
+                toast.success("Security keys authorized and updated successfully", { id: toastId });
+                reset({ ...watch(), currentPassword: "", newPassword: "", confirmPassword: "" });
+            }
+        } catch (err: any) {
+            const message = err.response?.data?.message || "Authorization Failed: Current master key is incorrect";
+            toast.error(message, { id: toastId });
         } finally {
             setIsLoading(false);
         }
@@ -57,122 +132,107 @@ export default function ProfilePage() {
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-75 pt-20 p-4 md:p-8">
-                    <div className="max-w-7xl mx-auto space-y-8">
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Account Security</h1>
-                            <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Manage your personal identity, credentials, and authentication preferences.</p>
+                <main className="pl-0 md:pl-75 pt-20 p-8 flex justify-center">
+                    <div className="w-full max-w-4xl space-y-6">
+                        {/* Header Section (Following Add Product Page Design) */}
+                        <div className="flex items-center gap-4">
+                            <Link href="/client">
+                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/50">
+                                    <ArrowLeft size={20} />
+                                </Button>
+                            </Link>
+                            <div>
+                                <h1 className="text-3xl font-bold">My Profile</h1>
+                                <p className="text-muted-foreground">Manage your account settings and security preferences.</p>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            {/* Left Col: Personal Info */}
-                            <div className="lg:col-span-2 space-y-6">
-                                <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-5">
-                                        <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <h2 className="text-xl font-extrabold tracking-tight">Identity Details</h2>
-                                    </div>
+                        {/* Main Form Container (Following Add Product Page Design) */}
+                        <div className="glass rounded-[2rem] p-10 border border-white/5 shadow-2xl space-y-8">
+                            <Tabs defaultValue="identity" className="w-full">
+                                <TabsList className="mb-8 w-full justify-start bg-secondary/10 p-1 rounded-xl h-auto">
+                                    <TabsTrigger value="identity" className="gap-2 px-6 py-2.5 rounded-lg text-sm font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+                                        <User size={16} /> Identity
+                                    </TabsTrigger>
+                                    <TabsTrigger value="security" className="gap-2 px-6 py-2.5 rounded-lg text-sm font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+                                        <Lock size={16} /> Security
+                                    </TabsTrigger>
+                                </TabsList>
 
-                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="space-y-2">
+                                {/* Identity Tab */}
+                                <TabsContent value="identity" className="space-y-8 animate-in fade-in duration-300">
+                                    <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-1.5">
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">First Name</Label>
-                                                <Input {...register("firstName")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                                <Input {...register("firstName")} className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
                                             </div>
-                                            <div className="space-y-2">
+                                            <div className="space-y-1.5">
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Last Name</Label>
-                                                <Input {...register("lastName")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                                <Input {...register("lastName")} className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
                                             </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="space-y-2">
+                                            <div className="space-y-1.5">
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
-                                                <Input {...register("phoneNumber")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                                <Input {...register("phoneNumber")} className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
                                             </div>
-                                            <div className="space-y-2">
+                                            <div className="space-y-1.5">
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">WhatsApp Number</Label>
-                                                <Input {...register("whatsAppNumber")} className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                                <Input {...register("whatsAppNumber")} className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
                                             </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Registered Email</Label>
-                                            <Input {...register("email")} disabled className="h-11 rounded-xl bg-secondary/10 border-border/50 opacity-60 font-semibold cursor-not-allowed" />
-                                            <p className="text-[10px] text-muted-foreground font-medium">Contact administration to modify your primary email record.</p>
                                         </div>
 
-                                        <div className="pt-2">
-                                            <Button type="submit" className="h-11 px-8 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2" disabled={isLoading}>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address (Read-Only)</Label>
+                                            <Input {...register("email")} disabled className="bg-secondary/10 h-11 border-border rounded-xl font-medium opacity-60" />
+                                            <p className="text-[10px] text-muted-foreground font-medium italic">Contact administration to modify your primary email record.</p>
+                                        </div>
+
+                                        <div className="flex justify-end pt-4">
+                                            <Button type="submit" disabled={isLoading} className="h-11 px-8 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2">
                                                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                                Persist Changes
+                                                Save Changes
                                             </Button>
                                         </div>
                                     </form>
-                                </div>
+                                </TabsContent>
 
-                                <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-5">
-                                        <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500">
-                                            <Lock className="w-5 h-5" />
-                                        </div>
-                                        <h2 className="text-xl font-extrabold tracking-tight">Security Credentials</h2>
-                                    </div>
-                                    <form className="space-y-6">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Password</Label>
-                                            <Input type="password" placeholder="••••••••" className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">New Access Key</Label>
-                                                <Input type="password" placeholder="Minimum 12 characters" className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                {/* Security Tab */}
+                                <TabsContent value="security" className="space-y-8 animate-in fade-in duration-300">
+                                    <form onSubmit={handleSubmit(onUpdatePassword)} className="space-y-8">
+                                        <div className="p-6 bg-rose-500/5 rounded-2xl border border-rose-500/10 space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <Shield className="text-rose-500" size={18} />
+                                                <h3 className="text-sm font-bold text-rose-500">Security Verification</h3>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Re-verify Key</Label>
-                                                <Input type="password" placeholder="Confirm new key" className="h-11 rounded-xl bg-secondary/30 border-border/50 focus:border-primary/50 font-semibold" />
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Password</Label>
+                                                <Input type="password" {...register("currentPassword")} placeholder="Required to authorize change" className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
                                             </div>
                                         </div>
-                                        <div className="pt-2">
-                                            <Button type="button" variant="outline" className="h-11 px-8 rounded-xl font-bold border-border hover:bg-secondary/50">Modify Access Key</Button>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-3">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">New Password</Label>
+                                                <Input type="password" {...register("newPassword")} placeholder="Min. 8 characters" className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
+
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Confirm New Password</Label>
+                                                <Input type="password" {...register("confirmPassword")} placeholder="Repeat new password" className="bg-secondary/20 h-11 border-border rounded-xl font-medium" />
+                                            </div>
+                                        </div>
+
+                                        <PasswordStrength password={watch("newPassword")} />
+
+                                        <div className="flex justify-end pt-4">
+                                            <Button type="submit" disabled={isLoading} className="h-11 px-8 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2">
+                                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                                                Update Security
+                                            </Button>
                                         </div>
                                     </form>
-                                </div>
-                            </div>
-
-                            {/* Right Col: Security */}
-                            <div className="space-y-6">
-                                <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 p-6 opacity-5 -mr-4 -mt-4 transition-transform group-hover:scale-110">
-                                        <Shield size={80} />
-                                    </div>
-                                    <div className="flex items-center gap-3 mb-6 relative z-10">
-                                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
-                                            <Shield className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-lg font-extrabold tracking-tight">Trust Status</h2>
-                                            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest leading-none mt-1">Health: Nominal</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4 relative z-10">
-                                        <div className="flex items-center justify-between p-4 bg-secondary/30 border border-border/50 rounded-xl transition-colors hover:bg-secondary/50">
-                                            <div>
-                                                <p className="font-bold text-sm">2FA Protocols</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium">Enhanced auth currently inactive</p>
-                                            </div>
-                                            <Button size="sm" className="h-9 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 shadow-sm" onClick={() => set2FAModalOpen(true)}>Enable</Button>
-                                        </div>
-                                        <div className="flex items-center justify-between p-4 bg-secondary/30 border border-border/50 rounded-xl transition-colors hover:bg-secondary/50">
-                                            <div>
-                                                <p className="font-bold text-sm">Last Access</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium">Session recorded from Dhaka, BD</p>
-                                            </div>
-                                            <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold uppercase tracking-widest p-0 px-2 opacity-60 hover:opacity-100">Audit</Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                </TabsContent>
+                            </Tabs>
                         </div>
                     </div>
 

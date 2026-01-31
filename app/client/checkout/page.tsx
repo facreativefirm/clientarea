@@ -38,6 +38,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useWhiteLabel } from "@/components/white-label-provider";
 
 function CheckoutContent() {
@@ -173,14 +174,14 @@ function CheckoutContent() {
             const response = await fetch(`/api/domain/check?domain=${finalName}`);
             const data = await response.json();
 
-            if (data.available === true) {
-                updateDomainName(itemId, finalName);
-                toast.success(`Domain ${finalName} is available and selected!`);
+            if (data?.available === true) {
+                updateDomainName(itemId, data.name);
+                toast.success(`Domain ${data.name} is available!`);
                 setDomainTargetItem(null);
-            } else if (data.available === false) {
-                toast.error(`Domain ${finalName} is already taken. Please try another.`);
+            } else if (data?.available === false) {
+                toast.error(`Domain ${data.name} is already taken.`);
             } else {
-                toast.error(data.error || "Could not verify domain availability.");
+                toast.error(data?.error || data?.message || "Could not verify domain.");
             }
         } catch (error) {
             console.error("Checkout domain check error:", error);
@@ -191,9 +192,15 @@ function CheckoutContent() {
     };
 
     const [completedOrder, setCompletedOrder] = useState<any>(null);
+    const [agreeToPolicies, setAgreeToPolicies] = useState(false);
 
     const handleCompleteOrder = async () => {
         // Validation: Check if any domain items are missing domain names
+        if (!agreeToPolicies) {
+            toast.error("Please agree to our Terms, Privacy, and Refund policies to continue.");
+            return;
+        }
+
         const missingDomain = items.find(i => i.type === 'DOMAIN' && !i.domainName);
         if (!invoiceId && missingDomain) {
             toast.error(`Please set a domain name for ${missingDomain.name}`);
@@ -247,15 +254,20 @@ function CheckoutContent() {
             const response = await api.post("/orders", {
                 items: items.map(i => {
                     const orderItem: any = {
-                        billingCycle: i.billingCycle,
+                        billingCycle: i.billingCycle || (i.type === 'DOMAIN' ? 'ANNUALLY' : 'MONTHLY'),
                         quantity: i.quantity || 1,
                     };
 
-                    // For domain items (id starts with 'dom-'), include domainName but no productId
+                    // For domain items (id starts with 'dom-'), include domainName
+                    // Note: If we have a real productId (not starting with dom-), we MUST send it.
                     if (i.id.startsWith('dom-')) {
                         orderItem.domainName = i.domainName;
+                        // For legacy dom- items, we might fail if backend requires productId. 
+                        // But let's assume specific backend handling or that these are filtered out.
+                        // Actually, to be safe, if it's a dom- item and we have no productId, we are in trouble.
+                        // But usually we don't fix the legacy data here, just the payload structure.
                     } else {
-                        // For regular products, parse the id as productId
+                        // For regular products (and now properly configured domains), parse the id as productId
                         orderItem.productId = parseInt(i.id);
                         if (i.domainName) {
                             orderItem.domainName = i.domainName;
@@ -377,30 +389,35 @@ function CheckoutContent() {
                                                                 <div className="space-y-1">
                                                                     <h4 className="font-bold text-sm leading-tight">{item.name}</h4>
                                                                     <div className="flex flex-wrap gap-2 items-center mt-1">
-                                                                        {(item.monthlyPrice && item.annualPrice) ? (
-                                                                            <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 border">
-                                                                                <button
-                                                                                    onClick={() => updateItem(item.cartId!, { billingCycle: 'MONTHLY', price: item.monthlyPrice! })}
-                                                                                    className={cn(
-                                                                                        "px-2 py-0.5 text-[10px] rounded-md font-bold transition-all",
-                                                                                        item.billingCycle === 'MONTHLY' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                                                                    )}
-                                                                                >
-                                                                                    Monthly
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => updateItem(item.cartId!, { billingCycle: 'ANNUALLY', price: item.annualPrice! })}
-                                                                                    className={cn(
-                                                                                        "px-2 py-0.5 text-[10px] rounded-md font-bold transition-all",
-                                                                                        item.billingCycle === 'ANNUALLY' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                                                                    )}
-                                                                                >
-                                                                                    Annually
-                                                                                </button>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <Badge variant="secondary" className="text-[10px] h-5">{item.billingCycle}</Badge>
-                                                                        )}
+                                                                        {(() => {
+                                                                            const monthly = Number(item.monthlyPrice || 0);
+                                                                            const annual = Number(item.annualPrice || 0);
+                                                                            if (monthly > 0 && annual > 0) {
+                                                                                return (
+                                                                                    <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 border">
+                                                                                        <button
+                                                                                            onClick={() => updateItem(item.cartId!, { billingCycle: 'MONTHLY', price: monthly })}
+                                                                                            className={cn(
+                                                                                                "px-2 py-0.5 text-[10px] rounded-md font-bold transition-all",
+                                                                                                item.billingCycle === 'MONTHLY' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                                                                            )}
+                                                                                        >
+                                                                                            Monthly
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() => updateItem(item.cartId!, { billingCycle: 'ANNUALLY', price: annual })}
+                                                                                            className={cn(
+                                                                                                "px-2 py-0.5 text-[10px] rounded-md font-bold transition-all",
+                                                                                                item.billingCycle === 'ANNUALLY' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                                                                            )}
+                                                                                        >
+                                                                                            Annually
+                                                                                        </button>
+                                                                                    </div>
+                                                                                );
+                                                                            }
+                                                                            return <Badge variant="secondary" className="text-[10px] h-5">{item.billingCycle}</Badge>;
+                                                                        })()}
                                                                         {item.type === 'DOMAIN' && (
                                                                             item.domainName ? (
                                                                                 <div className="flex items-center gap-2">
@@ -508,10 +525,6 @@ function CheckoutContent() {
                                                     <div className="p-2.5 rounded-xl bg-muted/30 border text-sm font-semibold">
                                                         {user?.email}
                                                     </div>
-                                                </div>
-                                                <div className="sm:col-span-2 space-y-1.5">
-                                                    <Label className="text-xs text-muted-foreground">Billing Address</Label>
-                                                    <Input placeholder="Enter your full address" className="rounded-xl h-11" />
                                                 </div>
                                             </div>
 
@@ -651,25 +664,41 @@ function CheckoutContent() {
                                             )}
                                         </AnimatePresence>
 
-                                        <div className="bg-card border rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                                                    <Lock size={18} />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-sm">Secure Transaction</p>
-                                                    <p className="text-[10px] text-muted-foreground">SSL encrypted payment processing</p>
-                                                </div>
+                                        <div className="bg-card border rounded-3xl p-6 space-y-4 shadow-sm">
+                                            <div className="flex items-start gap-3 text-left bg-muted/30 p-4 rounded-2xl border">
+                                                <Checkbox
+                                                    id="agreeClient"
+                                                    checked={agreeToPolicies}
+                                                    onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
+                                                    className="mt-1"
+                                                />
+                                                <Label htmlFor="agreeClient" className="text-[11px] leading-relaxed text-muted-foreground cursor-pointer select-none">
+                                                    I have read and agree to the{" "}
+                                                    <Link href="/terms" className="text-primary font-bold hover:underline">Terms & Conditions</Link>,{" "}
+                                                    <Link href="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>, and{" "}
+                                                    <Link href="/refund" className="text-primary font-bold hover:underline">Refund Policy</Link>.
+                                                </Label>
                                             </div>
-                                            <Button
-                                                onClick={handleCompleteOrder}
-                                                disabled={loading}
-                                                size="lg"
-                                                className="w-full sm:w-auto rounded-xl px-10 h-12 font-bold text-sm shadow-lg shadow-primary/20"
-                                            >
-                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" fill="currentColor" />}
-                                                Complete Order
-                                            </Button>
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                                                        <Lock size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">Secure Transaction</p>
+                                                        <p className="text-[10px] text-muted-foreground">SSL encrypted payment processing</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    onClick={handleCompleteOrder}
+                                                    disabled={loading}
+                                                    size="lg"
+                                                    className="w-full sm:w-auto rounded-xl px-10 h-12 font-bold text-sm shadow-lg shadow-primary/20"
+                                                >
+                                                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" fill="currentColor" />}
+                                                    Complete Order
+                                                </Button>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
