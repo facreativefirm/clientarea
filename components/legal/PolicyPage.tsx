@@ -15,7 +15,7 @@ interface PolicyPageProps {
 
 export function PolicyPage({ title, description, icon: Icon, contentEn, contentBn }: PolicyPageProps) {
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
             <Navbar />
             <div className="flex justify-center pt-24 p-6 md:p-12">
                 <div className="w-full max-w-7xl space-y-8">
@@ -56,7 +56,7 @@ export function PolicyPage({ title, description, icon: Icon, contentEn, contentB
                         <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-xl bg-white/5 flex flex-col">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent/50 to-transparent"></div>
                             <div className="mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
-                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-primary/20 text-primary">বাংলা</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-primary/20 text-primary font-tiro-bangla">বাংলা</span>
                                 <h3 className="font-bold text-lg font-tiro-bangla">বিবরণ ও শর্তাবলী</h3>
                             </div>
                             <div className="prose prose-invert max-w-none prose-headings:text-primary prose-strong:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground font-tiro-bangla prose-p:leading-relaxed text-lg">

@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,7 +60,8 @@ export default function SystemSettingsPage() {
         nagadMerchantId: "",
         nagadPublicKey: "",
         nagadPrivateKey: "",
-        nagadRunMode: "sandbox"
+        nagadRunMode: "sandbox",
+        companyAddress: ""
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -129,7 +131,7 @@ export default function SystemSettingsPage() {
 
     return (
         <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-72 pt-20 p-4 md:p-8">
@@ -282,6 +284,16 @@ export default function SystemSettingsPage() {
                                                 <p className="text-[10px] text-muted-foreground">Used for WhatsApp integration and contact info.</p>
                                             </div>
                                             <div className="space-y-3">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Company Address</Label>
+                                                <Textarea
+                                                    value={settings.companyAddress || ""}
+                                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleUpdateSetting("companyAddress", e.target.value)}
+                                                    placeholder="123 Suite, Building Name, City, Country"
+                                                    className="min-h-[100px] rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold resize-none"
+                                                />
+                                                <p className="text-[10px] text-muted-foreground">This address will be displayed on invoices and official documents.</p>
+                                            </div>
+                                            <div className="space-y-3">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Maintenance Mode</Label>
                                                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                                                     <span className="text-sm font-bold text-muted-foreground">Enable Maintenance Mode</span>
@@ -292,7 +304,7 @@ export default function SystemSettingsPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="pt-6 border-t border-border/10">
+                                            {/* <div className="pt-6 border-t border-border/10">
                                                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Manual Diagnostics</h4>
                                                 <Button
                                                     variant="outline"
@@ -306,7 +318,7 @@ export default function SystemSettingsPage() {
                                                 <p className="text-[10px] text-muted-foreground mt-2 px-1 italic">
                                                     Manually triggers the consolidation engine, scans for expiring services, and notifies clients.
                                                 </p>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
                                 </TabsContent>

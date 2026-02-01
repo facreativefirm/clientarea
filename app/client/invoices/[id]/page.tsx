@@ -80,7 +80,7 @@ export default function ClientInvoiceDetailsPage() {
     };
 
     const handlePrint = () => {
-        window.print();
+        window.open(`/client/invoices/${params.id}/print`, '_blank');
     };
 
     const handleDownload = async () => {
@@ -94,7 +94,12 @@ export default function ClientInvoiceDetailsPage() {
             const { InvoicePDF } = await import('@/components/pdf/InvoicePDF');
 
             const blob = await pdf(
-                <InvoicePDF invoice={invoice as any} appName={settings.appName || 'FA CRM'} />
+                <InvoicePDF
+                    invoice={invoice as any}
+                    appName={settings.appName || 'FA CRM'}
+                    companyAddress={settings.companyAddress}
+                    supportEmail={settings.supportEmail}
+                />
             ).toBlob();
 
             const url = URL.createObjectURL(blob);
@@ -128,7 +133,7 @@ export default function ClientInvoiceDetailsPage() {
 
     return (
         <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300 print:bg-white print:text-black">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300 print:bg-white print:text-black">
                 <div className="print:hidden">
                     <Navbar />
                     <Sidebar />
@@ -158,10 +163,10 @@ export default function ClientInvoiceDetailsPage() {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" onClick={handlePrint} className="gap-2">
+                                {/* <Button variant="outline" onClick={handlePrint} className="gap-2">
                                     <Printer size={16} />
                                     Print
-                                </Button>
+                                </Button> */}
                                 <Button variant="outline" onClick={handleDownload} className="gap-2">
                                     <Download size={16} />
                                     Download PDF
@@ -192,10 +197,14 @@ export default function ClientInvoiceDetailsPage() {
                                         </div>
                                         <h2 className="text-2xl font-bold text-primary">{settings.appName || 'FA CRM'}</h2>
                                     </div>
-                                    <div className="text-sm text-muted-foreground print:text-gray-600">
-                                        <p>123 Hosting Street</p>
-                                        <p>Dhaka, Bangladesh</p>
-                                        <p>support@whmcscrm.com</p>
+                                    <div className="text-sm text-muted-foreground print:text-gray-600 whitespace-pre-line">
+                                        {settings.companyAddress || (
+                                            <>
+                                                <p>123 Hosting Street</p>
+                                                <p>Dhaka, Bangladesh</p>
+                                            </>
+                                        )}
+                                        <p>{settings.supportEmail || 'support@whmcscrm.com'}</p>
                                     </div>
                                 </div>
                                 <div className="text-left md:text-right">
@@ -216,17 +225,6 @@ export default function ClientInvoiceDetailsPage() {
                                     {invoice.client.companyName && (
                                         <div className="text-muted-foreground mb-1">{invoice.client.companyName}</div>
                                     )}
-                                    <div className="text-sm text-muted-foreground space-y-1">
-                                        {contact ? (
-                                            <>
-                                                <p>{contact.address1}</p>
-                                                <p>{contact.city} {contact.country}</p>
-                                            </>
-                                        ) : (
-                                            <p className="italic opacity-50">No address on file</p>
-                                        )}
-                                        <p>{invoice.client.user.email}</p>
-                                    </div>
                                 </div>
                                 <div>
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Payment Method</h3>

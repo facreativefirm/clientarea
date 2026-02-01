@@ -127,7 +127,7 @@ export default function InvoiceDetailsPage() {
     };
 
     const handlePrint = () => {
-        window.print();
+        window.open(`/admin/billing/${params.id}/print`, '_blank');
     };
 
     const handleDownload = async () => {
@@ -141,6 +141,8 @@ export default function InvoiceDetailsPage() {
                 <InvoicePDF
                     invoice={invoice as any}
                     appName={settings.appName || 'FA CRM'}
+                    companyAddress={settings.companyAddress}
+                    supportEmail={settings.supportEmail}
                     currencyCode={settings.defaultCurrency || 'BDT'}
                 />
             ).toBlob();
@@ -176,7 +178,7 @@ export default function InvoiceDetailsPage() {
 
     return (
         <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300 print:bg-white print:text-black">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300 print:bg-white print:text-black">
                 <div className="print:hidden">
                     <Navbar />
                     <Sidebar />
@@ -290,10 +292,14 @@ export default function InvoiceDetailsPage() {
                                         </div>
                                         <h2 className="text-2xl font-bold text-primary">{settings.appName || 'FA CRM'}</h2>
                                     </div>
-                                    <div className="text-sm text-muted-foreground print:text-gray-600">
-                                        <p>4210 Oxygen Chittagong</p>
-                                        <p>Chittagong, Bangladesh</p>
-                                        <p>naimursharon@gmail.com</p>
+                                    <div className="text-sm text-muted-foreground print:text-gray-600 whitespace-pre-line">
+                                        {settings.companyAddress || (
+                                            <>
+                                                <p>4210 Oxygen Chittagong</p>
+                                                <p>Chittagong, Bangladesh</p>
+                                            </>
+                                        )}
+                                        <p>{settings.supportEmail || 'naimursharon@gmail.com'}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -314,17 +320,6 @@ export default function InvoiceDetailsPage() {
                                     {invoice.client.companyName && (
                                         <div className="text-muted-foreground mb-1">{invoice.client.companyName}</div>
                                     )}
-                                    <div className="text-sm text-muted-foreground space-y-1">
-                                        {contact ? (
-                                            <>
-                                                <p>{contact.address1}</p>
-                                                <p>{contact.city} {contact.country}</p>
-                                            </>
-                                        ) : (
-                                            <p className="italic opacity-50">No address on file</p>
-                                        )}
-                                        <p>{invoice.client.user.email}</p>
-                                    </div>
                                 </div>
                                 {/* Could add Payment Method info here if available */}
                             </div>

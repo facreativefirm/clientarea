@@ -55,6 +55,7 @@ interface ProductService {
     icon?: string;
     products: Product[];
     subServices?: ProductService[];
+    parentServiceId?: number | null;
 }
 
 export default function StoreFront() {
@@ -176,7 +177,7 @@ export default function StoreFront() {
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
             price: typeof price === 'string' ? parseFloat(price) : price,
             setupFee: product.setupFee ? (typeof product.setupFee === 'string' ? parseFloat(product.setupFee) : product.setupFee) : 0,
-            billingCycle: billingCycle as any,
+            billingCycle: cycle as any,
             quantity: 1,
             monthlyPrice: typeof product.monthlyPrice === 'string' ? parseFloat(product.monthlyPrice) : product.monthlyPrice,
             annualPrice: typeof product.annualPrice === 'string' ? parseFloat(product.annualPrice) : product.annualPrice
@@ -206,7 +207,7 @@ export default function StoreFront() {
             price: domainResult.price,
             billingCycle: "ANNUALLY", // Domains are usually yearly
             quantity: 1,
-            monthlyPrice: domainResult.price,
+            monthlyPrice: 0, // No monthly option for domains
             annualPrice: domainResult.price
         };
         addItem(item);
@@ -216,21 +217,69 @@ export default function StoreFront() {
         router.push("/client/checkout");
     };
 
-    const filteredServices = services
-        .map(service => ({
-            ...service,
-            products: service.products.filter(p =>
-                p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                service.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }))
+    const getAllIdsInBranch = (serviceId: number | "all"): number[] => {
+        if (serviceId === "all") return [];
+
+        const findService = (list: any[]): any => {
+            for (const s of list) {
+                if (s.id === serviceId) return s;
+                if (s.subServices) {
+                    const found = findService(s.subServices);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const service = findService(services);
+        if (!service) return [];
+
+        const ids: number[] = [service.id];
+        const collect = (s: any) => {
+            if (s.subServices) {
+                s.subServices.forEach((child: any) => {
+                    ids.push(child.id);
+                    collect(child);
+                });
+            }
+        };
+        collect(service);
+        return ids;
+    };
+
+    const allFlattenedServices = (() => {
+        const flat: ProductService[] = [];
+        const flatten = (list: ProductService[]) => {
+            list.forEach(s => {
+                flat.push(s);
+                if (s.subServices) flatten(s.subServices);
+            });
+        };
+        flatten(services);
+        return flat;
+    })();
+
+    const filteredServices = allFlattenedServices
+        .map(service => {
+            // A service is in the active branch if "all" is active, 
+            // or if it IS the active service, or if it's a descendant of the active service.
+            const activeBranchIds = activeServiceId === "all" ? [] : getAllIdsInBranch(activeServiceId);
+            const isServiceInActiveBranch = activeServiceId === "all" || activeBranchIds.includes(service.id);
+
+            return {
+                ...service,
+                isVisible: isServiceInActiveBranch
+            };
+        })
         .filter(service =>
-            (activeServiceId === "all" || service.id === activeServiceId) &&
-            (service.products.length > 0 || service.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            service.isVisible &&
+            service.products.length > 0 &&
+            (service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                service.products.some(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())))
         );
 
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
             <Navbar />
             <Sidebar />
             <main className="lg:pl-72 pt-20 p-4 md:p-8">
@@ -318,32 +367,87 @@ export default function StoreFront() {
 
                     {/* Navigation & Search Bar */}
                     <div className="flex flex-col sm:flex-row gap-6 items-center justify-between py-4 border-b border-border/50">
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-2 sm:pb-0">
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-4 sm:pb-4">
                             <button
                                 onClick={() => setActiveServiceId("all")}
                                 className={cn(
-                                    "px-2 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                    "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                                     activeServiceId === "all"
-                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                        : "bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent"
+                                        ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20"
+                                        : "bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent whitespace-nowrap"
                                 )}
                             >
-                                Core Registry
+                                All Services
                             </button>
-                            {services.map((service) => (
-                                <button
-                                    key={service.id}
-                                    onClick={() => setActiveServiceId(service.id)}
-                                    className={cn(
-                                        "px-2 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                        activeServiceId === service.id
-                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                            : "bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent"
-                                    )}
-                                >
-                                    {service.name}
-                                </button>
-                            ))}
+                            {(() => {
+                                // Helper to find if a service or any of its sub-services is selected
+                                const isNodeInActivePath = (svc: any): boolean => {
+                                    if (activeServiceId === 'all') return false;
+                                    if (svc.id === activeServiceId) return true;
+                                    if (svc.subServices) {
+                                        return svc.subServices.some((child: any) => isNodeInActivePath(child));
+                                    }
+                                    return false;
+                                };
+
+                                const flatServices: any[] = [];
+                                const flatten = (cats: any[], depth = 0) => {
+                                    cats.forEach(s => {
+                                        // A service is visible if:
+                                        // 1. It's a root service
+                                        // 2. Its parent is in the active path (either selected or an ancestor of selected)
+                                        const parent = findParent(s.id, services);
+                                        const isVisibleInTabs = !s.parentServiceId || (parent && isNodeInActivePath(parent));
+
+                                        if (isVisibleInTabs) {
+                                            flatServices.push({ ...s, depth });
+                                        }
+
+                                        // Only recurse if this service is in the active path (to show its children)
+                                        if (s.subServices && isNodeInActivePath(s)) {
+                                            flatten(s.subServices, depth + 1);
+                                        }
+                                    });
+                                };
+
+                                // Helper to find parent of a service
+                                const findParent = (id: number, list: any[]): any => {
+                                    for (const item of list) {
+                                        if (item.subServices && item.subServices.some((c: any) => c.id === id)) return item;
+                                        if (item.subServices) {
+                                            const found = findParent(id, item.subServices);
+                                            if (found) return found;
+                                        }
+                                    }
+                                    return null;
+                                };
+
+                                flatten(services);
+                                return flatServices.map((service) => (
+                                    <button
+                                        key={service.id}
+                                        onClick={() => {
+                                            if (activeServiceId === service.id) {
+                                                // Toggle: if clicking active, go to parent or all
+                                                setActiveServiceId(service.parentServiceId || "all");
+                                            } else {
+                                                setActiveServiceId(service.id);
+                                            }
+                                        }}
+                                        className={cn(
+                                            "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center whitespace-nowrap",
+                                            activeServiceId === service.id
+                                                ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20"
+                                                : isNodeInActivePath(service)
+                                                    ? "bg-primary/10 text-primary border border-primary/20"
+                                                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary border border-transparent"
+                                        )}
+                                    >
+                                        {service.depth > 0 && <span className="opacity-40">{"—".repeat(service.depth)}</span>}
+                                        {service.name}
+                                    </button>
+                                ));
+                            })()}
                         </div>
 
                     </div>

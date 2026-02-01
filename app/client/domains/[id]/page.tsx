@@ -19,7 +19,11 @@ import {
     Unlock,
     Shield,
     ExternalLink,
-    Activity
+    Activity,
+    Copy,
+    Eye,
+    EyeOff,
+    Key
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/shared/Badge";
@@ -38,6 +42,7 @@ export default function ClientDomainDetailPage() {
     const [domain, setDomain] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [renewing, setRenewing] = useState(false);
+    const [showEpp, setShowEpp] = useState(false);
 
     useEffect(() => {
         fetchDomain();
@@ -85,7 +90,7 @@ export default function ClientDomainDetailPage() {
 
     return (
         <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-72 pt-20 p-4 md:p-8">
@@ -215,6 +220,63 @@ export default function ClientDomainDetailPage() {
                                         <Button variant="outline" size="sm" className="rounded-lg font-bold uppercase text-[9px] tracking-widest text-primary border-primary/30">
                                             Manage
                                         </Button>
+                                    </div>
+
+                                    {/* EPP Code Section */}
+                                    <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4 group hover:border-primary/50 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                                                    <Key className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm">EPP / Auth Code</h4>
+                                                    <p className="text-xs text-muted-foreground">Required for domain transfer</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setShowEpp(!showEpp)}
+                                                    className="rounded-lg font-bold uppercase text-[9px] tracking-widest gap-2"
+                                                >
+                                                    {showEpp ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                    {showEpp ? "Hide" : "Reveal"}
+                                                </Button>
+                                                {showEpp && domain.eppCode && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(domain.eppCode);
+                                                            toast.success("EPP Code copied to clipboard");
+                                                        }}
+                                                        className="rounded-lg font-bold uppercase text-[9px] tracking-widest gap-2 border-primary/30 text-primary"
+                                                    >
+                                                        <Copy size={14} />
+                                                        Copy
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {showEpp && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="p-4 rounded-xl bg-primary/10 border border-primary/20 text-center"
+                                            >
+                                                <p className="font-mono font-black text-lg tracking-widest text-primary">
+                                                    {domain.eppCode || "No EPP code available yet."}
+                                                </p>
+                                                {!domain.eppCode && (
+                                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">
+                                                        Please contact support if you need your transfer code.
+                                                    </p>
+                                                )}
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </div>
                             </TabsContent>

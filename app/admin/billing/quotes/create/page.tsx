@@ -311,10 +311,6 @@ export default function CreateQuotePage() {
                                 <Label>Notes (Visible to Client)</Label>
                                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." />
                             </div>
-                            <div className="space-y-2">
-                                <Label>Terms & Conditions</Label>
-                                <Textarea value={terms} onChange={(e) => setTerms(e.target.value)} />
-                            </div>
                         </div>
 
                         <div className="flex justify-end pt-6">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
@@ -30,19 +30,19 @@ const styles = StyleSheet.create({
         color: '#6b7280',
         lineHeight: 1.3,
     },
-    invoiceTitle: {
+    quoteTitle: {
         fontSize: 24,
-        color: '#60a5fa',
+        color: '#10b981',
         marginBottom: 5,
         textAlign: 'right',
     },
-    invoiceNumber: {
+    quoteNumber: {
         fontSize: 11,
         fontFamily: 'Courier',
         marginBottom: 3,
         textAlign: 'right',
     },
-    invoiceDate: {
+    quoteDate: {
         fontSize: 8,
         color: '#6b7280',
         textAlign: 'right',
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
         color: '#1a1a1a',
     },
     grandTotalAmount: {
-        color: '#3b82f6',
+        color: '#10b981',
     },
     notesSection: {
         marginTop: 20,
@@ -163,49 +163,61 @@ const styles = StyleSheet.create({
     },
 });
 
-interface InvoiceItem {
+interface QuoteItem {
     id: number;
     description: string;
     quantity: number;
     unitPrice: number;
-    total?: number;
+    amount?: number;
 }
 
-interface InvoiceData {
+interface QuoteData {
     id: number;
-    invoiceNumber: string;
-    date: string;
-    dueDate: string;
+    quoteNumber: string;
+    proposalDate: string;
+    validUntil: string;
     status: string;
     subtotal: number;
-    tax?: number;
+    taxTotal?: number;
     totalAmount: number;
     notes?: string;
+    terms?: string;
+    subject?: string;
     client: {
-        firstName: string;
-        lastName: string;
-        email: string;
+        user: {
+            firstName: string;
+            lastName: string;
+            email: string;
+        };
         companyName?: string;
-        address?: string;
-        city?: string;
-        country?: string;
+        contacts?: {
+            address1?: string;
+            city?: string;
+            country?: string;
+        }[];
     };
-    items: InvoiceItem[];
+    items: QuoteItem[];
 }
 
-interface InvoicePDFProps {
-    invoice: InvoiceData;
+interface QuotePDFProps {
+    quote: QuoteData;
     appName?: string;
     companyAddress?: string;
     supportEmail?: string;
     currencyCode?: string;
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA CRM', companyAddress, supportEmail, currencyCode = 'USD' }) => {
+export const QuotePDF: React.FC<QuotePDFProps> = ({
+    quote,
+    appName = 'FA CRM',
+    companyAddress,
+    supportEmail,
+    currencyCode = 'USD'
+}) => {
     const formatValue = (amount: number | string) => {
         const value = Number(amount).toFixed(2);
         const symbols: Record<string, string> = {
-            'BDT': 'Taka', // Use text instead of symbol for better PDF font support
+            'BDT': 'Taka',
             'USD': '$',
             'EUR': '€',
             'GBP': '£',
@@ -234,27 +246,26 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA C
                         </View>
                     </View>
                     <View>
-                        <Text style={styles.invoiceTitle}>INVOICE</Text>
-                        <Text style={styles.invoiceNumber}>#{invoice.invoiceNumber || invoice.id}</Text>
-                        <Text style={styles.invoiceDate}>
-                            Date: {new Date((invoice as any).invoiceDate || (invoice as any).createdAt || invoice.date).toLocaleDateString()}
+                        <Text style={styles.quoteTitle}>QUOTATION</Text>
+                        <Text style={styles.quoteNumber}>#{quote.quoteNumber || quote.id}</Text>
+                        <Text style={styles.quoteDate}>
+                            Date: {new Date(quote.proposalDate).toLocaleDateString()}
                         </Text>
-                        <Text style={styles.invoiceDate}>
-                            Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}
+                        <Text style={styles.quoteDate}>
+                            Valid Until: {new Date(quote.validUntil).toLocaleDateString()}
                         </Text>
                     </View>
                 </View>
 
                 {/* Client Information */}
                 <View style={styles.clientSection}>
-                    <Text style={styles.sectionTitle}>BILL TO</Text>
+                    <Text style={styles.sectionTitle}>PREPARED FOR</Text>
                     <Text style={styles.clientName}>
-                        {invoice.client.firstName} {invoice.client.lastName}
+                        {quote.client.user.firstName} {quote.client.user.lastName}
                     </Text>
-                    {invoice.client.companyName && (
-                        <Text style={styles.clientDetails}>{invoice.client.companyName}</Text>
+                    {quote.client.companyName && (
+                        <Text style={styles.clientDetails}>{quote.client.companyName}</Text>
                     )}
-                    {/* Compact address info removed to save space similar to Quotes */}
                 </View>
 
                 {/* Items Table */}
@@ -265,13 +276,13 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA C
                         <Text style={[styles.tableColPrice, styles.headerText]}>Unit Price</Text>
                         <Text style={[styles.tableColTotal, styles.headerText]}>Total</Text>
                     </View>
-                    {invoice.items.map((item) => (
+                    {quote.items.map((item) => (
                         <View key={item.id} style={styles.tableRow}>
                             <Text style={styles.tableColDescription}>{item.description}</Text>
                             <Text style={styles.tableColQty}>{item.quantity}</Text>
                             <Text style={styles.tableColPrice}>{formatValue(item.unitPrice)}</Text>
                             <Text style={styles.tableColTotal}>
-                                {formatValue(item.total || (item.quantity * item.unitPrice))}
+                                {formatValue(item.amount || (item.quantity * item.unitPrice))}
                             </Text>
                         </View>
                     ))}
@@ -282,30 +293,32 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA C
                     <View style={styles.totalsBox}>
                         <View style={styles.totalRow}>
                             <Text>Subtotal</Text>
-                            <Text>{formatValue(invoice.subtotal)}</Text>
+                            <Text>{formatValue(quote.subtotal)}</Text>
                         </View>
                         <View style={styles.totalRow}>
                             <Text>Tax</Text>
-                            <Text>{formatValue(invoice.tax || 0)}</Text>
+                            <Text>{formatValue(quote.taxTotal || 0)}</Text>
                         </View>
                         <View style={styles.grandTotalRow}>
                             <Text style={styles.grandTotalLabel}>Total</Text>
-                            <Text style={styles.grandTotalAmount}>{formatValue(invoice.totalAmount)}</Text>
+                            <Text style={styles.grandTotalAmount}>{formatValue(quote.totalAmount)}</Text>
                         </View>
                     </View>
                 </View>
 
                 {/* Notes */}
-                {invoice.notes && (
+                {quote.notes && (
                     <View style={styles.notesSection}>
-                        <Text style={styles.notesTitle}>Notes</Text>
-                        <Text style={styles.notesText}>{invoice.notes}</Text>
+                        <View>
+                            <Text style={styles.notesTitle}>Notes</Text>
+                            <Text style={styles.notesText}>{quote.notes}</Text>
+                        </View>
                     </View>
                 )}
 
                 {/* Footer */}
                 <View style={styles.footer}>
-                    <Text>Thank you for your business.</Text>
+                    <Text>Thank you for considering our proposal.</Text>
                     <Text>Generated by {appName}</Text>
                 </View>
             </Page>

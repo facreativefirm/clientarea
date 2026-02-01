@@ -105,7 +105,7 @@ export default function AdminClientsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
             <Navbar />
             <Sidebar />
             <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">

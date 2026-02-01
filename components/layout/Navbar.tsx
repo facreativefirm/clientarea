@@ -4,7 +4,7 @@ import React from "react";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/language-provider";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
     Moon,
     Sun,
@@ -40,9 +40,12 @@ export function Navbar() {
     const { user, logout } = useAuthStore();
     const { items } = useCartStore();
     const { toggleSidebar } = useUIStore();
+    const pathname = usePathname();
+    const [isMounted, setIsMounted] = React.useState(false);
 
     // WebSocket Integration (Admin Alerts & Notifications)
     React.useEffect(() => {
+        setIsMounted(true);
         if (!user) return;
 
         const socket = socketService.connect();
@@ -161,7 +164,7 @@ export function Navbar() {
                         onClick={() => router.push("/client/checkout")}
                     >
                         <ShoppingCart className="w-5 h-5" />
-                        {items.length > 0 && (
+                        {isMounted && items.length > 0 && (
                             <span className="absolute top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                                 {items.length}
                             </span>
@@ -191,9 +194,9 @@ export function Navbar() {
                         </DropdownMenuItem>
 
                         {/* Hybrid view switching for Resellers */}
-                        {user?.userType === 'RESELLER' && (
+                        {isMounted && user?.userType === 'RESELLER' && (
                             <>
-                                {router && !window.location.pathname.startsWith('/client') ? (
+                                {pathname && !pathname.startsWith('/client') ? (
                                     <DropdownMenuItem onClick={() => router.push("/client")} className="bg-primary/5 text-primary font-bold">
                                         <Shield className="mr-2 h-4 w-4" />
                                         <span>Switch to Client View</span>

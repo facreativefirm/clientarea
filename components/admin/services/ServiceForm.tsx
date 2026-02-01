@@ -14,7 +14,8 @@ import {
     Calendar,
     Activity,
     CreditCard,
-    HardDrive
+    HardDrive,
+    ExternalLink
 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -85,6 +86,7 @@ export function ServiceForm({ initialData, onSuccess, onCancel, className }: Ser
         username: initialData?.username || "",
         password: "",
         ipAddress: initialData?.ipAddress || "",
+        controlPanelUrl: initialData?.controlPanelUrl || "",
     });
 
     const handleSave = async (e: React.FormEvent) => {
@@ -230,7 +232,7 @@ export function ServiceForm({ initialData, onSuccess, onCancel, className }: Ser
                 </div>
 
                 <div className="col-span-1 md:col-span-2 border-t border-white/5 pt-8">
-                    <div className="flex items-center gap-2 mb-6 text-primary">
+                    <div className="flex items-center gap-2 mb-2 text-primary">
                         <HardDrive size={18} />
                         <h3 className="font-bold uppercase tracking-widest text-xs">Login & Account Details</h3>
                     </div>
@@ -250,38 +252,38 @@ export function ServiceForm({ initialData, onSuccess, onCancel, className }: Ser
                             />
                         </div>
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Assigned Server</Label>
                         <ServerSelector
                             value={formData.serverId}
                             onChange={(val) => setFormData({ ...formData, serverId: val })}
                         />
+                    </div> */}
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Username</Label>
+                        <Input
+                            className="h-12 rounded-xl bg-secondary/30 border-none font-bold"
+                            value={formData.username}
+                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                type="password"
+                                className="pl-12 h-12 rounded-xl bg-secondary/30 border-none font-bold"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
+                        </div>
                     </div>
                 </div>
 
                 <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Username</Label>
-                            <Input
-                                className="h-12 rounded-xl bg-secondary/30 border-none font-bold"
-                                value={formData.username}
-                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                    type="password"
-                                    className="pl-12 h-12 rounded-xl bg-secondary/30 border-none font-bold"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </div>
+
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Dedicated IP Address</Label>
                         <Input
@@ -290,6 +292,20 @@ export function ServiceForm({ initialData, onSuccess, onCancel, className }: Ser
                             value={formData.ipAddress}
                             onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
                         />
+                    </div>
+
+
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Control Panel URL (Override)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="https://cpanel.example.com"
+                                className="pl-12 h-12 rounded-xl bg-secondary/30 border-none font-bold"
+                                value={formData.controlPanelUrl}
+                                onChange={(e) => setFormData({ ...formData, controlPanelUrl: e.target.value })}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -305,6 +321,6 @@ export function ServiceForm({ initialData, onSuccess, onCancel, className }: Ser
                     {initialData?.id ? "Save Changes" : "Setup Service"}
                 </Button>
             </div>
-        </form>
+        </form >
     );
 }

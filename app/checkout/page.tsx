@@ -64,8 +64,19 @@ function PublicCheckoutContent() {
 
     const [completedOrder, setCompletedOrder] = useState<any>(null);
     const [agreeToPolicies, setAgreeToPolicies] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
-    const MANUAL_METHODS = [
+    const ALL_PAYMENT_METHODS = [
+        {
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
+            instructions: {
+                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
+                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
+            }
+        },
+        {
+            id: 'nagad_auto', name: 'Nagad Payment', desc: 'Merchant Payment', icon: Zap, type: 'auto'
+        },
         {
             id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
             instructions: {
@@ -85,13 +96,6 @@ function PublicCheckoutContent() {
             instructions: {
                 en: '1. Open Rocket App or Dial *322#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
                 bn: '১. রকেট অ্যাপ খুলুন বা *৩২২# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. রকেট নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
-            }
-        },
-        {
-            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
             }
         },
         {
@@ -124,15 +128,8 @@ function PublicCheckoutContent() {
         }
     ];
 
-    const AUTOMATED_METHODS = [
-        {
-            id: 'nagad_auto', name: 'Nagad', desc: 'Fast & Secure (Automated)', icon: Zap, type: 'auto'
-        }
-    ];
-
-    const ALL_PAYMENT_METHODS = [...AUTOMATED_METHODS, ...MANUAL_METHODS];
-
     useEffect(() => {
+        setIsMounted(true);
         if (invoiceId) {
             fetchInvoice(parseInt(invoiceId));
             setStep(3);
@@ -225,8 +222,8 @@ function PublicCheckoutContent() {
                     }
                 }
 
-                const selectedMethod = MANUAL_METHODS.find(m => m.id === paymentMethod);
-                if (selectedMethod) {
+                const selectedMethod = ALL_PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                if (selectedMethod && selectedMethod.type === 'manual') {
                     if (!trxId || !senderNumber) {
                         toast.error("Enter Transaction ID and Phone");
                         setLoading(false);
@@ -303,7 +300,7 @@ function PublicCheckoutContent() {
         }
     };
 
-    if (!invoiceId && items.length === 0 && step !== 4) {
+    if (isMounted && !invoiceId && items.length === 0 && step !== 4) {
         return (
             <div className="min-h-screen bg-[#0f1d22]">
                 <PublicNavbar />
@@ -378,11 +375,11 @@ function PublicCheckoutContent() {
                                             <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                                                 <h3 className="font-bold text-sm flex items-center gap-3">
                                                     <ShoppingBag size={18} className="text-[#f37021]" />
-                                                    Your Items ({items.length})
+                                                    Your Items ({isMounted ? items.length : 0})
                                                 </h3>
                                             </div>
                                             <div className="divide-y divide-white/5">
-                                                {items.map((item) => (
+                                                {isMounted && items.map((item) => (
                                                     <div key={item.cartId} className="p-6 hover:bg-white/[0.02] transition-all group">
                                                         <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
                                                             <div className="flex gap-5">
@@ -396,7 +393,7 @@ function PublicCheckoutContent() {
                                                                         {(() => {
                                                                             const monthly = Number(item.monthlyPrice || 0);
                                                                             const annual = Number(item.annualPrice || 0);
-                                                                            if (monthly > 0 && annual > 0) {
+                                                                            if (monthly > 0 && annual > 0 && monthly !== annual) {
                                                                                 return (
                                                                                     <div className="flex items-center bg-white/5 rounded-lg p-0.5 border border-white/10">
                                                                                         <button
@@ -577,12 +574,7 @@ function PublicCheckoutContent() {
                                                         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-all", paymentMethod === method.id ? "bg-[#f37021] text-white" : "bg-white/5 text-white/40")}>
                                                             <method.icon size={20} />
                                                         </div>
-                                                        <div className="flex items-center gap-2 mb-0.5">
-                                                            <p className="font-bold text-sm text-white">{method.name}</p>
-                                                            {method.type === 'auto' && (
-                                                                <span className="text-[8px] font-black uppercase tracking-tighter bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">Fast</span>
-                                                            )}
-                                                        </div>
+                                                        <p className="font-bold text-sm text-white">{method.name}</p>
                                                         <p className="text-[10px] text-white/50">{method.desc}</p>
                                                     </button>
                                                 ))}
@@ -591,7 +583,7 @@ function PublicCheckoutContent() {
 
                                         {/* Fields for Manual Verification */}
                                         <AnimatePresence>
-                                            {invoiceId && paymentMethod && !AUTOMATED_METHODS.some(m => m.id === paymentMethod) && (
+                                            {invoiceId && paymentMethod && !ALL_PAYMENT_METHODS.filter(m => m.type === 'auto').some(m => m.id === paymentMethod) && (
                                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-[#162a31] border border-white/10 rounded-xl p-6 shadow-lg space-y-4 overflow-hidden">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <ShieldCheck size={16} className="text-[#f37021]" />
@@ -627,7 +619,7 @@ function PublicCheckoutContent() {
                                                     id="agreeCheckout"
                                                     checked={agreeToPolicies}
                                                     onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
-                                                    className="mt-1"
+                                                    className="mt-0"
                                                 />
                                                 <Label htmlFor="agreeCheckout" className="text-[11px] leading-relaxed text-white/60 cursor-pointer select-none">
                                                     I have read and agree to the{" "}
@@ -696,17 +688,17 @@ function PublicCheckoutContent() {
                                                 if (method.type === 'auto') {
                                                     return (
                                                         <>
-                                                            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center gap-3">
+                                                            <div className="bg-gradient-to-r from-[#f37021] to-[#d9621c] p-4 flex items-center gap-3">
                                                                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
                                                                     <Zap size={18} fill="currentColor" />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-xs font-black uppercase tracking-widest text-white leading-none mb-1">Instant Payment</h4>
-                                                                    <p className="text-[10px] text-white/80 font-bold">Automated Verification</p>
+                                                                    <h4 className="text-xs font-black uppercase tracking-widest text-white leading-none mb-1">How to Pay</h4>
+                                                                    <p className="text-[10px] text-white/80 font-bold">Automated Merchant Payment</p>
                                                                 </div>
                                                             </div>
                                                             <div className="p-6 text-center space-y-4">
-                                                                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-400 border border-emerald-500/20">
+                                                                <div className="w-12 h-12 bg-[#f37021]/10 rounded-full flex items-center justify-center mx-auto text-[#f37021] border border-[#f37021]/20">
                                                                     <CheckCircle2 size={24} />
                                                                 </div>
                                                                 <p className="text-[11px] text-white/70 font-medium leading-relaxed">
@@ -775,7 +767,7 @@ function PublicCheckoutContent() {
                                     <div className="space-y-3 pb-6 border-b border-white/5">
                                         <div className="flex justify-between items-center text-sm font-medium">
                                             <span className="text-white/60">Subtotal</span>
-                                            <span className="text-white">{formatPrice(items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0))}</span>
+                                            <span className="text-white">{isMounted ? formatPrice(items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0)) : formatPrice(0)}</span>
                                         </div>
                                         {promoCode && (
                                             <div className="flex justify-between items-center text-[#f37021] text-xs bg-[#f37021]/10 p-2 rounded-lg border border-[#f37021]/20">
@@ -792,7 +784,7 @@ function PublicCheckoutContent() {
                                     <div className="pt-6 flex flex-col items-end">
                                         <span className="text-xs text-white/60 mb-1">Total Payable</span>
                                         <span className="text-3xl font-bold text-[#f37021] leading-none">
-                                            {formatPrice(total())}
+                                            {isMounted ? formatPrice(total()) : formatPrice(0)}
                                         </span>
                                     </div>
 

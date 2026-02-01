@@ -59,13 +59,24 @@ function CheckoutContent() {
     const [invoice, setInvoice] = useState<any>(null);
     const [trxId, setTrxId] = useState("");
     const [senderNumber, setSenderNumber] = useState("");
+    const [isMounted, setIsMounted] = useState(false);
 
     // Domain Search for missing domain items
     const [domainInputs, setDomainInputs] = useState<Record<string, string>>({});
     const [domainTargetItem, setDomainTargetItem] = useState<string | null>(null);
     const [checkingDomainId, setCheckingDomainId] = useState<string | null>(null);
 
-    const MANUAL_METHODS = [
+    const ALL_PAYMENT_METHODS = [
+        {
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
+            instructions: {
+                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
+                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
+            }
+        },
+        {
+            id: 'nagad_auto', name: 'Nagad Payment', desc: 'Merchant Payment', icon: Zap, type: 'auto'
+        },
         {
             id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
             instructions: {
@@ -85,13 +96,6 @@ function CheckoutContent() {
             instructions: {
                 en: '1. Open Rocket App or Dial *322#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
                 bn: '১. রকেট অ্যাপ খুলুন বা *৩২২# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. রকেট নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
-            }
-        },
-        {
-            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
             }
         },
         {
@@ -124,15 +128,8 @@ function CheckoutContent() {
         }
     ];
 
-    const AUTOMATED_METHODS = [
-        {
-            id: 'nagad_auto', name: 'Nagad', desc: 'Fast & Secure (Automated)', icon: Zap, type: 'auto'
-        }
-    ];
-
-    const ALL_PAYMENT_METHODS = [...AUTOMATED_METHODS, ...MANUAL_METHODS];
-
     useEffect(() => {
+        setIsMounted(true);
         if (invoiceId) {
             fetchInvoice(parseInt(invoiceId));
             setStep(3);
@@ -223,8 +220,8 @@ function CheckoutContent() {
                     }
                 }
 
-                const selectedMethod = MANUAL_METHODS.find(m => m.id === paymentMethod);
-                if (selectedMethod) {
+                const selectedMethod = ALL_PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                if (selectedMethod && selectedMethod.type === 'manual') {
                     if (!trxId || !senderNumber) {
                         toast.error("Provide Transaction ID and Sender Phone");
                         setLoading(false);
@@ -310,7 +307,7 @@ function CheckoutContent() {
         }
     };
 
-    if (!invoiceId && items.length === 0 && step !== 4) {
+    if (isMounted && !invoiceId && items.length === 0 && step !== 4) {
         return (
             <div className="min-h-screen bg-background">
                 <Navbar />
@@ -375,11 +372,11 @@ function CheckoutContent() {
                                             <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
                                                 <h3 className="text-sm font-bold flex items-center gap-2 px-1">
                                                     <ShoppingBag size={16} className="text-primary" />
-                                                    Order Items ({items.length})
+                                                    Order Items ({isMounted ? items.length : 0})
                                                 </h3>
                                             </div>
                                             <div className="divide-y">
-                                                {items.map((item) => (
+                                                {isMounted && items.map((item) => (
                                                     <div key={item.cartId} className="p-4 transition-colors hover:bg-muted/5">
                                                         <div className="flex items-start justify-between gap-4">
                                                             <div className="flex gap-4">
@@ -392,7 +389,7 @@ function CheckoutContent() {
                                                                         {(() => {
                                                                             const monthly = Number(item.monthlyPrice || 0);
                                                                             const annual = Number(item.annualPrice || 0);
-                                                                            if (monthly > 0 && annual > 0) {
+                                                                            if (monthly > 0 && annual > 0 && monthly !== annual) {
                                                                                 return (
                                                                                     <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 border">
                                                                                         <button
@@ -587,37 +584,11 @@ function CheckoutContent() {
                                                         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-all", paymentMethod === method.id ? "bg-[#f37021] text-white" : "bg-primary/10 text-primary")}>
                                                             <method.icon size={18} />
                                                         </div>
-                                                        <div className="flex items-center gap-2 mb-0.5">
-                                                            <p className="font-bold text-sm">{method.name}</p>
-                                                            {method.type === 'auto' && (
-                                                                <span className="text-[8px] font-black uppercase tracking-tighter bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">Fast</span>
-                                                            )}
-                                                        </div>
+                                                        <p className="font-bold text-sm">{method.name}</p>
                                                         <p className="text-[10px] text-muted-foreground">{method.desc}</p>
                                                     </button>
                                                 ))}
 
-                                                {/* Global Card Option */}
-                                                <button
-                                                    onClick={() => setPaymentMethod('card')}
-                                                    className={cn(
-                                                        "p-4 rounded-2xl border-2 transition-all text-left relative group bg-gradient-to-br",
-                                                        paymentMethod === 'card'
-                                                            ? "from-primary/10 to-transparent border-primary"
-                                                            : "from-transparent to-transparent border-border hover:border-primary/20"
-                                                    )}
-                                                >
-                                                    {paymentMethod === 'card' && (
-                                                        <div className="absolute top-3 right-3 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-white">
-                                                            <CheckCircle2 size={12} strokeWidth={3} />
-                                                        </div>
-                                                    )}
-                                                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors", paymentMethod === 'card' ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
-                                                        <Globe size={20} />
-                                                    </div>
-                                                    <p className="font-bold text-sm mb-0.5">Card / Global</p>
-                                                    <p className="text-[10px] text-muted-foreground">Stripe, VISA, Mastercard</p>
-                                                </button>
                                             </div>
                                         </div>
 
@@ -634,7 +605,7 @@ function CheckoutContent() {
                                                 </motion.div>
                                             )}
 
-                                            {invoiceId && paymentMethod && paymentMethod !== 'card' && !AUTOMATED_METHODS.some(m => m.id === paymentMethod) && (
+                                            {invoiceId && paymentMethod && paymentMethod !== 'card' && !ALL_PAYMENT_METHODS.filter(m => m.type === 'auto').some(m => m.id === paymentMethod) && (
                                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-card border rounded-2xl p-5 shadow-sm space-y-4 overflow-hidden">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <ShieldCheck size={18} className="text-primary" />
@@ -670,7 +641,7 @@ function CheckoutContent() {
                                                     id="agreeClient"
                                                     checked={agreeToPolicies}
                                                     onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
-                                                    className="mt-1"
+                                                    className="mt-0"
                                                 />
                                                 <Label htmlFor="agreeClient" className="text-[11px] leading-relaxed text-muted-foreground cursor-pointer select-none">
                                                     I have read and agree to the{" "}
@@ -743,17 +714,17 @@ function CheckoutContent() {
                                                 if (method.type === 'auto') {
                                                     return (
                                                         <>
-                                                            <div className="bg-emerald-500 p-4 flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                                                            <div className="bg-primary p-4 flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-lg bg-primary-foreground/20 flex items-center justify-center text-primary-foreground">
                                                                     <Zap size={18} fill="currentColor" />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/70 leading-none mb-1">Instant Payment</h4>
-                                                                    <p className="text-xs text-white font-bold">Automated Verification</p>
+                                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/70 leading-none mb-1">How to Pay</h4>
+                                                                    <p className="text-xs text-primary-foreground font-bold truncate max-w-[150px]">Automated Merchant Payment</p>
                                                                 </div>
                                                             </div>
                                                             <div className="p-6 text-center space-y-4">
-                                                                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 border border-emerald-500/20">
+                                                                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary border border-primary/20">
                                                                     <CheckCircle2 size={24} />
                                                                 </div>
                                                                 <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
@@ -821,11 +792,11 @@ function CheckoutContent() {
 
                                     <div className="space-y-3 pb-4 border-b">
                                         {(() => {
-                                            const subtotal = invoiceId && invoice ? parseFloat(invoice.subtotal) : items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0);
-                                            const discount = promoCode === 'SAVE20' ? subtotal * 0.2 : 0;
+                                            const subtotal = isMounted && (invoiceId && invoice) ? parseFloat(invoice.subtotal) : (isMounted ? items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0) : 0);
+                                            const discount = isMounted && promoCode === 'SAVE20' ? subtotal * 0.2 : 0;
                                             const discountedSubtotal = subtotal - discount;
-                                            const tax = invoiceId && invoice ? parseFloat(invoice.taxAmount) : discountedSubtotal * 0.05;
-                                            const finalTotal = invoiceId && invoice ? parseFloat(invoice.totalAmount) : discountedSubtotal + tax;
+                                            const tax = isMounted && (invoiceId && invoice) ? parseFloat(invoice.taxAmount) : discountedSubtotal * 0.05;
+                                            const finalTotal = isMounted && (invoiceId && invoice) ? parseFloat(invoice.totalAmount) : discountedSubtotal + tax;
 
                                             return (
                                                 <>

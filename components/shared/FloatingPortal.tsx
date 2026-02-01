@@ -25,6 +25,11 @@ export function FloatingPortal() {
         pathname.startsWith("/investor") ||
         pathname.startsWith("/sales-team");
 
+    // Exclude print pages explicitly
+    if (pathname.endsWith("/print")) {
+        return null;
+    }
+
     return (
         <>
             {/* Show Chat universally (Public + Dashboard) */}

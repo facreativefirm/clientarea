@@ -70,13 +70,58 @@ export default function ProductsPage() {
         fetchData();
     }, []);
 
-    const filteredProducts = products.filter(product => {
-        const matchesCategory = !selectedCategory ||
-            services.find(s => s.slug === selectedCategory)?.id === product.serviceId;
-        const matchesSearch = !searchQuery ||
-            product.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+    const getAllChildServiceIds = (serviceSlug: string): number[] => {
+        const findService = (list: any[]): any => {
+            for (const s of list) {
+                if (s.slug === serviceSlug) return s;
+                if (s.subServices) {
+                    const found = findService(s.subServices);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const service = findService(services);
+        if (!service) return [];
+
+        const ids: number[] = [service.id];
+        const collectIds = (s: any) => {
+            if (s.subServices) {
+                s.subServices.forEach((child: any) => {
+                    ids.push(child.id);
+                    collectIds(child);
+                });
+            }
+        };
+        collectIds(service);
+        return ids;
+    };
+
+    const allFlattenedServices = (() => {
+        const flat: any[] = [];
+        const flatten = (list: any[]) => {
+            list.forEach(s => {
+                flat.push(s);
+                if (s.subServices) flatten(s.subServices);
+            });
+        };
+        flatten(services);
+        return flat;
+    })();
+
+    const groupedServices = allFlattenedServices.map(svc => {
+        const svcProducts = products.filter(p => p.serviceId === svc.id);
+        const filteredP = svcProducts.filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        let isVisible = !selectedCategory;
+        if (selectedCategory) {
+            const allowedIds = getAllChildServiceIds(selectedCategory);
+            isVisible = allowedIds.includes(svc.id);
+        }
+
+        return { ...svc, filteredProducts: filteredP, isVisible };
+    }).filter(s => s.isVisible && s.filteredProducts.length > 0);
 
     const getPrice = (product: any) => {
         const display = getProductDisplayPrice(product);
@@ -167,169 +212,215 @@ export default function ProductsPage() {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
-                    {/* Search */}
-                    <div className="lg:col-span-4 relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search infrastructure..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-14 pl-12 pr-4 bg-muted/50 border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-sm"
-                        />
-                    </div>
+                {/* Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Sidebar: Hierarchy */}
+                    <div className="lg:col-span-3 space-y-6">
+                        <div className="bg-card rounded-[2rem] border border-border p-6 shadow-sm overflow-hidden relative">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                <Filter size={80} />
+                            </div>
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-6 flex items-center gap-2">
+                                <Filter size={14} /> Service Inventory
+                            </h3>
 
-                    {/* Category Tabs */}
-                    <div className="lg:col-span-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                        <button
-                            onClick={() => setSelectedCategory(null)}
-                            className={cn(
-                                "whitespace-nowrap px-6 h-14 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border",
-                                !selectedCategory
-                                    ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
-                                    : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
-                            )}
-                        >
-                            All Assets
-                        </button>
-                        {services.map((service) => (
-                            <button
-                                key={service.id}
-                                onClick={() => setSelectedCategory(service.slug)}
-                                className={cn(
-                                    "whitespace-nowrap px-6 h-14 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border",
-                                    selectedCategory === service.slug
-                                        ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
-                                        : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
-                                )}
-                            >
-                                {service.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Products Grid */}
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-32 gap-6">
-                        <Loader2 className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        <p className="font-black text-xs uppercase tracking-[0.3em] text-muted-foreground">Syncing Catalog...</p>
-                    </div>
-                ) : filteredProducts.length === 0 ? (
-                    <div className="text-center py-32 bg-muted/30 rounded-[3rem] border border-dashed border-border">
-                        <Server size={64} className="mx-auto text-muted-foreground/20 mb-6" />
-                        <h3 className="text-2xl font-black text-foreground mb-2">No Assets Detected</h3>
-                        <p className="text-muted-foreground font-medium">Try adjusting your filtration parameters.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredProducts.map((product, index) => {
-                            const price = getPrice(product);
-                            let featureList: string[] = [];
-                            try {
-                                if (product.features) {
-                                    const parsed = typeof product.features === 'string' ? JSON.parse(product.features) : product.features;
-                                    featureList = Array.isArray(parsed) ? parsed : (parsed.list || []);
-                                }
-                            } catch (e) { }
-
-                            return (
-                                <motion.div
-                                    key={product.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="group relative flex flex-col bg-card rounded-[2.5rem] p-8 md:p-10 shadow-sm hover:shadow-2xl transition-all border border-border hover:border-primary/20 overflow-hidden"
+                            <nav className="space-y-1">
+                                <button
+                                    onClick={() => setSelectedCategory(null)}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all group",
+                                        !selectedCategory
+                                            ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
                                 >
-                                    {/* Glass reflection */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full",
+                                        !selectedCategory ? "bg-white" : "bg-muted-foreground/20 group-hover:bg-primary/40"
+                                    )} />
+                                    All Assets
+                                </button>
 
-                                    <div className="relative z-10 flex flex-col h-full">
-                                        {/* Status Badge */}
-                                        <div className="flex justify-between items-start mb-8">
-                                            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                                                <Server size={28} />
-                                            </div>
-                                            {product.resellerOverride && (
-                                                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-500/20">
-                                                    Special Offer
-                                                </span>
-                                            )}
+                                {(() => {
+                                    const hasActiveChild = (svc: any): boolean => {
+                                        if (!selectedCategory) return false;
+                                        if (svc.subServices) {
+                                            for (const child of svc.subServices) {
+                                                if (child.slug === selectedCategory || hasActiveChild(child)) return true;
+                                            }
+                                        }
+                                        return false;
+                                    };
+
+                                    const renderServiceItems = (cats: any[], depth = 0, parentSlug: string | null = null) => {
+                                        return cats.map((service) => {
+                                            const isSelected = selectedCategory === service.slug;
+                                            const isExpanded = isSelected || hasActiveChild(service);
+
+                                            return (
+                                                <React.Fragment key={service.id}>
+                                                    <button
+                                                        onClick={() => {
+                                                            // Toggle behavior: if already selected, go back to parent (or null)
+                                                            if (isSelected) {
+                                                                setSelectedCategory(parentSlug);
+                                                            } else {
+                                                                setSelectedCategory(service.slug);
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all group",
+                                                            isSelected
+                                                                ? "bg-primary text-white shadow-md"
+                                                                : isExpanded ? "bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        )}
+                                                        style={{ paddingLeft: `${(depth * 16) + 16}px` }}
+                                                    >
+                                                        <div className={cn(
+                                                            "w-1.5 h-1.5 rounded-full",
+                                                            isSelected ? "bg-white" : isExpanded ? "bg-primary" : "bg-muted-foreground/20 group-hover:bg-primary/40"
+                                                        )} />
+                                                        {service.name}
+                                                    </button>
+                                                    {/* Show children if this parent IS SELECTED OR HAS AN ACTIVE CHILD */}
+                                                    {service.subServices && service.subServices.length > 0 && isExpanded && renderServiceItems(service.subServices, depth + 1, service.slug)}
+                                                </React.Fragment>
+                                            );
+                                        });
+                                    };
+                                    return renderServiceItems(services);
+                                })()}
+                            </nav>
+                        </div>
+
+                        {/* Search in Sidebar for Desktop */}
+                        <div className="hidden lg:block relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Quick search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full h-14 pl-12 pr-4 bg-muted/50 border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-9 space-y-8">
+                        {/* Mobile Search */}
+                        <div className="lg:hidden relative group mb-2">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search infrastructure..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full h-14 pl-12 pr-4 bg-muted/50 border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-sm"
+                            />
+                        </div>
+
+                        {/* Products Grid */}
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-32 gap-6">
+                                <Loader2 className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                                <p className="font-black text-xs uppercase tracking-[0.3em] text-muted-foreground">Syncing Catalog...</p>
+                            </div>
+                        ) : groupedServices.length === 0 ? (
+                            <div className="text-center py-32 bg-muted/30 rounded-[3rem] border border-dashed border-border">
+                                <Server size={64} className="mx-auto text-muted-foreground/20 mb-6" />
+                                <h3 className="text-2xl font-black text-foreground mb-2">No Assets Detected</h3>
+                                <p className="text-muted-foreground font-medium">Try selecting a different service group.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-16">
+                                {groupedServices.map((group) => (
+                                    <div key={group.id} className="space-y-8">
+                                        <div className="flex flex-col gap-1 border-l-4 border-primary pl-5">
+                                            <h2 className="text-xl font-black tracking-tight text-foreground uppercase">{group.name}</h2>
+                                            {group.description && <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-80">{group.description}</p>}
                                         </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {group.filteredProducts.map((product: any, index: number) => {
+                                                const price = getPrice(product);
+                                                let featureList: string[] = [];
+                                                try {
+                                                    if (product.features) {
+                                                        const parsed = typeof product.features === 'string' ? JSON.parse(product.features) : product.features;
+                                                        featureList = Array.isArray(parsed) ? parsed : (parsed.list || []);
+                                                    }
+                                                } catch (e) { }
 
-                                        <h3 className="text-2xl font-black text-foreground mb-3 uppercase tracking-tight group-hover:text-primary transition-colors">
-                                            {product.name}
-                                        </h3>
-
-                                        <p className="text-sm text-muted-foreground mb-8 font-medium leading-relaxed line-clamp-2">
-                                            {product.description || 'Enterprise-grade hosting infrastructure with full management and SLA backing.'}
-                                        </p>
-
-                                        {/* Pricing */}
-                                        {/* Pricing */}
-                                        <div className="mb-10">
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-4xl font-black text-foreground tracking-tighter">
-                                                    {formatPrice(price)}
-                                                </span>
-                                                <span className="text-muted-foreground font-bold text-sm tracking-tight">
-                                                    /{billingCycle === 'annually' ? 'mo' : getProductDisplayPrice(product).cycle}
-                                                </span>
-                                            </div>
-                                            {product.setupFee && Number(product.setupFee) > 0 && (
-                                                <p className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
-                                                    + {formatPrice(product.setupFee)} Setup Fee
-                                                </p>
-                                            )}
-                                            {billingCycle === 'annually' && (
-                                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-2">
-                                                    Billed annually • Save {formatPrice((Number(product.monthlyPrice) * 12) - (price * 12))}/yr
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        {/* Specs List */}
-                                        <div className="space-y-4 mb-10 mt-auto border-t border-border/50 pt-8">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4">Core Specifications</p>
-                                            {(featureList.length > 0 ? featureList : ["High Performance", "99.9% Uptime", "24/7 Support", "DDoS Protection"]).slice(0, 5).map((feature, i) => {
-                                                const Icon = getIconForFeature(feature);
                                                 return (
-                                                    <div key={i} className="flex items-center gap-3 text-sm font-bold text-foreground/80 group/feat">
-                                                        <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-primary/60 group-hover/feat:text-primary group-hover/feat:bg-primary/5 transition-all">
-                                                            <Icon size={14} />
+                                                    <motion.div
+                                                        key={product.id}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        className="group relative flex flex-col bg-card rounded-[2.5rem] p-8 md:p-10 shadow-sm hover:shadow-2xl transition-all border border-border hover:border-primary/20 overflow-hidden"
+                                                    >
+                                                        <div className="relative z-10 flex flex-col h-full">
+                                                            <div className="flex justify-between items-start mb-8">
+                                                                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                                                    <Server size={28} />
+                                                                </div>
+                                                            </div>
+
+                                                            <h3 className="text-2xl font-black text-foreground mb-3 uppercase tracking-tight group-hover:text-primary transition-colors">
+                                                                {product.name}
+                                                            </h3>
+
+                                                            <p className="text-sm text-muted-foreground mb-8 font-medium leading-relaxed line-clamp-2">
+                                                                {product.description || 'Enterprise-grade hosting infrastructure.'}
+                                                            </p>
+
+                                                            <div className="mb-10">
+                                                                <div className="flex items-baseline gap-1">
+                                                                    <span className="text-4xl font-black text-foreground tracking-tighter">
+                                                                        {formatPrice(price)}
+                                                                    </span>
+                                                                    <span className="text-muted-foreground font-bold text-sm tracking-tight">
+                                                                        /{billingCycle === 'annually' ? 'mo' : getProductDisplayPrice(product).cycle}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-4 mb-10 mt-auto border-t border-border/50 pt-8">
+                                                                {(featureList.length > 0 ? featureList : ["High Performance", "99.9% Uptime", "24/7 Support"]).slice(0, 3).map((feature, i) => (
+                                                                    <div key={i} className="flex items-center gap-3 text-sm font-bold text-foreground/80">
+                                                                        <CheckCircle2 size={14} className="text-primary" />
+                                                                        {feature}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <Button
+                                                                    onClick={() => handleAddToCart(product)}
+                                                                    className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 group/btn transition-all"
+                                                                >
+                                                                    Order Now
+                                                                </Button>
+                                                                <Link href={`/store/products/${product.slug}`} className="w-full">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="w-full h-14 rounded-2xl border-border hover:bg-muted/50 font-black text-xs uppercase tracking-widest"
+                                                                    >
+                                                                        Details
+                                                                    </Button>
+                                                                </Link>
+                                                            </div>
                                                         </div>
-                                                        {feature}
-                                                    </div>
+                                                    </motion.div>
                                                 );
                                             })}
                                         </div>
-
-                                        {/* Actions */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                onClick={() => handleAddToCart(product)}
-                                                className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 group/btn transition-all"
-                                            >
-                                                Initialize
-                                                <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                                            </Button>
-                                            <Link href={`/store/products/${product.slug}?billing=${billingCycle}`} className="w-full">
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-full h-14 rounded-2xl border-border hover:bg-muted/50 font-black text-xs uppercase tracking-widest"
-                                                >
-                                                    Details
-                                                </Button>
-                                            </Link>
-                                        </div>
                                     </div>
-                                </motion.div>
-                            );
-                        })}
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );

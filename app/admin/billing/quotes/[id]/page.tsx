@@ -1,436 +1,373 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
-import { useLanguage } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Save, ArrowLeft, Loader2, Send, CheckCircle, FileText, XCircle } from "lucide-react";
+import { ArrowLeft, Printer, Download, Mail, Save, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { useRouter, useParams } from "next/navigation";
-import { Badge } from "@/components/shared/Badge";
-
+import { useLanguage } from "@/components/language-provider";
 import { useSettingsStore } from "@/lib/store/settingsStore";
+import { cn } from "@/lib/utils";
 
-export default function EditQuotePage() {
-    const router = useRouter();
+export default function AdminQuoteDetailsPage() {
     const params = useParams();
-    const id = params.id;
+    const router = useRouter();
     const { t } = useLanguage();
-    const { formatPrice, fetchSettings } = useSettingsStore();
-
+    const { settings, fetchSettings, formatPrice } = useSettingsStore();
+    const [quote, setQuote] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [clients, setClients] = useState<any[]>([]);
-    const [products, setProducts] = useState<any[]>([]);
-    const [quote, setQuote] = useState<any>(null);
-    const [clientUser, setClientUser] = useState<any>(null);
-
-    // Form State
-    const [subject, setSubject] = useState("");
-    const [validUntil, setValidUntil] = useState("");
-    const [terms, setTerms] = useState("");
-    const [notes, setNotes] = useState("");
-    const [items, setItems] = useState<any[]>([]);
+    const componentRef = useRef<HTMLDivElement>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedQuote, setEditedQuote] = useState<any>(null);
 
     useEffect(() => {
         fetchSettings();
         fetchQuote();
-
-        api.get("/clients").then(res => {
-            if (res.data.status === 'success') {
-                setClients(res.data.data.clients);
-            }
-        });
-
-        api.get("/products").then(res => {
-            if (res.data.status === 'success') {
-                setProducts(res.data.data.products);
-            }
-        });
-    }, []);
+    }, [params.id]);
 
     const fetchQuote = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/quotes/${id}`);
-            const q = response.data.data.quote;
-            setQuote(q);
-            setSubject(q.subject || "");
-            setValidUntil(q.validUntil ? new Date(q.validUntil).toISOString().split('T')[0] : "");
-            setTerms(q.terms || "");
-            setNotes(q.notes || "");
-            setItems(q.items || []);
-            setClientUser(q.client);
-        } catch (err) {
-            toast.error("Failed to load quote details");
+            const response = await api.get(`/quotes/${params.id}`);
+            if (response.data.status === 'success') {
+                setQuote(response.data.data.quote);
+                setEditedQuote(response.data.data.quote);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load quotation details");
             router.push("/admin/billing/quotes");
         } finally {
             setLoading(false);
         }
     };
 
-    const isEditable = quote?.status === 'DRAFT';
-
-    const addItem = () => {
-        setItems([...items, { description: "", quantity: 1, unitPrice: 0, productId: null, billingCycle: "monthly", domainName: "" }]);
+    const handlePrint = () => {
+        window.open(`/admin/billing/quotes/${params.id}/print`, '_blank');
     };
 
-    const removeItem = (index: number) => {
-        setItems(items.filter((_, i) => i !== index));
-    };
+    const handleDownload = async () => {
+        if (!quote) return;
 
-    const updateItem = (index: number, field: string, value: any) => {
-        const newItems = [...items];
-        let updatedItem = { ...newItems[index], [field]: value };
+        try {
+            const { pdf } = await import('@react-pdf/renderer');
+            const { QuotePDF } = await import('@/components/pdf/QuotePDF');
 
-        if (field === 'productId' && value) {
-            const product = products.find(p => p.id === parseInt(value));
-            if (product) {
-                updatedItem.description = product.name;
-                updatedItem.productId = parseInt(value);
-                const cycle = updatedItem.billingCycle || "monthly";
-                updatedItem.unitPrice = getProductPrice(product, cycle);
-            }
-        } else if (field === 'billingCycle' && updatedItem.productId) {
-            const product = products.find(p => p.id === updatedItem.productId);
-            if (product) {
-                updatedItem.unitPrice = getProductPrice(product, value);
-            }
+            const blob = await pdf(
+                <QuotePDF
+                    quote={quote as any}
+                    appName={settings.appName || 'FA CRM'}
+                    companyAddress={settings.companyAddress}
+                    supportEmail={settings.supportEmail}
+                    currencyCode={settings.defaultCurrency || 'USD'}
+                />
+            ).toBlob();
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Quotation-${quote.quoteNumber || quote.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            toast.success("PDF downloaded successfully");
+        } catch (error) {
+            console.error("PDF generation error:", error);
+            toast.error("Failed to generate PDF");
         }
-
-        newItems[index] = updatedItem;
-        setItems(newItems);
-    };
-
-    const getProductPrice = (product: any, cycle: string) => {
-        switch (cycle) {
-            case 'monthly': return product.monthlyPrice || 0;
-            case 'quarterly': return product.quarterlyPrice || 0;
-            case 'semi-annually': return product.semiAnnualPrice || 0;
-            case 'annually': return product.annualPrice || 0;
-            case 'biennial': return product.biennialPrice || 0;
-            case 'triennial': return product.triennialPrice || 0;
-            default: return product.monthlyPrice || 0;
-        }
-    };
-
-    const calculateTotal = () => {
-        return items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0);
     };
 
     const handleSave = async () => {
-        setSaving(true);
+        if (!editedQuote) return;
+
         try {
-            await api.patch(`/quotes/${id}`, {
-                subject,
-                validUntil,
-                terms,
-                notes,
-                items: items.map(i => ({
-                    description: i.description,
-                    quantity: Number(i.quantity),
-                    unitPrice: Number(i.unitPrice),
-                    productId: i.productId,
-                    billingCycle: i.billingCycle,
-                    domainName: i.domainName
-                }))
+            const response = await api.patch(`/quotes/${params.id}`, {
+                notes: editedQuote.notes,
+                terms: editedQuote.terms,
+                status: editedQuote.status
             });
-            toast.success("Quote updated successfully");
-            fetchQuote();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to update quote");
-        } finally {
-            setSaving(false);
+
+            if (response.data.status === 'success') {
+                setQuote(response.data.data.quote);
+                setEditedQuote(response.data.data.quote);
+                setIsEditing(false);
+                toast.success("Quotation updated successfully");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update quotation");
         }
     };
 
     const handleSend = async () => {
         try {
-            await api.post(`/quotes/${id}/send`);
-            toast.success("Quote marked as SENT and emailed to client");
-            fetchQuote(); // Refresh status
-        } catch (err) {
-            toast.error("Failed to send quote");
+            const response = await api.post(`/quotes/${params.id}/send`);
+            if (response.data.status === 'success') {
+                toast.success("Quotation sent successfully");
+                fetchQuote();
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to send quotation");
+        }
+    };
+
+    const handleStatusChange = async (newStatus: string) => {
+        try {
+            const response = await api.patch(`/quotes/${params.id}`, { status: newStatus });
+            if (response.data.status === 'success') {
+                setQuote(response.data.data.quote);
+                setEditedQuote(response.data.data.quote);
+                toast.success(`Quotation ${newStatus.toLowerCase()}`);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update status");
         }
     };
 
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="animate-spin text-primary" size={32} />
+            <div className="flex h-screen items-center justify-center bg-background text-foreground">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
+    if (!quote) return null;
+
+    const clientName = quote.client.user ? `${quote.client.user.firstName} ${quote.client.user.lastName}` : (quote.client.companyName || 'Valued Client');
+    const contact = quote.client.contacts?.[0];
+    const isExpired = new Date(quote.validUntil) < new Date();
+
     return (
-        <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN", "STAFF"]}>
-            <div className="min-h-screen bg-gray-50/50">
-                <Navbar />
-                <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-                    {/* Header Actions */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div className="flex items-center gap-4">
-                            <Button variant="ghost" size="icon" asChild>
-                                <Link href="/admin/billing/quotes"><ArrowLeft size={20} /></Link>
-                            </Button>
-                            <div>
-                                <div className="flex items-center gap-3">
-                                    <h1 className="text-2xl font-bold text-gray-900">Quote #{quote.quoteNumber}</h1>
-                                    <Badge variant={
-                                        quote.status === 'ACCEPTED' ? 'success' :
-                                            quote.status === 'REJECTED' ? 'destructive' :
-                                                quote.status === 'SENT' ? 'info' : 'secondary'
-                                    }>
-                                        {quote.status}
-                                    </Badge>
-                                </div>
-                                <p className="text-sm text-gray-500">Created on {new Date(quote.createdAt).toLocaleDateString()}</p>
-                            </div>
-                        </div>
+        <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300 print:bg-white print:text-black">
+                <div className="print:hidden">
+                    <Navbar />
+                    <Sidebar />
+                </div>
 
-                        <div className="flex gap-2">
-                            {quote.status === 'DRAFT' && (
-                                <>
-                                    <Button variant="outline" onClick={handleSave} disabled={saving}>
-                                        {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save className="mr-2" size={16} />}
-                                        Save Changes
-                                    </Button>
-                                    <Button onClick={handleSend} className="bg-primary text-white hover:bg-primary/90">
-                                        <Send className="mr-2" size={16} /> Send to Client
-                                    </Button>
-                                </>
-                            )}
-                            {quote.status === 'SENT' && (
-                                <Button variant="outline" disabled className="opacity-75">
-                                    <CheckCircle className="mr-2" size={16} /> Sent
-                                </Button>
-                            )}
-                            {quote.status === 'ACCEPTED' && quote.invoiceId && (
-                                <Button asChild variant="default" className="bg-green-600 hover:bg-green-700">
-                                    <Link href={`/admin/billing/invoices`}>
-                                        <FileText className="mr-2" size={16} /> View Invoice
-                                    </Link>
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                <main className="pl-0 md:pl-75 pt-20 p-8 flex justify-center print:p-0 print:pt-0 print:pl-0 print:m-0">
+                    <div className="w-full max-w-4xl space-y-8 print:w-full print:max-w-none">
 
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-8">
-                        {/* Quote Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label>Client</Label>
-                                <div className="p-3 bg-gray-50 rounded-lg border text-sm font-medium">
-                                    {clientUser?.user?.firstName} {clientUser?.user?.lastName} <br />
-                                    <span className="text-gray-500 font-normal">{clientUser?.user?.email}</span>
+                        {/* Header Actions - Hidden in Print */}
+                        <div className="flex items-center justify-between print:hidden">
+                            <div className="flex items-center gap-4">
+                                <Link href="/admin/billing/quotes">
+                                    <Button variant="ghost" size="icon" className="rounded-full">
+                                        <ArrowLeft size={20} />
+                                    </Button>
+                                </Link>
+                                <div>
+                                    <h1 className="text-3xl font-bold">Quotation #{quote.quoteNumber || quote.id}</h1>
+                                    <span className={cn(
+                                        "px-2.5 py-0.5 rounded-full text-xs font-medium border",
+                                        quote.status === 'ACCEPTED' ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" :
+                                            quote.status === 'REJECTED' ? "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800" :
+                                                isExpired ? "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800" :
+                                                    "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
+                                    )}>
+                                        {isExpired && quote.status === 'DRAFT' ? 'EXPIRED' : quote.status}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Valid Until</Label>
-                                {isEditable ? (
-                                    <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
-                                ) : (
-                                    <div className="p-3 bg-gray-50 rounded-lg border text-sm">{new Date(validUntil).toLocaleDateString()}</div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={handlePrint} className="gap-2">
+                                    <Printer size={16} />
+                                    Print
+                                </Button>
+                                <Button variant="outline" onClick={handleDownload} className="gap-2">
+                                    <Download size={16} />
+                                    Download PDF
+                                </Button>
+                                {quote.status === 'DRAFT' && (
+                                    <Button onClick={handleSend} className="gap-2">
+                                        <Mail size={16} />
+                                        Send to Client
+                                    </Button>
                                 )}
-                            </div>
-                            <div className="col-span-2 space-y-2">
-                                <Label>Subject / Title</Label>
-                                {isEditable ? (
-                                    <Input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
-                                ) : (
-                                    <div className="p-3 bg-gray-50 rounded-lg border text-sm font-bold">{subject}</div>
+                                {quote.status === 'SENT' && !isExpired && (
+                                    <>
+                                        <Button onClick={() => handleStatusChange('ACCEPTED')} className="gap-2 bg-green-600 hover:bg-green-700">
+                                            <CheckCircle size={16} />
+                                            Accept
+                                        </Button>
+                                        <Button onClick={() => handleStatusChange('REJECTED')} variant="destructive" className="gap-2">
+                                            <XCircle size={16} />
+                                            Reject
+                                        </Button>
+                                    </>
                                 )}
                             </div>
                         </div>
 
-                        {/* Items Section */}
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-gray-900 border-b pb-2">Line Items</h3>
+                        {/* Quote Content */}
+                        <div
+                            ref={componentRef}
+                            className="bg-card text-card-foreground rounded-[2rem] p-12 shadow-xl border border-border/50 print:shadow-none print:border-none print:rounded-none print:bg-white print:text-black print:p-8"
+                            id="quote-content"
+                        >
+                            {/* Quote Header */}
+                            <div className="flex justify-between items-start border-b border-border/10 pb-8 mb-8">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl">
+                                            W
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-primary">{settings.appName || 'FA CRM'}</h2>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground print:text-gray-600 whitespace-pre-line">
+                                        {settings.companyAddress || (
+                                            <>
+                                                <p>4210 Oxygen Chittagong</p>
+                                                <p>Chittagong, Bangladesh</p>
+                                            </>
+                                        )}
+                                        <p>{settings.supportEmail || 'naimursharon@gmail.com'}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <h1 className="text-4xl font-light text-primary/80 mb-2">QUOTATION</h1>
+                                    <p className="font-mono text-lg">#{quote.quoteNumber || quote.id}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Date: {new Date(quote.proposalDate).toLocaleDateString()}</p>
+                                    <p className="text-sm text-muted-foreground">Valid Until: {new Date(quote.validUntil).toLocaleDateString()}</p>
+                                </div>
+                            </div>
 
-                            <div className="space-y-6">
-                                {items.map((item, index) => (
-                                    <div key={index} className="p-5 bg-white rounded-xl border border-gray-100 shadow-sm relative group/item hover:border-primary/20 transition-colors">
-                                        <div className="absolute top-4 right-4 flex items-center gap-2">
-                                            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Item #{index + 1}</span>
-                                            {isEditable && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8"
-                                                    onClick={() => removeItem(index)}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </Button>
+                            {/* Client & Company Info */}
+                            <div className="grid grid-cols-2 gap-12 mb-2">
+                                <div>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Prepared For</h3>
+                                    <div className="font-medium text-lg mb-1">
+                                        {clientName}
+                                    </div>
+                                    {quote.client.companyName && (
+                                        <div className="text-muted-foreground mb-1">{quote.client.companyName}</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Table */}
+                            <div className="mb-5">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-border/50">
+                                            <th className="py-3 font-semibold text-sm text-muted-foreground w-1/2">Description</th>
+                                            <th className="py-3 font-semibold text-sm text-muted-foreground text-center">Qty</th>
+                                            <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Unit Price</th>
+                                            <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/10">
+                                        {quote.items.map((item: any) => (
+                                            <tr key={item.id}>
+                                                <td className="py-1">
+                                                    <p className="font-medium">{item.description}</p>
+                                                </td>
+                                                <td className="py-1 text-center text-muted-foreground">
+                                                    {item.quantity}
+                                                </td>
+                                                <td className="py-1 text-right text-muted-foreground">
+                                                    {formatPrice(item.unitPrice)}
+                                                </td>
+                                                <td className="py-1 text-right font-medium">
+                                                    {formatPrice(item.amount || (item.quantity * item.unitPrice))}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Totals */}
+                            <div className="flex justify-end">
+                                <div className="w-64 space-y-3">
+                                    <div className="flex justify-between text-muted-foreground">
+                                        <span>Subtotal</span>
+                                        <span>{formatPrice(quote.subtotal)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-muted-foreground">
+                                        <span>Tax</span>
+                                        <span>{formatPrice(quote.taxTotal || 0)}</span>
+                                    </div>
+                                    <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span className="text-primary">{formatPrice(quote.totalAmount)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Notes Section */}
+                            {(quote.notes || quote.terms) && (
+                                <div className="mt-2 pt-2 border-t border-border/10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {quote.notes && (
+                                        <div>
+                                            <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Client Notes</h4>
+                                            {isEditing ? (
+                                                <Textarea
+                                                    value={editedQuote?.notes || ''}
+                                                    onChange={(e) => setEditedQuote({ ...editedQuote, notes: e.target.value })}
+                                                    className="min-h-[100px]"
+                                                />
+                                            ) : (
+                                                <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
+                                                    {quote.notes}
+                                                </div>
                                             )}
                                         </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4">
-                                            {/* Top Selection Row */}
-                                            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Product / Service (Optional)</Label>
-                                                    {isEditable ? (
-                                                        <select
-                                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                            value={item.productId || ""}
-                                                            onChange={(e) => updateItem(index, 'productId', e.target.value)}
-                                                        >
-                                                            <option value="">-- Custom Item --</option>
-                                                            {products.map(p => (
-                                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <div className="p-2.5 bg-gray-50 rounded-md border text-sm font-medium">
-                                                            {products.find(p => p.id === item.productId)?.name || "Custom Item"}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {(isEditable && item.productId) || (!isEditable && item.productId) ? (
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs font-semibold text-gray-500 uppercase">Billing Cycle</Label>
-                                                        {isEditable ? (
-                                                            <select
-                                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                                value={item.billingCycle || "monthly"}
-                                                                onChange={(e) => updateItem(index, 'billingCycle', e.target.value)}
-                                                            >
-                                                                <option value="monthly">Monthly</option>
-                                                                <option value="quarterly">Quarterly</option>
-                                                                <option value="semi-annually">Semi-Annually</option>
-                                                                <option value="annually">Annually</option>
-                                                                <option value="biennial">Biennial</option>
-                                                                <option value="triennial">Triennial</option>
-                                                            </select>
-                                                        ) : (
-                                                            <div className="p-2.5 bg-gray-50 rounded-md border text-sm capitalize">
-                                                                {item.billingCycle || "Monthly"}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : <div className="hidden md:block"></div>}
-                                            </div>
-
-                                            {/* Description Row */}
-                                            <div className="md:col-span-12 space-y-2">
-                                                <Label className="text-xs font-semibold text-gray-500 uppercase">Description / Notes</Label>
-                                                {isEditable ? (
-                                                    <Input
-                                                        placeholder="Enter service details..."
-                                                        value={item.description}
-                                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                                        className="bg-gray-50/30"
-                                                    />
-                                                ) : (
-                                                    <div className="p-3 bg-gray-50 rounded-md border text-sm text-gray-700 min-h-[40px]">
-                                                        {item.description}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Footer Row: Domain, Qty, Price, Total */}
-                                            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-dashed border-gray-100 items-end">
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Domain (Optional)</Label>
-                                                    {isEditable ? (
-                                                        <Input
-                                                            placeholder="example.com"
-                                                            value={item.domainName || ""}
-                                                            onChange={(e) => updateItem(index, 'domainName', e.target.value)}
-                                                        />
-                                                    ) : (
-                                                        <div className="p-2.5 bg-gray-50 rounded-md border text-sm">
-                                                            {item.domainName || "-"}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4 md:col-span-2">
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs font-semibold text-gray-500 uppercase text-center block">Qty</Label>
-                                                        {isEditable ? (
-                                                            <Input
-                                                                type="number"
-                                                                value={item.quantity}
-                                                                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                                                className="text-center"
-                                                            />
-                                                        ) : (
-                                                            <div className="p-2.5 bg-gray-50 rounded-md border text-sm text-center">
-                                                                {item.quantity}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs font-semibold text-gray-500 uppercase text-center block">Unit Price</Label>
-                                                        {isEditable ? (
-                                                            <Input
-                                                                type="number"
-                                                                value={item.unitPrice}
-                                                                onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
-                                                                className="text-center"
-                                                            />
-                                                        ) : (
-                                                            <div className="p-2.5 bg-gray-50 rounded-md border text-sm text-center font-mono">
-                                                                {formatPrice(item.unitPrice)}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-right pb-1">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subtotal</p>
-                                                    <p className="text-xl font-bold text-gray-900">
-                                                        {formatPrice(item.quantity * item.unitPrice)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {isEditable && (
-                                <Button variant="outline" onClick={addItem} className="gap-2">
-                                    <Plus size={16} /> Add Another Item
-                                </Button>
+                                    )}
+                                </div>
                             )}
 
-                            <div className="flex justify-end pt-4 border-t">
-                                <div className="text-right">
-                                    <p className="text-sm text-gray-500">Total Amount</p>
-                                    <p className="text-2xl font-bold text-primary">{formatPrice(calculateTotal())}</p>
-                                </div>
+                            <div className="mt-12 text-center text-xs text-muted-foreground print:mt-20">
+                                <p>Thank you for considering our proposal.</p>
+                                <p className="mt-1">Generated by {settings.appName || 'FA CRM'}</p>
                             </div>
                         </div>
 
-                        {/* Footer Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                            <div className="space-y-2">
-                                <Label>Notes</Label>
-                                {isEditable ? (
-                                    <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes..." />
-                                ) : <div className="p-3 bg-gray-50 rounded-lg border text-sm min-h-[80px]">{notes}</div>}
+                        {/* Edit Controls - Hidden in Print */}
+                        {isEditing && (
+                            <div className="flex justify-end gap-2 print:hidden">
+                                <Button variant="outline" onClick={() => {
+                                    setIsEditing(false);
+                                    setEditedQuote(quote);
+                                }}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSave} className="gap-2">
+                                    <Save size={16} />
+                                    Save Changes
+                                </Button>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Terms</Label>
-                                {isEditable ? (
-                                    <Textarea value={terms} onChange={(e) => setTerms(e.target.value)} />
-                                ) : <div className="p-3 bg-gray-50 rounded-lg border text-sm min-h-[80px]">{terms}</div>}
+                        )}
+
+                        {!isEditing && quote.status === 'DRAFT' && (
+                            <div className="flex justify-end print:hidden">
+                                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                                    Edit Quotation
+                                </Button>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </main>
             </div>
+
+            <style jsx global>{`
+                @media print {
+                    @page { margin: 0; size: auto; }
+                    body { background: white; color: black; }
+                }
+            `}</style>
         </AuthGuard>
     );
 }

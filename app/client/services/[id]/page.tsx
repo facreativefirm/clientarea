@@ -101,9 +101,16 @@ export default function ClientServiceDetailPage() {
 
         toast.info("Establishing secure connection to gateway...");
         setTimeout(() => {
-            if (service.domain) {
+            // Priority 1: Admin defined Control Panel URL
+            if (service.controlPanelUrl) {
+                window.open(service.controlPanelUrl, '_blank');
+            }
+            // Priority 2: Domain
+            else if (service.domain) {
                 window.open(`https://${service.domain}`, '_blank');
-            } else if (service.ipAddress) {
+            }
+            // Priority 3: IP Address fallback (e.g. cPanel default port)
+            else if (service.ipAddress) {
                 window.open(`http://${service.ipAddress}:2083`, '_blank');
             } else {
                 toast.success("Redirecting to Management Console");
@@ -169,7 +176,7 @@ export default function ClientServiceDetailPage() {
 
     return (
         <AuthGuard allowedRoles={["CLIENT", "RESELLER"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-72 pt-20 p-4 md:p-8">
@@ -202,14 +209,16 @@ export default function ClientServiceDetailPage() {
                                 </div>
                             </div>
                             <div className="flex gap-4 w-full md:w-auto">
-                                <Button
-                                    disabled={service.status === 'PENDING'}
-                                    onClick={handleLaunchConsole}
-                                    className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2 w-full md:w-auto transition-all active:scale-95"
-                                >
-                                    <ExternalLink size={18} />
-                                    {service.status === 'PENDING' ? 'Provisioning Assets...' : 'Launch Management Console'}
-                                </Button>
+                                {service.controlPanelUrl && (
+                                    <Button
+                                        disabled={service.status === 'PENDING'}
+                                        onClick={handleLaunchConsole}
+                                        className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2 w-full md:w-auto transition-all active:scale-95"
+                                    >
+                                        <ExternalLink size={18} />
+                                        {service.status === 'PENDING' ? 'Provisioning Assets...' : 'Launch Management Console'}
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
@@ -238,7 +247,6 @@ export default function ClientServiceDetailPage() {
                                     <TabsList className="bg-card/50 p-1 rounded-2xl border border-border/50 mb-6">
                                         <TabsTrigger value="overview" className="rounded-xl px-8 font-bold">Overview</TabsTrigger>
                                         <TabsTrigger value="management" className="rounded-xl px-8 font-bold">Management</TabsTrigger>
-                                        <TabsTrigger value="billing" className="rounded-xl px-8 font-bold">Billing</TabsTrigger>
                                     </TabsList>
 
                                     <TabsContent value="overview" className="space-y-6 mt-6">
@@ -368,12 +376,19 @@ export default function ClientServiceDetailPage() {
                                                     </DialogContent>
                                                 </Dialog>
 
-                                                <Button asChild variant="outline" className="h-24 rounded-2xl flex flex-col gap-2 font-bold bg-white/5 border-white/10 hover:border-emerald-500/50">
-                                                    <Link href={`/support/new?serviceId=${service.id}&subject=${encodeURIComponent(`Upgrade/Downgrade Request for ${service.product?.name}`)}`}>
+                                                <Button
+                                                    asChild
+                                                    variant="outline"
+                                                    className="h-24 rounded-2xl flex flex-col gap-2 font-bold 
+             bg-white/5 border-white/10 
+             opacity-50 pointer-events-none cursor-not-allowed"
+                                                >
+                                                    <span>
                                                         <Settings size={24} className="text-emerald-500" />
-                                                        Upgrade/Downgrade
-                                                    </Link>
+                                                        {/* Upgrade/Downgrade */}
+                                                    </span>
                                                 </Button>
+
 
                                                 <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
                                                     <DialogTrigger asChild>
@@ -420,7 +435,7 @@ export default function ClientServiceDetailPage() {
                                                                 className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 font-bold px-8 h-11"
                                                             >
                                                                 {isCancelling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                                                Confirm De-provisioning
+                                                                Confirm Cancellation
                                                             </Button>
                                                         </DialogFooter>
                                                     </DialogContent>
@@ -462,18 +477,6 @@ export default function ClientServiceDetailPage() {
                                         billingCycle={service.billingCycle}
                                         status={service.status}
                                     />
-                                </div>
-
-                                <div className="bg-gradient-to-br from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-[2.5rem] p-8">
-                                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-4">Dedicated Support</h3>
-                                    <p className="text-white/80 font-medium leading-relaxed">
-                                        As a {service.product?.name} holder, you have priority access to our support engineers.
-                                    </p>
-                                    <Button asChild variant="outline" className="mt-6 w-full h-11 rounded-xl font-bold bg-indigo-500/10 border-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all">
-                                        <Link href={`/support/new?serviceId=${service.id}&subject=${encodeURIComponent(`Issue with ${service.product?.name}`)}`}>
-                                            Open Priority Ticket
-                                        </Link>
-                                    </Button>
                                 </div>
                             </div>
                         </div>

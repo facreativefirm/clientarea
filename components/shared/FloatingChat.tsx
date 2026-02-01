@@ -411,9 +411,9 @@ export function FloatingChat() {
                                                 <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">Send us a message below and we'll help you out!</p>
                                             </div>
                                         ) : (
-                                            tickets.map((t) => (
+                                            tickets.map((t, index) => (
                                                 <button
-                                                    key={t.id}
+                                                    key={t.id || index}
                                                     onClick={() => loadTicket(t.id)}
                                                     className="w-full text-left p-4 rounded-3xl bg-card border border-border/50 hover:border-primary/50 hover:shadow-lg transition-all group relative"
                                                 >
@@ -557,7 +557,7 @@ export function FloatingChat() {
                                             const isMe = reply.userId === user?.id || reply.user?.id === user?.id;
                                             return (
                                                 <motion.div
-                                                    key={reply.id || i}
+                                                    key={reply.id || `reply-${i}`}
                                                     initial={{ opacity: 0, scale: 0.95, y: 5 }}
                                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                                     className={cn(

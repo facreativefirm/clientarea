@@ -94,7 +94,7 @@ export default function ClientQuotesPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-transparent">
+        <div className="min-h-screen bg-white">
             <Navbar />
             <Sidebar />
             <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-6">

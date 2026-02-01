@@ -129,7 +129,7 @@ export default function ProfilePage() {
 
     return (
         <AuthGuard>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="pl-0 md:pl-75 pt-20 p-8 flex justify-center">

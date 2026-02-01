@@ -54,11 +54,12 @@ export default function NotificationsPage() {
     };
 
     const markAsRead = async (id: number) => {
+        if (!id) return;
         try {
             await api.post(`/notifications/${id}/read`);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         } catch (error) {
-            console.error("Failed to mark as read");
+            console.error("Failed to mark as read", error);
         }
     };
 
@@ -84,7 +85,7 @@ export default function NotificationsPage() {
 
     return (
         <AuthGuard allowedRoles={["CLIENT", "RESELLER", "ADMIN"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-75 pt-20 p-4 md:p-8">

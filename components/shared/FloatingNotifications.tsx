@@ -58,10 +58,17 @@ export function FloatingNotifications({ className }: { className?: string }) {
         const socket = socketService.connect();
 
         const handleNewNotification = (notification: any) => {
+            const normalizedNotification = {
+                ...notification,
+                id: notification.id || Date.now(),
+                createdAt: notification.createdAt || new Date().toISOString(),
+                isRead: notification.isRead || false
+            };
+
             setNotifications(prev => {
-                // Deduplicate
-                if (prev.some(n => n.id === notification.id)) return prev;
-                return [notification, ...prev.slice(0, 4)];
+                // Deduplicate if ID exists
+                if (notification.id && prev.some(n => n.id === notification.id)) return prev;
+                return [normalizedNotification, ...prev.slice(0, 4)];
             });
 
             setUnreadCount(prev => prev + 1);
@@ -124,6 +131,7 @@ export function FloatingNotifications({ className }: { className?: string }) {
     };
 
     const markAsRead = async (id: number) => {
+        if (!id) return;
         try {
             await api.post(`/notifications/${id}/read`);
             // Optimistically update: find item, mark isRead=true
@@ -131,7 +139,7 @@ export function FloatingNotifications({ className }: { className?: string }) {
             // Decrement unread count locally
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {
-            console.error("Failed to mark as read");
+            console.error("Failed to mark as read", error);
         }
     };
 
@@ -190,9 +198,9 @@ export function FloatingNotifications({ className }: { className?: string }) {
                                     <p className="text-xs font-medium">No notifications</p>
                                 </div>
                             ) : (
-                                notifications.map((notification) => (
+                                notifications.map((notification, index) => (
                                     <div
-                                        key={notification.id}
+                                        key={notification.id || index}
                                         className={cn(
                                             "relative group border border-border/30 rounded-xl p-3 transition-colors hover:bg-secondary/20",
                                             notification.isRead ? "bg-background/30 opacity-70" : "bg-background/80 shadow-sm"

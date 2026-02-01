@@ -61,11 +61,12 @@ export default function ProductDetailPage() {
             id: product.id.toString(),
             name: product.name,
             type: (product.productType === 'DOMAIN' ? 'DOMAIN' : (['HOSTING', 'VPS', 'RESELLER'].includes(product.productType) ? 'HOSTING' : 'OTHER')) as any,
-            price: product.monthlyPrice,
-            setupFee: product.setupFee,
-            billingCycle: "MONTHLY",
+            price: Number(product.monthlyPrice) || Number(product.annualPrice) || Number(product.price) || 0,
+            setupFee: product.setupFee ? Number(product.setupFee) : 0,
+            billingCycle: Number(product.monthlyPrice) > 0 ? "MONTHLY" : "ANNUALLY",
             quantity: 1,
-            monthlyPrice: product.monthlyPrice
+            monthlyPrice: Number(product.monthlyPrice),
+            annualPrice: Number(product.annualPrice)
         };
         addItem(item);
         toast.success(`${product.name} added to cart.`);

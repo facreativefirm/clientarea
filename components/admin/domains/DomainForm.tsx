@@ -34,6 +34,7 @@ export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps
         emailForwarding: initialData?.emailForwarding ?? false,
         idProtection: initialData?.idProtection ?? false,
         status: initialData?.status || "ACTIVE",
+        eppCode: initialData?.eppCode || "",
         expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : "",
     });
 
@@ -153,6 +154,15 @@ export function DomainForm({ initialData, onSuccess, onCancel }: DomainFormProps
                                     placeholder="Auto-detecting..."
                                     value={form.registrar}
                                     onChange={e => setForm({ ...form, registrar: e.target.value })}
+                                    className="h-11 rounded-xl bg-secondary/20 border-border font-bold"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs uppercase text-muted-foreground font-black tracking-widest">EPP / Auth Code</Label>
+                                <Input
+                                    placeholder="Transfer Code"
+                                    value={form.eppCode}
+                                    onChange={e => setForm({ ...form, eppCode: e.target.value })}
                                     className="h-11 rounded-xl bg-secondary/20 border-border font-bold"
                                 />
                             </div>

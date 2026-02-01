@@ -74,7 +74,7 @@ export default function AddOrderPage() {
 
     return (
         <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-72 pt-20 p-4 md:p-8">

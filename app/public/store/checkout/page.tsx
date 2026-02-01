@@ -313,7 +313,39 @@ function StoreCheckoutContent() {
                                                                 {item.type === 'DOMAIN' ? <Globe size={24} /> : <Server size={24} />}
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <h4 className="font-black text-xl text-foreground tracking-tight leading-none truncate max-w-[200px] sm:max-w-none">{item.name}</h4>
+                                                                <div className="flex items-center gap-3">
+                                                                    <h4 className="font-black text-xl text-foreground tracking-tight leading-none truncate max-w-[200px] sm:max-w-none">{item.name}</h4>
+                                                                    {/* Billing Switcher */}
+                                                                    {(() => {
+                                                                        const monthly = Number(item.monthlyPrice || 0);
+                                                                        const annual = Number(item.annualPrice || 0);
+                                                                        if (monthly > 0 && annual > 0 && monthly !== annual) {
+                                                                            return (
+                                                                                <div className="flex items-center bg-muted/50 rounded-lg p-0.5 border border-border">
+                                                                                    <button
+                                                                                        onClick={() => updateItem(item.cartId!, { billingCycle: 'MONTHLY', price: monthly })}
+                                                                                        className={cn(
+                                                                                            "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
+                                                                                            item.billingCycle === 'MONTHLY' ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+                                                                                        )}
+                                                                                    >
+                                                                                        Monthly
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => updateItem(item.cartId!, { billingCycle: 'ANNUALLY', price: annual })}
+                                                                                        className={cn(
+                                                                                            "px-2 py-0.5 text-[9px] rounded-md font-black uppercase transition-all",
+                                                                                            item.billingCycle === 'ANNUALLY' ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+                                                                                        )}
+                                                                                    >
+                                                                                        Annual
+                                                                                    </button>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
+                                                                </div>
                                                                 <div className="flex flex-wrap gap-2 items-center mt-3">
                                                                     <Badge variant="outline" className="border-primary/20 text-primary font-black uppercase tracking-widest text-[9px] px-3 py-1">
                                                                         {item.billingCycle || 'Monthly'}
@@ -337,6 +369,11 @@ function StoreCheckoutContent() {
                                                         </div>
                                                         <div className="text-right flex flex-col items-end gap-2">
                                                             <p className="font-black text-2xl text-foreground tracking-tighter">{formatPrice(Number(item.price) * (item.quantity || 1))}</p>
+                                                            {item.setupFee && Number(item.setupFee) > 0 && (
+                                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
+                                                                    + {formatPrice(item.setupFee)} Setup
+                                                                </p>
+                                                            )}
                                                             <button onClick={() => removeItem(item.cartId!)} className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-destructive flex items-center gap-1">
                                                                 <Trash2 size={14} /> Remove
                                                             </button>
@@ -507,7 +544,7 @@ function StoreCheckoutContent() {
                                                 id="agreeStore"
                                                 checked={agreeToPolicies}
                                                 onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
-                                                className="mt-1"
+                                                className="mt-0"
                                             />
                                             <Label htmlFor="agreeStore" className="text-xs leading-relaxed text-muted-foreground cursor-pointer select-none">
                                                 I have read and agree to the{" "}

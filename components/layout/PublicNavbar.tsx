@@ -22,8 +22,10 @@ export function PublicNavbar() {
 
     const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null);
     const [services, setServices] = React.useState<any[]>([]);
+    const [isMounted, setIsMounted] = React.useState(false);
 
     React.useEffect(() => {
+        setIsMounted(true);
         const fetchServices = async () => {
             try {
                 const res = await api.get("/products/services");
@@ -119,7 +121,7 @@ export function PublicNavbar() {
                 <div className="hidden md:flex items-center gap-4">
                     <Link href="/checkout" className="relative p-2 text-gray-400 hover:text-primary transition-colors">
                         <ShoppingBag size={22} />
-                        {items.length > 0 && (
+                        {isMounted && items.length > 0 && (
                             <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                                 {items.length}
                             </span>
@@ -153,7 +155,7 @@ export function PublicNavbar() {
                 <div className="md:hidden flex items-center gap-3">
                     <Link href="/checkout" className="relative p-2 text-gray-400">
                         <ShoppingBag size={22} />
-                        {items.length > 0 && (
+                        {isMounted && items.length > 0 && (
                             <span className="absolute top-0 right-0 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                                 {items.length}
                             </span>

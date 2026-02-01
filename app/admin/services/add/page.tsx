@@ -19,7 +19,7 @@ function AddServiceContent() {
 
     return (
         <AuthGuard allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
-            <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
                 <main className="pl-0 md:pl-75 pt-20 p-8 flex justify-center">
@@ -37,7 +37,7 @@ function AddServiceContent() {
                             </div>
                         </div>
 
-                        <div className="glass rounded-[3rem] p-10 border border-white/5 shadow-2xl relative overflow-hidden">
+                        <div className="glass rounded-[3rem] py-10 px-4 border border-white/5 shadow-2xl relative overflow-hidden">
                             {/* Decorative background element */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
 

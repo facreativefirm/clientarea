@@ -40,18 +40,32 @@ export default function StorePage() {
         fetchData();
     }, []);
 
-    // Group products by service
-    const productsByService = services.map(service => {
+    const allFlattenedServices = (() => {
+        const flat: any[] = [];
+        const flatten = (list: any[]) => {
+            list.forEach(s => {
+                flat.push(s);
+                if (s.subServices) flatten(s.subServices);
+            });
+        };
+        flatten(services);
+        return flat;
+    })();
+
+    const productsByService = allFlattenedServices.map(service => {
         const serviceProducts = products.filter(p => p.serviceId === service.id);
         const prices = serviceProducts.map(p => getProductDisplayPrice(p).price);
         const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const subServiceNames = service.subServices?.map((s: any) => s.name).join(", ");
 
         return {
             ...service,
             products: serviceProducts,
-            minPrice: minPrice
+            minPrice: minPrice,
+            productCount: serviceProducts.length,
+            subServiceNames: subServiceNames
         };
-    }).filter(s => s.products.length > 0);
+    }).filter(s => s.productCount > 0);
 
     return (
         <div className="min-h-screen">

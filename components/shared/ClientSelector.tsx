@@ -32,7 +32,7 @@ interface Client {
 }
 
 interface ClientSelectorProps {
-    value?: number;
+    value?: number | string;
     onChange: (value: number) => void;
     className?: string;
 }
@@ -68,7 +68,7 @@ export function ClientSelector({ value, onChange, className }: ClientSelectorPro
         return fullName.includes(term) || email.includes(term) || company.includes(term);
     });
 
-    const selectedClient = clients.find((client) => client.id === value);
+    const selectedClient = clients.find((client) => client.id === (typeof value === 'string' ? parseInt(value) : value));
 
     const handleClientCreated = (newClient: any) => {
         setSheetOpen(false);
@@ -126,7 +126,7 @@ export function ClientSelector({ value, onChange, className }: ClientSelectorPro
                                 key={client.id}
                                 className={cn(
                                     "relative flex cursor-default select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 cursor-pointer",
-                                    value === client.id && "bg-accent text-accent-foreground"
+                                    (typeof value === 'string' ? parseInt(value) : value) === client.id && "bg-accent text-accent-foreground"
                                 )}
                                 onClick={() => {
                                     onChange(client.id);
@@ -136,7 +136,7 @@ export function ClientSelector({ value, onChange, className }: ClientSelectorPro
                                 <Check
                                     className={cn(
                                         "mr-2 h-4 w-4",
-                                        value === client.id ? "opacity-100" : "opacity-0"
+                                        (typeof value === 'string' ? parseInt(value) : value) === client.id ? "opacity-100" : "opacity-0"
                                     )}
                                 />
                                 <div className="flex flex-col">
@@ -173,6 +173,6 @@ export function ClientSelector({ value, onChange, className }: ClientSelectorPro
                     </div>
                 </PopoverContent>
             </Popover>
-        </div>
+        </div >
     );
 }

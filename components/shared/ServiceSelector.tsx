@@ -25,6 +25,7 @@ interface Service {
     id: number;
     name: string;
     slug?: string;
+    depth?: number;
 }
 
 interface ServiceSelectorProps {
@@ -53,11 +54,11 @@ export function ServiceSelector({ value, onChange, className, excludeId }: Servi
             const list = response.data.data.services || [];
             let flat: Service[] = [];
 
-            const flatten = (items: any[]) => {
+            const flatten = (items: any[], depth = 0) => {
                 items.forEach(svc => {
-                    flat.push({ id: svc.id, name: svc.name, slug: svc.slug });
+                    flat.push({ id: svc.id, name: svc.name, slug: svc.slug, depth });
                     if (svc.subServices && svc.subServices.length > 0) {
-                        flatten(svc.subServices);
+                        flatten(svc.subServices, depth + 1);
                     }
                 });
             };
@@ -121,7 +122,25 @@ export function ServiceSelector({ value, onChange, className, excludeId }: Servi
                         </div>
                     </div>
                     <div className="max-h-[300px] overflow-y-auto p-1">
-                        {filteredServices.length === 0 && !loading && (
+                        <div
+                            className={cn(
+                                "relative flex cursor-default select-none items-center rounded-md px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer text-muted-foreground",
+                                !value && "bg-accent text-accent-foreground"
+                            )}
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                        >
+                            <Check
+                                className={cn(
+                                    "mr-2 h-4 w-4",
+                                    !value ? "opacity-100" : "opacity-0"
+                                )}
+                            />
+                            <span>None / No Parent</span>
+                        </div>
+                        {filteredServices.length === 0 && !loading && search && (
                             <div className="py-6 text-center text-sm text-muted-foreground">
                                 No services found.
                             </div>
@@ -133,6 +152,7 @@ export function ServiceSelector({ value, onChange, className, excludeId }: Servi
                                     "relative flex cursor-default select-none items-center rounded-md px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer",
                                     value?.toString() === svc.id.toString() && "bg-accent text-accent-foreground"
                                 )}
+                                style={{ paddingLeft: `${((svc.depth || 0) * 20) + 8}px` }}
                                 onClick={() => {
                                     onChange(svc.id.toString());
                                     setOpen(false);
@@ -144,6 +164,7 @@ export function ServiceSelector({ value, onChange, className, excludeId }: Servi
                                         value?.toString() === svc.id.toString() ? "opacity-100" : "opacity-0"
                                     )}
                                 />
+                                {svc.depth! > 0 && <span className="text-muted-foreground/40 mr-1">—</span>}
                                 <span>{svc.name}</span>
                             </div>
                         ))}
