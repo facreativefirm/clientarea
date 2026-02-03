@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils";
 
 const Checkbox = React.forwardRef<
     HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement>
->(({ className, ...props }, ref) => {
+    React.InputHTMLAttributes<HTMLInputElement> & {
+        onCheckedChange?: (checked: boolean) => void;
+    }
+>(({ className, onCheckedChange, onChange, ...props }, ref) => {
     return (
         <div className="relative flex items-center">
             <input
@@ -17,6 +19,10 @@ const Checkbox = React.forwardRef<
                     className
                 )}
                 ref={ref}
+                onChange={(e) => {
+                    onChange?.(e);
+                    onCheckedChange?.(e.target.checked);
+                }}
                 {...props}
             />
             <Check className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
