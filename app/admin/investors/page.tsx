@@ -148,7 +148,7 @@ export default function AdminInvestorsPage() {
         <div className="min-h-screen bg-background text-foreground">
             <Navbar />
             <Sidebar />
-            <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
+            <main className="min-h-screen lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold">Investor Management</h1>

@@ -68,11 +68,7 @@ function PublicCheckoutContent() {
 
     const ALL_PAYMENT_METHODS = [
         {
-            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
-            }
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Auto Merchant Payment', icon: Smartphone, type: 'auto'
         },
         {
             id: 'nagad_auto', name: 'Nagad Payment', desc: 'Merchant Payment', icon: Zap, type: 'auto'
@@ -214,6 +210,17 @@ function PublicCheckoutContent() {
                 // Automated Nagad
                 if (paymentMethod === 'nagad_auto') {
                     const res = await api.post("/payments/nagad/initiate", {
+                        invoiceId: invoice.id
+                    });
+                    if (res.data.status === 'success') {
+                        window.location.href = res.data.data.redirectUrl;
+                        return;
+                    }
+                }
+
+                // Automated bKash
+                if (paymentMethod === 'bkash_payment') {
+                    const res = await api.post("/bkash/initiate", {
                         invoiceId: invoice.id
                     });
                     if (res.data.status === 'success') {

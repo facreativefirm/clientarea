@@ -17,15 +17,24 @@ export interface CartItem {
     annualPrice?: number;
 }
 
+interface PromoDetails {
+    code: string;
+    type: 'percentage' | 'fixed';
+    value: number;
+    recurrence?: number;
+}
+
 interface CartState {
     items: CartItem[];
-    promoCode: string | null;
+    promoDetails: PromoDetails | null;
+    promoCode: string | null; // Keep for backward compat access if needed
     addItem: (item: CartItem) => void;
     removeItem: (cartId: string) => void;
     updateItem: (cartId: string, updates: Partial<CartItem>) => void;
     updateDomainName: (cartId: string, domainName: string) => void;
     clearCart: () => void;
-    setPromoCode: (code: string | null) => void;
+    applyPromo: (details: PromoDetails | null) => void;
+    setPromoCode: (code: string | null) => void; // Deprecated, wraps applyPromo
     total: () => number;
 }
 
@@ -33,6 +42,7 @@ export const useCartStore = create<CartState>()(
     persist(
         (set, get) => ({
             items: [],
+            promoDetails: null,
             promoCode: null,
             addItem: (item: CartItem) => set((state) => ({
                 items: [...state.items, {
@@ -59,16 +69,28 @@ export const useCartStore = create<CartState>()(
             updateDomainName: (cartId: string, domainName: string) => set((state) => ({
                 items: state.items.map(i => i.cartId === cartId ? { ...i, domainName } : i)
             })),
-            clearCart: () => set({ items: [], promoCode: null }),
-            setPromoCode: (code) => set({ promoCode: code }),
+            clearCart: () => set({ items: [], promoDetails: null, promoCode: null }),
+            applyPromo: (details) => set({ promoDetails: details, promoCode: details?.code || null }),
+            setPromoCode: (code) => {
+                // Legacy support - try to clear if null
+                if (!code) set({ promoDetails: null, promoCode: null });
+            },
             total: () => {
-                const subtotal = get().items.reduce((acc, item) => {
+                let subtotal = get().items.reduce((acc, item) => {
                     const price = typeof item.price === 'string' ? parseFloat(item.price) : (item.price || 0);
                     const setupFee = typeof item.setupFee === 'string' ? parseFloat(item.setupFee) : (item.setupFee || 0);
                     return acc + (price * (item.quantity || 1)) + setupFee;
                 }, 0);
 
-                if (get().promoCode === 'SAVE20') return subtotal * 0.8;
+                const promo = get().promoDetails;
+                if (promo) {
+                    if (promo.type === 'percentage') {
+                        subtotal = subtotal * (1 - (promo.value / 100));
+                    } else if (promo.type === 'fixed') {
+                        subtotal = Math.max(0, subtotal - promo.value);
+                    }
+                }
+
                 return subtotal;
             },
         }),

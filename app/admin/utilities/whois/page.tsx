@@ -212,7 +212,7 @@ export default function WhoisLookupPage() {
             <div className="min-h-screen bg-background text-foreground transition-all duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8 relative z-10">
+                <main className="min-h-screen lg:pl-72 pt-20 p-4 md:p-8 space-y-8 relative z-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
                             <h1 className="text-4xl font-black tracking-tight">WHOIS Lookup</h1>

@@ -199,9 +199,10 @@ interface InvoicePDFProps {
     companyAddress?: string;
     supportEmail?: string;
     currencyCode?: string;
+    taxName?: string;
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA CRM', companyAddress, supportEmail, currencyCode = 'USD' }) => {
+export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA CRM', companyAddress, supportEmail, currencyCode = 'USD', taxName = 'Tax' }) => {
     const formatValue = (amount: number | string) => {
         const value = Number(amount).toFixed(2);
         const symbols: Record<string, string> = {
@@ -285,7 +286,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA C
                             <Text>{formatValue(invoice.subtotal)}</Text>
                         </View>
                         <View style={styles.totalRow}>
-                            <Text>Tax</Text>
+                            <Text>{taxName}</Text>
                             <Text>{formatValue(invoice.tax || 0)}</Text>
                         </View>
                         <View style={styles.grandTotalRow}>

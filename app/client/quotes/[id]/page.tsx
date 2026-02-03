@@ -61,6 +61,7 @@ export default function ClientQuoteDetailsPage() {
                     companyAddress={settings.companyAddress}
                     supportEmail={settings.supportEmail}
                     currencyCode={settings.defaultCurrency || 'USD'}
+                    taxName={settings.taxName}
                 />
             ).toBlob();
 

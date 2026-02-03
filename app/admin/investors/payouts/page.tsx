@@ -169,7 +169,7 @@ export default function AdminPayoutsPage() {
         <div className="min-h-screen bg-background text-foreground">
             <Navbar />
             <Sidebar />
-            <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
+            <main className="min-h-screen lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                 <div>
                     <h1 className="text-3xl font-bold">Withdrawal Requests</h1>
                     <p className="text-muted-foreground">Approve or reject investor fund withdrawals.</p>

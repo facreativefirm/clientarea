@@ -64,7 +64,13 @@ function StoreCheckoutContent() {
     const [completedOrder, setCompletedOrder] = useState<any>(null);
     const [agreeToPolicies, setAgreeToPolicies] = useState(false);
 
-    const MANUAL_METHODS = [
+    const PAYMENT_METHODS = [
+        {
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Auto Merchant Payment', icon: Smartphone, type: 'auto'
+        },
+        {
+            id: 'nagad_auto', name: 'Nagad Payment', desc: 'Auto Merchant Payment', icon: Zap, type: 'auto'
+        },
         {
             id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Instant)', icon: Smartphone, type: 'manual',
             instructions: {
@@ -126,8 +132,6 @@ function StoreCheckoutContent() {
         setCheckingDomainId(itemId);
         try {
             const finalName = val.includes(".") ? val : `${val}.com`;
-            // Note: In a real app, this should check domain availability via a registrar API
-            // For now, mirroring the existing check functionality
             const response = await fetch(`/api/domain/check?domain=${finalName}`);
             const data = await response.json();
 
@@ -175,9 +179,31 @@ function StoreCheckoutContent() {
             const sanitizedHost = host.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
             if (invoiceId && invoice) {
-                // Handling Existing Invoice Payment
-                const selectedMethod = MANUAL_METHODS.find(m => m.id === paymentMethod);
-                if (selectedMethod) {
+                // Automated Nagad
+                if (paymentMethod === 'nagad_auto') {
+                    const res = await api.post("/payments/nagad/initiate", {
+                        invoiceId: invoice.id
+                    });
+                    if (res.data.status === 'success') {
+                        window.location.href = res.data.data.redirectUrl;
+                        return;
+                    }
+                }
+
+                // Automated bKash
+                if (paymentMethod === 'bkash_payment') {
+                    const res = await api.post("/bkash/initiate", {
+                        invoiceId: invoice.id
+                    });
+                    if (res.data.status === 'success') {
+                        window.location.href = res.data.data.redirectUrl;
+                        return;
+                    }
+                }
+
+                // Handling Existing Invoice Payment (Manual)
+                const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                if (selectedMethod && selectedMethod.type === 'manual') {
                     if (!trxId || !senderNumber) {
                         toast.error("Enter Transaction ID and Phone");
                         setLoading(false);
@@ -194,6 +220,7 @@ function StoreCheckoutContent() {
                     return;
                 }
 
+                // Fallback / legacy pay
                 const gateway = paymentMethod === 'mobile' ? 'BKASH' : 'STRIPE';
                 await api.post("/invoices/pay", {
                     invoiceId: invoice.id,
@@ -224,12 +251,43 @@ function StoreCheckoutContent() {
                 }),
                 paymentMethod: paymentMethod,
                 promoCode: promoCode || undefined,
-                resellerHost: sanitizedHost // Crucial for reseller attribution
+                resellerHost: sanitizedHost
             });
 
-            setCompletedOrder(response.data.data.order);
+            const order = response.data.data.order;
+            setCompletedOrder(order);
             toast.success("Order placed successfully!");
             clearCart();
+
+            // Auto-initiate if automated method selected
+            if (paymentMethod === 'nagad_auto' && order.invoices?.[0]?.id) {
+                try {
+                    const initRes = await api.post("/payments/nagad/initiate", {
+                        invoiceId: order.invoices[0].id
+                    });
+                    if (initRes.data.status === 'success') {
+                        window.location.href = initRes.data.data.redirectUrl;
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Nagad auto-init failed", err);
+                }
+            }
+
+            if (paymentMethod === 'bkash_payment' && order.invoices?.[0]?.id) {
+                try {
+                    const initRes = await api.post("/bkash/initiate", {
+                        invoiceId: order.invoices[0].id
+                    });
+                    if (initRes.data.status === 'success') {
+                        window.location.href = initRes.data.data.redirectUrl;
+                        return;
+                    }
+                } catch (err) {
+                    console.error("bKash auto-init failed", err);
+                }
+            }
+
             setStep(4);
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Order failed.");
@@ -315,7 +373,6 @@ function StoreCheckoutContent() {
                                                             <div className="space-y-1">
                                                                 <div className="flex items-center gap-3">
                                                                     <h4 className="font-black text-xl text-foreground tracking-tight leading-none truncate max-w-[200px] sm:max-w-none">{item.name}</h4>
-                                                                    {/* Billing Switcher */}
                                                                     {(() => {
                                                                         const monthly = Number(item.monthlyPrice || 0);
                                                                         const annual = Number(item.annualPrice || 0);
@@ -380,7 +437,6 @@ function StoreCheckoutContent() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Domain Config Area */}
                                                     <AnimatePresence>
                                                         {(domainTargetItem === item.cartId || (item.type === 'DOMAIN' && !item.domainName)) && (
                                                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-8 pt-8 border-t border-border overflow-hidden">
@@ -463,7 +519,7 @@ function StoreCheckoutContent() {
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {MANUAL_METHODS.map((method) => (
+                                            {PAYMENT_METHODS.map((method) => (
                                                 <button
                                                     key={method.id}
                                                     onClick={() => setPaymentMethod(method.id)}
@@ -489,7 +545,7 @@ function StoreCheckoutContent() {
                                         </div>
 
                                         <AnimatePresence>
-                                            {MANUAL_METHODS.find(m => m.id === paymentMethod) && (
+                                            {PAYMENT_METHODS.find(m => m.id === paymentMethod) && (
                                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mt-8 p-6 rounded-[1.5rem] bg-muted/30 border border-border space-y-6 overflow-hidden shadow-inner">
                                                     <div>
                                                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
@@ -497,12 +553,17 @@ function StoreCheckoutContent() {
                                                         </p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[12px] leading-relaxed">
                                                             {(() => {
-                                                                const method = MANUAL_METHODS.find(m => m.id === paymentMethod);
-                                                                if (!method) return null;
+                                                                const method = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                                                                if (!method || method.type === 'auto') return (
+                                                                    <div className="col-span-full text-center py-4 bg-primary/5 rounded-xl border border-primary/20">
+                                                                        <p className="font-bold text-primary">Automated Payment Protocol Active</p>
+                                                                        <p className="text-[10px] text-muted-foreground mt-1">Verification will proceed instantly after redirect.</p>
+                                                                    </div>
+                                                                );
 
                                                                 const refValue = invoice?.invoiceNumber || (invoiceId ? `#${invoiceId}` : 'Your Invoice #');
-                                                                const enInstructions = method.instructions.en.replace('Your Invoice #', refValue);
-                                                                const bnInstructions = method.instructions.bn.replace('আপনার ইনভয়েস নম্বর ব্যবহার করুন', refValue).replace('আপনার ইনভয়েস নম্বর', refValue);
+                                                                const enInstructions = method.instructions?.en.replace('Your Invoice #', refValue);
+                                                                const bnInstructions = method.instructions?.bn.replace('আপনার ইনভয়েস নম্বর ব্যবহার করুন', refValue).replace('আপনার ইনভয়েস নম্বর', refValue);
 
                                                                 return (
                                                                     <>
@@ -513,26 +574,29 @@ function StoreCheckoutContent() {
                                                             })()}
                                                         </div>
                                                     </div>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
-                                                        <div className="space-y-2">
-                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Transaction ID / TXNID</Label>
-                                                            <Input
-                                                                placeholder="Enter proof ID"
-                                                                className="h-10 rounded-xl font-bold uppercase"
-                                                                value={trxId}
-                                                                onChange={(e) => setTrxId(e.target.value)}
-                                                            />
+
+                                                    {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.type === 'manual' && (
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Transaction ID / TXNID</Label>
+                                                                <Input
+                                                                    placeholder="Enter proof ID"
+                                                                    className="h-10 rounded-xl font-bold uppercase"
+                                                                    value={trxId}
+                                                                    onChange={(e) => setTrxId(e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sender Account / Phone</Label>
+                                                                <Input
+                                                                    placeholder="e.g. 017XXXXXXXX"
+                                                                    className="h-10 rounded-xl"
+                                                                    value={senderNumber}
+                                                                    onChange={(e) => setSenderNumber(e.target.value)}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sender Account / Phone</Label>
-                                                            <Input
-                                                                placeholder="e.g. 017XXXXXXXX"
-                                                                className="h-10 rounded-xl"
-                                                                value={senderNumber}
-                                                                onChange={(e) => setSenderNumber(e.target.value)}
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                    )}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -543,7 +607,7 @@ function StoreCheckoutContent() {
                                             <Checkbox
                                                 id="agreeStore"
                                                 checked={agreeToPolicies}
-                                                onChange={(e: any) => setAgreeToPolicies(e.target.checked)}
+                                                onCheckedChange={(checked: boolean) => setAgreeToPolicies(checked)}
                                                 className="mt-0"
                                             />
                                             <Label htmlFor="agreeStore" className="text-xs leading-relaxed text-muted-foreground cursor-pointer select-none">
@@ -597,10 +661,9 @@ function StoreCheckoutContent() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Review Sidebar */}
-                    {
-                        step !== 4 && (
-                            <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-6">
+                    <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-6">
+                        {step !== 4 && (
+                            <>
                                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-card border border-border rounded-xl p-6 shadow-lg">
                                     <h4 className="text-xs font-bold text-muted-foreground mb-6 flex items-center gap-2">
                                         <Receipt size={14} className="text-primary" /> Invoice Summary
@@ -656,12 +719,12 @@ function StoreCheckoutContent() {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    }
-                </div >
-            </div >
-        </div >
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

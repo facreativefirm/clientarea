@@ -99,6 +99,7 @@ export default function ClientInvoiceDetailsPage() {
                     appName={settings.appName || 'FA CRM'}
                     companyAddress={settings.companyAddress}
                     supportEmail={settings.supportEmail}
+                    taxName={settings.taxName}
                 />
             ).toBlob();
 
@@ -286,7 +287,7 @@ export default function ClientInvoiceDetailsPage() {
                                         <span>{formatPrice(invoice.subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
-                                        <span>Tax</span>
+                                        <span>{settings.taxName || 'Tax'}</span>
                                         <span>{formatPrice(invoice.tax || 0)}</span>
                                     </div>
                                     <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">

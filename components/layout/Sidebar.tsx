@@ -24,7 +24,8 @@ import {
     FileText,
     Zap,
     TrendingUp,
-    DollarSign
+    DollarSign,
+    Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -115,6 +116,11 @@ export function Sidebar() {
                         { name: "Refunds", href: "/admin/billing/refunds" },
                         { name: "Create Invoice", href: "/admin/billing/create" },
                     ]
+                },
+                {
+                    name: "Promotions",
+                    icon: Tag,
+                    href: "/admin/promotions"
                 },
                 {
                     name: "Services",

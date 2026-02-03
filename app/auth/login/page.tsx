@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ export default function LoginPage() {
     const { setAuth, isAuthenticated, user } = useAuthStore();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const { brand } = useWhiteLabel();
 
     React.useEffect(() => {
@@ -143,13 +144,26 @@ export default function LoginPage() {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                {...register("password")}
-                                className={cn(errors.password && "border-destructive/50 focus-visible:ring-destructive")}
-                            />
+                            <div className="relative group/pass">
+                                <Input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    {...register("password")}
+                                    className={cn(
+                                        "pr-10",
+                                        errors.password && "border-destructive/50 focus-visible:ring-destructive"
+                                    )}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                                    title={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <p className="text-[11px] font-bold text-destructive uppercase tracking-wider">{errors.password.message}</p>
                             )}

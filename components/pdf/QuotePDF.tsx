@@ -205,6 +205,7 @@ interface QuotePDFProps {
     companyAddress?: string;
     supportEmail?: string;
     currencyCode?: string;
+    taxName?: string;
 }
 
 export const QuotePDF: React.FC<QuotePDFProps> = ({
@@ -212,7 +213,8 @@ export const QuotePDF: React.FC<QuotePDFProps> = ({
     appName = 'FA CRM',
     companyAddress,
     supportEmail,
-    currencyCode = 'USD'
+    currencyCode = 'USD',
+    taxName = 'Tax'
 }) => {
     const formatValue = (amount: number | string) => {
         const value = Number(amount).toFixed(2);
@@ -296,7 +298,7 @@ export const QuotePDF: React.FC<QuotePDFProps> = ({
                             <Text>{formatValue(quote.subtotal)}</Text>
                         </View>
                         <View style={styles.totalRow}>
-                            <Text>Tax</Text>
+                            <Text>{taxName}</Text>
                             <Text>{formatValue(quote.taxTotal || 0)}</Text>
                         </View>
                         <View style={styles.grandTotalRow}>

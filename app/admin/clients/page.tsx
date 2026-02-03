@@ -108,7 +108,7 @@ export default function AdminClientsPage() {
         <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
             <Navbar />
             <Sidebar />
-            <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
+            <main className="min-h-screen lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">

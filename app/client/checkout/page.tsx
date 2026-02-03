@@ -47,9 +47,9 @@ function CheckoutContent() {
     const searchParams = useSearchParams();
     const invoiceId = searchParams.get("invoiceId");
 
-    const { items, removeItem, updateItem, clearCart, total, promoCode, setPromoCode, updateDomainName } = useCartStore();
+    const { items, removeItem, updateItem, clearCart, total, promoCode, setPromoCode, updateDomainName, applyPromo, promoDetails } = useCartStore();
     const { user } = useAuthStore();
-    const { formatPrice } = useSettingsStore();
+    const { settings, formatPrice } = useSettingsStore();
     const { isReseller: isWhiteLabel, resellerId: ownerId } = useWhiteLabel();
 
     const [step, setStep] = useState(invoiceId ? 3 : 1);
@@ -68,11 +68,7 @@ function CheckoutContent() {
 
     const ALL_PAYMENT_METHODS = [
         {
-            id: 'bkash_payment', name: 'bKash Payment', desc: 'Merchant Payment', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Make Payment".\n3. Enter: 01831395555 (Merchant Number).\n4. Amount: Use Total Amount.\n5. Reference: Your Invoice #\n6. Counter: 1\n7. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Make Payment" অপশনটি বেছে নিন।\n৩. মার্চেন্ট নম্বর দিন: ০১৮৩১৩৯৫৫৫৫।\n৪. পরিমাণ: উপরে উল্লেখিত মোট টাকা।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. কাউন্টার: ১\n৭. আপনার পিন দিয়ে কনফার্ম করুন।'
-            }
+            id: 'bkash_payment', name: 'bKash Payment', desc: 'Auto Merchant Payment', icon: Smartphone, type: 'auto'
         },
         {
             id: 'nagad_auto', name: 'Nagad Payment', desc: 'Merchant Payment', icon: Zap, type: 'auto'
@@ -149,12 +145,31 @@ function CheckoutContent() {
         }
     };
 
-    const handleApplyPromo = () => {
-        if (promoInput === "SAVE20") {
-            setPromoCode("SAVE20");
-            toast.success("Promo code applied!");
-        } else {
-            toast.error("Invalid promo code");
+    const handleApplyPromo = async () => {
+        if (!promoInput) return;
+        setLoading(true);
+        try {
+            // Calculate current cart total for validation
+            const currentSubtotal = items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0);
+
+            const res = await api.post('/promotions/validate', {
+                code: promoInput,
+                cartTotal: currentSubtotal,
+                cartItems: items.map(i => ({ productId: i.id }))
+            });
+
+            if (res.data.status === 'success') {
+                applyPromo(res.data.data);
+                toast.success(res.data.data.message);
+            } else {
+                toast.error(res.data.status === 'error' ? res.data.message : 'Invalid code');
+                applyPromo(null);
+            }
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || "Failed to check promo code");
+            applyPromo(null);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -220,6 +235,17 @@ function CheckoutContent() {
                     }
                 }
 
+                // Automated bKash
+                if (paymentMethod === 'bkash_payment') {
+                    const res = await api.post("/bkash/initiate", {
+                        invoiceId: invoice.id
+                    });
+                    if (res.data.status === 'success') {
+                        window.location.href = res.data.data.redirectUrl;
+                        return;
+                    }
+                }
+
                 const selectedMethod = ALL_PAYMENT_METHODS.find(m => m.id === paymentMethod);
                 if (selectedMethod && selectedMethod.type === 'manual') {
                     if (!trxId || !senderNumber) {
@@ -274,7 +300,7 @@ function CheckoutContent() {
                     return orderItem;
                 }),
                 paymentMethod: paymentMethod,
-                promoCode: promoCode || undefined,
+                promoCode: promoCode || undefined, // Send the valid promo code
                 resellerId: isWhiteLabel ? ownerId : null,
             });
 
@@ -295,7 +321,21 @@ function CheckoutContent() {
                     }
                 } catch (initErr) {
                     console.error("Critical: Failed to auto-initiate Nagad after order creation", initErr);
-                    // Fallback to step 4 if initiation fails
+                }
+            }
+
+            // Redirect immediately if bKash Automated is selected
+            if (paymentMethod === 'bkash_payment' && order.invoices?.[0]?.id) {
+                try {
+                    const initRes = await api.post("/bkash/initiate", {
+                        invoiceId: order.invoices[0].id
+                    });
+                    if (initRes.data.status === 'success') {
+                        window.location.href = initRes.data.data.redirectUrl;
+                        return;
+                    }
+                } catch (initErr) {
+                    console.error("Critical: Failed to auto-initiate bKash after order creation", initErr);
                 }
             }
 
@@ -793,9 +833,21 @@ function CheckoutContent() {
                                     <div className="space-y-3 pb-4 border-b">
                                         {(() => {
                                             const subtotal = isMounted && (invoiceId && invoice) ? parseFloat(invoice.subtotal) : (isMounted ? items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0) : 0);
-                                            const discount = isMounted && promoCode === 'SAVE20' ? subtotal * 0.2 : 0;
+
+                                            let discount = 0;
+                                            if (isMounted && promoDetails && !invoiceId) {
+                                                if (promoDetails.type === 'percentage') {
+                                                    discount = subtotal * (promoDetails.value / 100);
+                                                } else if (promoDetails.type === 'fixed') {
+                                                    discount = Number(promoDetails.value);
+                                                }
+                                                // Prevent negative
+                                                if (discount > subtotal) discount = subtotal;
+                                            }
+
                                             const discountedSubtotal = subtotal - discount;
-                                            const tax = isMounted && (invoiceId && invoice) ? parseFloat(invoice.taxAmount) : discountedSubtotal * 0.05;
+                                            const currentTaxRate = parseFloat(settings.taxRate || '5') / 100;
+                                            const tax = isMounted && (invoiceId && invoice) ? parseFloat(invoice.taxAmount) : discountedSubtotal * currentTaxRate;
                                             const finalTotal = isMounted && (invoiceId && invoice) ? parseFloat(invoice.totalAmount) : discountedSubtotal + tax;
 
                                             return (
@@ -805,15 +857,15 @@ function CheckoutContent() {
                                                         <span className="font-bold">{formatPrice(subtotal)}</span>
                                                     </div>
 
-                                                    {promoCode && (
+                                                    {discount > 0 && (
                                                         <div className="flex justify-between items-center text-xs text-emerald-600 font-bold bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/10">
-                                                            <span className="flex items-center gap-1"><Tag size={10} /> SAVED 20%</span>
+                                                            <span className="flex items-center gap-1"><Tag size={10} /> SAVED {promoDetails?.type === 'percentage' ? `${promoDetails.value}%` : formatPrice(promoDetails?.value || 0)}</span>
                                                             <span>-{formatPrice(discount)}</span>
                                                         </div>
                                                     )}
 
                                                     <div className="flex justify-between items-center text-sm">
-                                                        <span className="text-muted-foreground text-xs">Tax ({invoiceId && invoice ? "Included" : "5%"})</span>
+                                                        <span className="text-muted-foreground text-xs">{settings.taxName || 'Tax'} ({invoiceId && invoice ? "Included" : (settings.taxRate ? `${settings.taxRate}%` : "5%")})</span>
                                                         <span className="font-bold">{formatPrice(tax)}</span>
                                                     </div>
 

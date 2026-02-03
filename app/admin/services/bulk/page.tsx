@@ -158,7 +158,7 @@ export default function BulkSetupPage() {
             <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
+                <main className="min-h-screen lg:pl-72 pt-20 p-4 md:p-8 space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-extrabold tracking-tight">Bulk Setup</h1>

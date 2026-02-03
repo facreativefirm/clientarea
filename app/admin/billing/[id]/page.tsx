@@ -364,7 +364,7 @@ export default function InvoiceDetailsPage() {
                                         <span>{formatPrice(invoice.subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
-                                        <span>Tax</span>
+                                        <span>{settings.taxName || 'Tax'}</span>
                                         <span>{formatPrice(invoice.taxAmount || 0)}</span>
                                     </div>
                                     <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">
