@@ -169,7 +169,7 @@ export default function InvoicePrintPage() {
                             color: '#3b82f6',
                             marginBottom: '5px'
                         }}>
-                            INVOICE
+                            {(invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID') ? 'MONEY RECEIPT' : 'INVOICE'}
                         </div>
                         <div style={{
                             fontSize: '11pt',
@@ -318,6 +318,34 @@ export default function InvoicePrintPage() {
                             <span style={{ color: '#1a1a1a' }}>Total</span>
                             <span style={{ color: '#3b82f6' }}>{formatPrice(invoice.totalAmount)}</span>
                         </div>
+
+                        {Number(invoice.amountPaid) > 0 && (
+                            <>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    padding: '5px 0',
+                                    fontSize: '10pt',
+                                    fontWeight: 'bold',
+                                    color: '#10b981'
+                                }}>
+                                    <span>Total Paid</span>
+                                    <span>{formatPrice(invoice.amountPaid)}</span>
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    padding: '3px 0',
+                                    marginTop: '5px',
+                                    borderTop: '0.5px solid #e5e7eb',
+                                    fontSize: '9pt',
+                                    color: Number(invoice.totalAmount) - Number(invoice.amountPaid) > 0 ? '#ef4444' : '#6b7280'
+                                }}>
+                                    <span>Balance Due</span>
+                                    <span>{formatPrice(Math.max(0, Number(invoice.totalAmount) - Number(invoice.amountPaid)))}</span>
+                                </div>
+                            </>
+                        )}
                         {invoice.status === 'PAID' && (
                             <div style={{
                                 marginTop: '10px',

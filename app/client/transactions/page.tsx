@@ -6,11 +6,12 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useLanguage } from "@/components/language-provider";
 import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/shared/Badge";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Printer, Download } from "lucide-react";
 import api from "@/lib/api";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { toast } from "sonner";
 import Link from "next/link";
+import { getSessionToken } from "@/lib/store/authStore";
 
 export default function TransactionsPage() {
     const { t } = useLanguage();
@@ -93,6 +94,32 @@ export default function TransactionsPage() {
                 }>
                     {item.status}
                 </Badge>
+            )
+        },
+        {
+            header: "Actions",
+            accessorKey: "actions" as any,
+            cell: (item: any) => (
+                <div className="flex gap-2">
+                    {(item.status === 'COMPLETED' || item.status === 'succeeded' || item.status === 'SUCCESS') && (
+                        <>
+                            <button
+                                onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/finance/transactions/${item.id}/receipt/download?token=${getSessionToken()}`, '_blank')}
+                                className="bg-primary/10 hover:bg-primary/20 text-primary p-2 rounded-lg transition-colors flex items-center gap-2 text-xs font-semibold"
+                                title="Download PDF Receipt"
+                            >
+                                <Download size={14} />
+                            </button>
+                            <button
+                                onClick={() => window.open(`/client/transactions/${item.id}/print`, '_blank')}
+                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 p-2 rounded-lg transition-colors flex items-center gap-2 text-xs font-semibold"
+                                title="Print Money Receipt"
+                            >
+                                <Printer size={14} />
+                            </button>
+                        </>
+                    )}
+                </div>
             )
         }
     ];

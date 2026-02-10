@@ -9,7 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/shared/Badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Plus, Download, Loader2, Zap, Cog, ShieldCheck, CheckCircle2, AlertCircle, MoreHorizontal, CheckCircle, Trash2, XCircle, RefreshCcw, History, Mail, MessageCircle } from "lucide-react";
+import { FileText, Plus, Download, Loader2, Zap, Cog, ShieldCheck, CheckCircle2, AlertCircle, MoreHorizontal, CheckCircle, Trash2, XCircle, RefreshCcw, History, Mail, MessageCircle, Printer } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,6 +23,7 @@ import { cn, formatLabel } from "@/lib/utils";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useSearchParams, useRouter } from "next/navigation";
 import { RefundQueue } from "@/components/admin/billing/RefundQueue";
+import { getSessionToken } from "@/lib/store/authStore";
 
 function AdminBillingContent() {
     const { t } = useLanguage();
@@ -433,54 +434,82 @@ function AdminBillingContent() {
             header: "Actions",
             accessorKey: "id" as any,
             cell: (item: any) => (
-                item.status === 'PENDING' ? (
-                    <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                            onClick={() => handleVerifyTransaction(item.id, 'APPROVE')}
-                            title="Approve Payment"
-                        >
-                            <CheckCircle size={16} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleVerifyTransaction(item.id, 'REJECT')}
-                            title="Reject Payment"
-                        >
-                            <XCircle size={16} />
-                        </Button>
-                    </div>
-                ) : (
-                    (() => {
-                        const refundedAmount = item.refunds
-                            ?.filter((r: any) => r.status !== 'REJECTED')
-                            .reduce((sum: number, r: any) => sum + parseFloat(r.amount), 0) || 0;
-                        const isFullyRefunded = refundedAmount >= parseFloat(item.amount);
-
-                        return (
+                <div className="flex items-center gap-1">
+                    {item.status === 'PENDING' ? (
+                        <>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className={
-                                    cn(
-                                        "h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10",
-                                        isFullyRefunded && "opacity-30 cursor-not-allowed text-muted-foreground"
-                                    )
-                                }
-                                title={isFullyRefunded ? "Fully Refunded" : "Request Refund"}
-                                onClick={() => !isFullyRefunded && handleRefundRequest(item)
-                                }
-                                disabled={item.amount <= 0 || item.status !== 'SUCCESS' || isFullyRefunded}
+                                className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                onClick={() => handleVerifyTransaction(item.id, 'APPROVE')}
+                                title="Approve Payment"
                             >
-                                <RefreshCcw size={14} />
-                            </Button >
-                        );
-                    })()
-                )
+                                <CheckCircle size={16} />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleVerifyTransaction(item.id, 'REJECT')}
+                                title="Reject Payment"
+                            >
+                                <XCircle size={16} />
+                            </Button>
+                        </>
+                    ) : (
+                        (() => {
+                            const refundedAmount = item.refunds
+                                ?.filter((r: any) => r.status !== 'REJECTED')
+                                .reduce((sum: number, r: any) => sum + parseFloat(r.amount), 0) || 0;
+                            const isFullyRefunded = refundedAmount >= parseFloat(item.amount);
+
+                            const isSuccess = item.status === 'COMPLETED' || item.status === 'succeeded' || item.status === 'SUCCESS';
+
+                            return (
+                                <>
+                                    {isSuccess && (
+                                        <>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-primary hover:text-primary-600 hover:bg-primary/10"
+                                                title="Download Receipt"
+                                                onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/finance/transactions/${item.id}/receipt/download?token=${getSessionToken()}`, '_blank')}
+                                            >
+                                                <Download size={14} />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                                title="Print Receipt"
+                                                onClick={() => window.open(`/client/transactions/${item.id}/print`, '_blank')}
+                                            >
+                                                <Printer size={14} />
+                                            </Button>
+                                        </>
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className={
+                                            cn(
+                                                "h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10",
+                                                isFullyRefunded && "opacity-30 cursor-not-allowed text-muted-foreground"
+                                            )
+                                        }
+                                        title={isFullyRefunded ? "Fully Refunded" : "Request Refund"}
+                                        onClick={() => !isFullyRefunded && handleRefundRequest(item)
+                                        }
+                                        disabled={item.amount <= 0 || !isSuccess || isFullyRefunded}
+                                    >
+                                        <RefreshCcw size={14} />
+                                    </Button >
+                                </>
+                            );
+                        })()
+                    )}
+                </div>
             )
         }
     ];
