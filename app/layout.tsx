@@ -19,8 +19,11 @@ const tiroBangla = Tiro_Bangla({
 });
 
 export const metadata: Metadata = {
-  title: "FA Creative CRM | Production Read",
+  title: "FA Creative CRM | Production Ready",
   description: "Next-gen FA Creative CRM for hosting and services.",
+  icons: {
+    icon: "/Facreativefirmltd.png",
+  },
 };
 
 export default function RootLayout({

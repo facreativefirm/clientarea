@@ -248,7 +248,7 @@ export function Sidebar() {
             )}
 
             <aside className={cn(
-                "w-64 h-[calc(100vh-64px)] fixed left-0 top-16 glass border-r border-white/5 flex flex-col p-4 z-40 overflow-y-auto custom-scrollbar transition-transform duration-300 lg:translate-x-0 lg:flex",
+                "w-64 h-[calc(100vh-64px)] fixed left-0 top-16 glass border-r border-border flex flex-col p-4 z-40 overflow-y-auto custom-scrollbar transition-transform duration-300 lg:translate-x-0 lg:flex",
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="flex-1 space-y-1">
@@ -296,7 +296,7 @@ export function Sidebar() {
                                 )}
 
                                 {hasChildren && isOpen && (
-                                    <div className="ml-9 space-y-1 border-l border-white/5 pl-2 mt-1">
+                                    <div className="ml-9 space-y-1 border-l border-border pl-2 mt-1">
                                         {item.children!.map((child) => (
                                             <Link
                                                 key={child.href}
@@ -321,7 +321,7 @@ export function Sidebar() {
                     })}
                 </div>
 
-                <div className="border-t border-white/5 mt-4 pt-4 space-y-1">
+                <div className="border-t border-border mt-4 pt-4 space-y-1">
                     {['ADMIN', 'SUPER_ADMIN'].includes(user?.userType || '') && (
                         <Link
                             href="/admin/settings"

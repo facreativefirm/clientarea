@@ -106,12 +106,14 @@ export function Navbar() {
     };
 
     return (
-        <nav className="sticky top-0 z-50 w-full glass border-b border-white/5 px-6 py-3 flex items-center justify-between">
+        <nav className="sticky top-0 z-50 w-full glass border-b border-border px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-8 flex-1 justify-between md:justify-start">
                 <div onClick={() => router.push("/")} className="cursor-pointer flex items-center gap-2 group min-w-fit">
-                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:scale-110 transition-transform">
-                        <Shield className="w-6 h-6" />
-                    </div>
+                    <img
+                        src="/Facreativefirmltd.png"
+                        alt="FA CRM Logo"
+                        className="w-10 h-10 object-contain group-hover:scale-110 transition-transform"
+                    />
                     <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:block">
                         FA CRM
                     </h1>

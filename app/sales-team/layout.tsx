@@ -45,11 +45,11 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
     };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] flex font-sans">
+        <div className="min-h-screen bg-background flex font-sans">
             {/* Sidebar Desktop */}
             <aside
                 className={cn(
-                    "bg-white/80 backdrop-blur-xl border-r border-gray-100 transition-all duration-500 hidden md:flex flex-col fixed h-full z-40 shadow-2xl shadow-gray-200/20",
+                    "bg-card/80 backdrop-blur-xl border-r border-border transition-all duration-500 hidden md:flex flex-col fixed h-full z-40 shadow-2xl shadow-black/5",
                     isSidebarOpen ? "w-[300px]" : "w-[100px]"
                 )}
             >
@@ -83,7 +83,7 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
                 <div className="flex-1 px-4 space-y-1.5 overflow-y-auto">
                     <div className="mb-4 px-4">
                         <p className={cn(
-                            "text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]",
+                            "text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]",
                             !isSidebarOpen && "text-center px-0"
                         )}>
                             {isSidebarOpen ? "Main Navigation" : "Nav"}
@@ -99,7 +99,7 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
                                     "flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                     isActive
                                         ? "bg-primary text-white shadow-xl shadow-primary/20"
-                                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                 )}
                             >
                                 <div className={cn(
@@ -119,9 +119,9 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
                     })}
                 </div>
 
-                <div className="p-6 border-t border-gray-50 bg-gray-50/30">
+                <div className="p-6 border-t border-border bg-muted/30">
                     <div className={cn(
-                        "flex items-center gap-3 mb-6 p-2 rounded-2xl bg-white border border-gray-100 shadow-sm",
+                        "flex items-center gap-3 mb-6 p-2 rounded-2xl bg-card border border-border shadow-sm",
                         !isSidebarOpen && "justify-center border-none shadow-none bg-transparent p-0"
                     )}>
                         <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 font-black shrink-0">
@@ -129,8 +129,8 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
                         </div>
                         {isSidebarOpen && (
                             <div className="truncate">
-                                <p className="text-xs font-black text-gray-900 truncate">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">Sales Executive</p>
+                                <p className="text-xs font-black text-foreground truncate">{user?.firstName} {user?.lastName}</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">Sales Executive</p>
                             </div>
                         )}
                     </div>
@@ -148,26 +148,26 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
             </aside>
 
             {/* Mobile Nav Top Bar */}
-            <div className="md:hidden fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 h-20 flex items-center justify-between px-6">
+            <div className="md:hidden fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border h-20 flex items-center justify-between px-6">
                 <Link href="/" className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                         <Shield className="w-5 h-5" />
                     </div>
-                    <span className="font-black text-xl tracking-tighter">Sales<span className="text-primary italic">Hub</span></span>
+                    <span className="font-black text-xl tracking-tighter text-foreground">Sales<span className="text-primary italic">Hub</span></span>
                 </Link>
                 <Sheet>
                     <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" className="rounded-xl border-2 border-gray-50">
-                            <Menu className="w-6 h-6 text-gray-900" />
+                        <Button variant="outline" size="icon" className="rounded-xl border-2 border-border">
+                            <Menu className="w-6 h-6 text-foreground" />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="w-[85%] p-0 bg-white border-r-0">
-                        <div className="p-8 border-b border-gray-50">
+                    <SheetContent side="left" className="w-[85%] p-0 bg-background border-r-0">
+                        <div className="p-8 border-b border-border">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-white">
                                     <Shield className="h-6 w-6" />
                                 </div>
-                                <SheetTitle className="font-black text-2xl tracking-tighter mb-0">Sales<span className="text-primary italic">Hub</span></SheetTitle>
+                                <SheetTitle className="font-black text-2xl tracking-tighter mb-0 text-foreground">Sales<span className="text-primary italic">Hub</span></SheetTitle>
                             </div>
                         </div>
                         <div className="p-6 space-y-2 mt-4">
@@ -181,7 +181,7 @@ export default function SalesTeamLayout({ children }: { children: React.ReactNod
                                             "flex items-center gap-4 px-6 py-5 rounded-[1.5rem] text-sm font-black transition-all",
                                             active
                                                 ? "bg-primary text-white shadow-xl shadow-primary/20"
-                                                : "text-gray-500 hover:bg-gray-50"
+                                                : "text-muted-foreground hover:bg-muted"
                                         )}
                                     >
                                         <item.icon size={22} />

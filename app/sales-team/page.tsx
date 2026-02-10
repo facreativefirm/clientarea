@@ -34,17 +34,17 @@ const StatCard = ({ title, value, icon: Icon, colorCls, delay }: any) => (
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.3 }}
-        className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm group hover:border-gray-200 transition-all"
+        className="bg-card border border-border rounded-xl p-5 shadow-sm group hover:border-primary/20 transition-all font-sans"
     >
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-4 font-sans">
             <div className={`p-3 rounded-lg ${colorCls} group-hover:scale-105 transition-transform`}>
                 <Icon size={20} />
             </div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Live</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Live</div>
         </div>
         <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{title}</p>
-            <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{value}</h3>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 font-sans">{title}</p>
+            <h3 className="text-2xl font-black text-foreground tracking-tight font-sans">{value}</h3>
         </div>
     </motion.div>
 );
@@ -98,14 +98,14 @@ export default function SalesTeamDashboard() {
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white border border-red-100 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-sm mt-12"
+                className="bg-card border border-rose-500/20 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-sm mt-12 font-sans"
             >
-                <div className="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-6">
-                    <AlertCircle className="h-8 w-8 text-red-500" />
+                <div className="w-16 h-16 bg-rose-500/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                    <AlertCircle className="h-8 w-8 text-rose-500" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Access Restricted</h3>
-                <p className="text-gray-500 font-medium mb-6">{error}</p>
-                <Button className="rounded-xl h-11 px-6 font-bold bg-primary">
+                <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">Access Restricted</h3>
+                <p className="text-muted-foreground font-medium mb-6">{error}</p>
+                <Button className="rounded-xl h-11 px-6 font-bold bg-primary text-white">
                     Contact Administrator
                 </Button>
             </motion.div>
@@ -125,10 +125,10 @@ export default function SalesTeamDashboard() {
                         <span className="w-6 h-[1.5px] bg-primary"></span>
                         Overview
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-2">
+                    <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2 font-sans">
                         Hello, {user?.firstName}
                     </h1>
-                    <p className="text-gray-500 font-medium text-sm max-w-sm">
+                    <p className="text-muted-foreground font-medium text-sm max-w-sm font-sans">
                         Keep track of your prospects and earnings.
                     </p>
                 </motion.div>
@@ -140,8 +140,8 @@ export default function SalesTeamDashboard() {
                     className="flex flex-wrap gap-3"
                 >
                     <Link href="/sales-team/points">
-                        <Button variant="outline" className="h-11 px-5 rounded-xl font-bold border-gray-200 bg-white hover:bg-gray-50 shadow-sm gap-2 font-sans">
-                            <DollarSign className="w-4 h-4 text-gray-400" />
+                        <Button variant="outline" className="h-11 px-5 rounded-xl font-bold border-border bg-background hover:bg-muted shadow-sm gap-2 font-sans text-foreground">
+                            <DollarSign className="w-4 h-4 text-muted-foreground" />
                             Withdraw
                         </Button>
                     </Link>
@@ -191,12 +191,12 @@ export default function SalesTeamDashboard() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.3 }}
-                className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
+                className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden"
             >
-                <div className="p-6 md:p-8 border-b border-gray-50 flex items-center justify-between">
+                <div className="p-6 md:p-8 border-b border-border flex items-center justify-between font-sans">
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Recent Activity</h3>
-                        <p className="text-gray-400 font-medium text-xs">Your latest point updates</p>
+                        <h3 className="text-xl font-bold text-foreground tracking-tight">Recent Activity</h3>
+                        <p className="text-muted-foreground font-medium text-xs">Your latest point updates</p>
                     </div>
                     <Link href="/sales-team/points">
                         <Button variant="ghost" className="rounded-lg font-bold text-primary group font-sans text-sm h-9">
