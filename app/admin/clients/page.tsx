@@ -21,17 +21,39 @@ export default function AdminClientsPage() {
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalClients, setTotalClients] = useState(0);
 
+    // Debounce search and pagination
     useEffect(() => {
-        fetchClients();
-        console.log(clients);
-    }, []);
+        const timer = setTimeout(() => {
+            fetchClients();
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timer);
+    }, [page, searchTerm, limit]);
 
     const fetchClients = async () => {
         try {
             setLoading(true);
-            const response = await api.get("/clients");
-            setClients(response.data.data.clients || []);
+            // Construct query params
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+                ...(searchTerm && { search: searchTerm })
+            });
+
+            const response = await api.get(`/clients?${params.toString()}`);
+
+            if (response.data.data) {
+                setClients(response.data.data.clients || []);
+                const meta = response.data.data.meta;
+                if (meta) {
+                    setTotalPages(meta.totalPages);
+                    setTotalClients(meta.total);
+                }
+            }
             setError(null);
         } catch (err: any) {
             console.error("Error fetching clients:", err);
@@ -41,14 +63,10 @@ export default function AdminClientsPage() {
         }
     };
 
-
-    const filteredClients = clients.filter(client =>
-        searchTerm === "" ||
-        client.user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPage(1); // Reset to page 1 on search
+    };
 
     const columns = [
         {
@@ -114,7 +132,9 @@ export default function AdminClientsPage() {
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
                             Client <span className="text-primary">Directory</span>
                         </h1>
-                        <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">Client base management</p>
+                        <p className="text-muted-foreground mt-1 text-sm md:text-base font-medium">
+                            Manage your client base ({totalClients} total)
+                        </p>
                     </div>
                     <Link href="/admin/clients/add" className="w-full md:w-auto">
                         <Button className="h-12 px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md gap-2 w-full md:w-auto">
@@ -129,13 +149,23 @@ export default function AdminClientsPage() {
                         <div className="relative w-full md:w-96">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search clients"
+                                placeholder="Search clients..."
                                 className="pl-12 h-12 bg-secondary/20 border-border rounded-xl font-medium focus:ring-primary/20"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={handleSearch}
                             />
                         </div>
-                        <div className="flex gap-2 w-full md:w-auto">
+                        <div className="flex gap-2 w-full md:w-auto items-center">
+                            <select
+                                className="h-12 px-4 rounded-xl bg-secondary/20 border-border font-medium focus:ring-primary/20"
+                                value={limit}
+                                onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+                            >
+                                <option value={10}>10 per page</option>
+                                <option value={20}>20 per page</option>
+                                <option value={50}>50 per page</option>
+                                <option value={100}>100 per page</option>
+                            </select>
                             <Button variant="outline" className="h-12 rounded-xl bg-secondary/30 border-border font-bold gap-2 flex-1 md:flex-none">
                                 <Filter className="w-4 h-4" />
                                 Filter
@@ -161,17 +191,84 @@ export default function AdminClientsPage() {
                             <p className="font-bold mb-4">{error}</p>
                             <Button onClick={fetchClients} variant="outline" className="rounded-xl border-destructive/50 hover:bg-destructive/10">Retry</Button>
                         </div>
-                    ) : filteredClients.length === 0 ? (
+                    ) : clients.length === 0 ? (
                         <EmptyState
                             icon={User}
                             title="No clients found."
-                            description="You don't have any clients registered in the system yet."
-                            actionLabel="Add New Client"
-                            onAction={() => window.location.href = '/admin/clients/add'}
+                            description={searchTerm ? "No clients match your search criteria." : "You don't have any clients registered in the system yet."}
+                            actionLabel={searchTerm ? "Clear Search" : "Add New Client"}
+                            onAction={searchTerm ? () => setSearchTerm("") : () => window.location.href = '/admin/clients/add'}
                         />
                     ) : (
-                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <DataTable columns={columns} data={filteredClients} />
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+                            <DataTable columns={columns} data={clients} />
+
+                            {/* Pagination Controls */}
+                            <div className="flex justify-between items-center py-4 border-t border-border mt-4">
+                                <div className="text-sm text-muted-foreground font-medium">
+                                    Showing <span className="text-foreground font-bold">{((page - 1) * limit) + 1}</span> to <span className="text-foreground font-bold">{Math.min(page * limit, totalClients)}</span> of <span className="text-foreground font-bold">{totalClients}</span> results
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="h-9 px-4 font-bold"
+                                    >
+                                        Previous
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            // Logic to show pages around current page could be complex, 
+                                            // for now just simple 1-5 or if totalPages is small. 
+                                            // A robust component is better, but this simple one works for now.
+                                            let pNum = i + 1;
+                                            if (totalPages > 5 && page > 3) {
+                                                pNum = page - 3 + i;
+                                                if (pNum > totalPages) pNum = i + (totalPages - 4);
+                                            }
+
+                                            // Ensure we don't go out of bounds (simple fix)
+                                            if (pNum < 1) pNum = 1;
+
+                                            return (
+                                                <Button
+                                                    key={i}
+                                                    variant={page === pNum ? "default" : "ghost"}
+                                                    size="sm"
+                                                    onClick={() => setPage(pNum)}
+                                                    className={`w-9 h-9 font-bold ${page === pNum ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                                >
+                                                    {pNum}
+                                                </Button>
+                                            );
+                                        })}
+                                        {totalPages > 5 && page < totalPages - 2 && (
+                                            <>
+                                                <span className="text-muted-foreground">...</span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setPage(totalPages)}
+                                                    className="w-9 h-9 font-bold text-muted-foreground"
+                                                >
+                                                    {totalPages}
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="h-9 px-4 font-bold"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

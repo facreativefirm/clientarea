@@ -34,14 +34,17 @@ export default function Home() {
             className="fixed inset-0 z-[100] bg-white flex items-center justify-center"
           >
             <div className="flex flex-col items-center gap-4">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border-4 border-t-primary"
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative w-24 h-24"
+              >
+                <img
+                  src="/Facreativefirmltd.png"
+                  alt="Loading..."
+                  className="w-20 h-20 object-contain drop-shadow-xl animate-pulse"
                 />
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         ) : (
@@ -63,8 +66,9 @@ export default function Home() {
             </main>
             <Footer />
           </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        )
+        }
+      </AnimatePresence >
+    </div >
   );
 }

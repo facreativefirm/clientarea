@@ -289,8 +289,12 @@ export default function InvoiceDetailsPage() {
                             <div className="flex justify-between items-start border-b border-border/10 pb-8 mb-8">
                                 <div>
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl">
-                                            W
+                                        <div className="w-10 h-10 shrink-0">
+                                            <img
+                                                src="/Facreativefirmltd.png"
+                                                alt="Logo"
+                                                className="w-full h-full object-contain drop-shadow-sm"
+                                            />
                                         </div>
                                         <h2 className="text-2xl font-bold text-primary">{settings.appName || 'FA CRM'}</h2>
                                     </div>

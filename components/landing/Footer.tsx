@@ -16,9 +16,11 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     <div className="space-y-6">
                         <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                                <Shield className="w-5 h-5" />
-                            </div>
+                            <img
+                                src="/Facreativefirmltd.png"
+                                alt="Logo"
+                                className="w-10 h-10 object-contain"
+                            />
                             <span className="text-xl font-bold text-gray-900">
                                 {settings.appName || 'FA CRM'}
                             </span>

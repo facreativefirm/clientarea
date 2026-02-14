@@ -105,8 +105,12 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background">
             <div className="w-full max-w-md">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-primary/10 text-primary mb-4 border border-primary/20 shadow-xl shadow-primary/10">
-                        <ShieldCheck className="w-8 h-8" />
+                    <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+                        <img
+                            src="/Facreativefirmltd.png"
+                            alt="Logo"
+                            className="w-full h-full object-contain drop-shadow-lg"
+                        />
                     </div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                         {brand?.name ? `Welcome to ${brand.name}` : "Welcome Back"}

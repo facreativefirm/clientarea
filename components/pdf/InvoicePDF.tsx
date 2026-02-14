@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
@@ -221,6 +221,10 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, appName = 'FA C
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.companyInfo}>
+                        <Image
+                            src="/Facreativefirmltd.png"
+                            style={{ width: 40, height: 40, marginBottom: 5 }}
+                        />
                         <Text style={styles.companyName}>{appName}</Text>
                         <View style={styles.companyDetails}>
                             {companyAddress ? (

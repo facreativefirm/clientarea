@@ -97,8 +97,12 @@ export default function RegisterPage() {
         <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/20 via-background to-background">
             <div className="w-full max-w-xl">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-accent/10 text-accent mb-4 border border-accent/20 shadow-xl shadow-accent/10">
-                        <UserPlus className="w-8 h-8" />
+                    <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+                        <img
+                            src="/Facreativefirmltd.png"
+                            alt="Logo"
+                            className="w-full h-full object-contain drop-shadow-lg"
+                        />
                     </div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                         {brand?.name ? `Join ${brand.name}` : "Create Your Account"}
