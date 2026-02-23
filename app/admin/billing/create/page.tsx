@@ -37,19 +37,34 @@ export default function CreateInvoicePage() {
         fetchSettings();
     }, []);
 
-    const [items, setItems] = useState([
-        { description: "", amount: "" }
+    const [items, setItems] = useState<any[]>([
+        { description: "", amount: "", billingCycle: "monthly", productId: null }
     ]);
 
     const addItem = () => {
-        setItems([...items, { description: "", amount: "" }]);
+        setItems([...items, { description: "", amount: "", billingCycle: "monthly", productId: null }]);
+    };
+
+    const getProductPrice = (product: any, cycle: string) => {
+        switch (cycle) {
+            case 'monthly': return product.monthlyPrice || 0;
+            case 'quarterly': return product.quarterlyPrice || 0;
+            case 'semi-annually': return product.semiAnnualPrice || 0;
+            case 'annually': return product.annualPrice || 0;
+            case 'biennial': return product.biennialPrice || 0;
+            case 'triennial': return product.triennialPrice || 0;
+            default: return product.monthlyPrice || 0;
+        }
     };
 
     const addProductItem = (prodId: number, product?: any) => {
         if (!product) return;
         setItems([...items, {
             description: product.name + (product.productType ? ` (${product.productType})` : ""),
-            amount: (product.monthlyPrice || 0).toString()
+            amount: (product.monthlyPrice || 0).toString(),
+            billingCycle: "monthly",
+            productId: product.id,
+            productData: product // Store full product data for cycle changes
         }]);
     };
 
@@ -61,7 +76,14 @@ export default function CreateInvoicePage() {
 
     const updateItem = (index: number, field: string, value: string) => {
         const newItems = [...items];
-        (newItems[index] as any)[field] = value;
+        const item = newItems[index] as any;
+        item[field] = value;
+
+        // If billing cycle is changed and we have product data, update the price
+        if (field === 'billingCycle' && item.productData) {
+            item.amount = getProductPrice(item.productData, value).toString();
+        }
+
         setItems(newItems);
     };
 
@@ -81,7 +103,7 @@ export default function CreateInvoicePage() {
                 notes: formData.notes,
                 adminNotes: formData.adminNotes,
                 items: items.map(item => ({
-                    description: item.description,
+                    description: item.description + (item.billingCycle && item.productId ? ` - ${item.billingCycle}` : ''),
                     amount: parseFloat(item.amount)
                 }))
             };
@@ -103,7 +125,7 @@ export default function CreateInvoicePage() {
                 <Navbar />
                 <Sidebar />
                 <main className="lg:pl-72 pt-20 p-4 md:p-8 flex justify-center">
-                    <div className="w-full max-w-4xl space-y-8">
+                    <div className="w-full max-w-6xl space-y-8">
                         <div className="flex items-center gap-4">
                             <Link href="/admin/billing">
                                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -179,6 +201,26 @@ export default function CreateInvoicePage() {
                                                     className="bg-background/50"
                                                 />
                                             </div>
+                                            {item.productId ? (
+                                                <div className="w-40">
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        value={item.billingCycle || "monthly"}
+                                                        onChange={(e) => updateItem(index, 'billingCycle', e.target.value)}
+                                                    >
+                                                        <option value="monthly">Monthly</option>
+                                                        <option value="quarterly">Quarterly</option>
+                                                        <option value="semi-annually">Semi-Annually</option>
+                                                        <option value="annually">Annually</option>
+                                                        <option value="biennial">Biennial</option>
+                                                        <option value="triennial">Triennial</option>
+                                                    </select>
+                                                </div>
+                                            ) : (
+                                                <div className="w-40 bg-muted/20 border border-transparent rounded-md flex items-center justify-center text-xs text-muted-foreground font-medium h-10">
+                                                    N/A
+                                                </div>
+                                            )}
                                             <div className="w-32">
                                                 <Input
                                                     type="number"
