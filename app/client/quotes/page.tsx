@@ -97,7 +97,7 @@ export default function ClientQuotesPage() {
         <div className="min-h-screen bg-white">
             <Navbar />
             <Sidebar />
-            <main className="lg:pl-72 pt-20 p-4 md:p-8 space-y-6">
+            <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-gray-900">My Quotes</h1>

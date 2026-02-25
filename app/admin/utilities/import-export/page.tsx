@@ -22,7 +22,7 @@ export default function ImportExportPage() {
             <div className="min-h-screen bg-background text-foreground">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8">
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white">
                     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center justify-between">
                             <div>

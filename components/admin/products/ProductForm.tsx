@@ -149,11 +149,12 @@ export function ProductForm({ onSuccess, onCancel, className, serviceId }: Produ
                                         <SelectItem value="HOSTING">Shared Hosting</SelectItem>
                                         <SelectItem value="VPS">VPS / Server</SelectItem>
                                         <SelectItem value="DOMAIN">Domain Registration</SelectItem>
-                                        <SelectItem value="SSL">SSL Cert</SelectItem>
+                                        <SelectItem value="SSL">SSL Certificate</SelectItem>
                                         <SelectItem value="WEB_DEVELOPMENT">Web Development</SelectItem>
                                         <SelectItem value="SOFTWARE_DEVELOPMENT">Software Development</SelectItem>
                                         <SelectItem value="MARKETING">Marketing</SelectItem>
-                                        <SelectItem value="OTHER">Other</SelectItem>
+                                        <SelectItem value="ADDON">Product Addon</SelectItem>
+                                        <SelectItem value="OTHER">Other Service</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

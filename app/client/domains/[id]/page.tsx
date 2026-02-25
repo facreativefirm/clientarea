@@ -93,7 +93,7 @@ export default function ClientDomainDetailPage() {
             <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8">
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white">
                     <div className="max-w-6xl mx-auto space-y-8">
                         {/* Header & Status */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

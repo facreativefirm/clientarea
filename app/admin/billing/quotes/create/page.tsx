@@ -143,7 +143,7 @@ export default function CreateQuotePage() {
             <div className="min-h-screen bg-gray-50/50">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white max-w-5xl mx-auto space-y-6">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" asChild>
                             <Link href="/admin/billing/quotes"><ArrowLeft size={20} /></Link>

@@ -162,7 +162,7 @@ export default function PromotionsPage() {
             <div className="min-h-screen bg-background">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8">
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white">
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

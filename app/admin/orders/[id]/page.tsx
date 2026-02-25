@@ -107,7 +107,7 @@ export default function OrderDetailsPage() {
             <div className="min-h-screen bg-white text-foreground transition-colors duration-300">
                 <Navbar />
                 <Sidebar />
-                <main className="lg:pl-72 pt-20 p-4 md:p-8 flex justify-center">
+                <main className="lg:pl-72 pt-20 p-4 md:p-8 bg-white flex justify-center">
                     <div className="w-full max-w-6xl space-y-8">
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
