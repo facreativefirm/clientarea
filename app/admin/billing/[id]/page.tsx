@@ -79,6 +79,11 @@ export default function InvoiceDetailsPage() {
     const [paymentTxId, setPaymentTxId] = useState("");
     const [paymentLoading, setPaymentLoading] = useState(false);
 
+    // Coupon Modal State
+    const [isCouponOpen, setIsCouponOpen] = useState(false);
+    const [couponCode, setCouponCode] = useState("");
+    const [couponLoading, setCouponLoading] = useState(false);
+
     useEffect(() => {
         fetchSettings();
         fetchInvoice();
@@ -125,6 +130,27 @@ export default function InvoiceDetailsPage() {
             toast.error(error.response?.data?.message || "Failed to add payment");
         } finally {
             setPaymentLoading(false);
+        }
+    };
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode) {
+            toast.error("Please enter a coupon code");
+            return;
+        }
+        try {
+            setCouponLoading(true);
+            await api.post(`/invoices/${params.id}/apply-coupon`, {
+                promoCode: couponCode
+            });
+            toast.success("Coupon applied successfully");
+            setIsCouponOpen(false);
+            setCouponCode("");
+            fetchInvoice(); // Reload to see new totals
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to apply coupon");
+        } finally {
+            setCouponLoading(false);
         }
     };
 
@@ -220,61 +246,95 @@ export default function InvoiceDetailsPage() {
                                 </Button>
 
                                 {invoice.status !== 'PAID' && (
-                                    <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button className="gap-2 font-bold shadow-lg shadow-primary/20">
-                                                <PlusCircle size={16} />
-                                                Add Payment
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Add Manual Payment</DialogTitle>
-                                                <DialogDescription>
-                                                    Record an offline transaction (e.g., Cash, Bank Transfer) for this invoice.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-4 py-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">Payment Amount</label>
-                                                    <Input
-                                                        type="number"
-                                                        value={paymentAmount}
-                                                        onChange={(e) => setPaymentAmount(e.target.value)}
-                                                        placeholder="0.00"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">Payment Method</label>
-                                                    <select
-                                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                                        value={paymentGateway}
-                                                        onChange={(e) => setPaymentGateway(e.target.value)}
-                                                    >
-                                                        <option value="Cash">Cash on Hand</option>
-                                                        <option value="Bank Transfer">Bank Transfer</option>
-                                                        <option value="Check">Check</option>
-                                                        <option value="Other">Other</option>
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">Transaction ID (Optional)</label>
-                                                    <Input
-                                                        value={paymentTxId}
-                                                        onChange={(e) => setPaymentTxId(e.target.value)}
-                                                        placeholder="e.g. TRX-12345 or Check Number"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>Cancel</Button>
-                                                <Button onClick={handleAddPayment} disabled={paymentLoading}>
-                                                    {paymentLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : null}
-                                                    Confirmation Payment
+                                    <>
+                                        <Dialog open={isCouponOpen} onOpenChange={setIsCouponOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" className="gap-2 font-bold text-primary">
+                                                    Apply Coupon
                                                 </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Apply Coupon</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter a valid promotion or coupon code for this invoice.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <label className="text-sm font-medium">Coupon Code</label>
+                                                        <Input
+                                                            value={couponCode}
+                                                            onChange={(e) => setCouponCode(e.target.value)}
+                                                            placeholder="e.g. SUMMER50"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button variant="outline" onClick={() => setIsCouponOpen(false)}>Cancel</Button>
+                                                    <Button onClick={handleApplyCoupon} disabled={couponLoading}>
+                                                        {couponLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : null}
+                                                        Apply Discount
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                        <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button className="gap-2 font-bold shadow-lg shadow-primary/20">
+                                                    <PlusCircle size={16} />
+                                                    Add Payment
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add Manual Payment</DialogTitle>
+                                                    <DialogDescription>
+                                                        Record an offline transaction (e.g., Cash, Bank Transfer) for this invoice.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <label className="text-sm font-medium">Payment Amount</label>
+                                                        <Input
+                                                            type="number"
+                                                            value={paymentAmount}
+                                                            onChange={(e) => setPaymentAmount(e.target.value)}
+                                                            placeholder="0.00"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-sm font-medium">Payment Method</label>
+                                                        <select
+                                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                            value={paymentGateway}
+                                                            onChange={(e) => setPaymentGateway(e.target.value)}
+                                                        >
+                                                            <option value="Cash">Cash on Hand</option>
+                                                            <option value="Bank Transfer">Bank Transfer</option>
+                                                            <option value="Check">Check</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-sm font-medium">Transaction ID (Optional)</label>
+                                                        <Input
+                                                            value={paymentTxId}
+                                                            onChange={(e) => setPaymentTxId(e.target.value)}
+                                                            placeholder="e.g. TRX-12345 or Check Number"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>Cancel</Button>
+                                                    <Button onClick={handleAddPayment} disabled={paymentLoading}>
+                                                        {paymentLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : null}
+                                                        Confirmation Payment
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </>
                                 )}
                             </div>
                         </div>

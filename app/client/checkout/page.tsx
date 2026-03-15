@@ -149,25 +149,38 @@ function CheckoutContent() {
         if (!promoInput) return;
         setLoading(true);
         try {
-            // Calculate current cart total for validation
-            const currentSubtotal = items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0);
-
-            const res = await api.post('/promotions/validate', {
-                code: promoInput,
-                cartTotal: currentSubtotal,
-                cartItems: items.map(i => ({ productId: i.id }))
-            });
-
-            if (res.data.status === 'success') {
-                applyPromo(res.data.data);
-                toast.success(res.data.data.message);
+            if (invoiceId && invoice) {
+                // Apply coupon to an existing invoice
+                const res = await api.post(`/invoices/${invoice.id}/apply-coupon`, {
+                    promoCode: promoInput
+                });
+                if (res.data.status === 'success') {
+                    toast.success("Coupon applied successfully");
+                    setInvoice(res.data.data.invoice);
+                } else {
+                    toast.error(res.data.message || 'Invalid code');
+                }
             } else {
-                toast.error(res.data.status === 'error' ? res.data.message : 'Invalid code');
-                applyPromo(null);
+                // Original cart based logic
+                const currentSubtotal = items.reduce((acc, i) => acc + (Number(i.price || 0) * (i.quantity || 1)) + Number(i.setupFee || 0), 0);
+
+                const res = await api.post('/promotions/validate', {
+                    code: promoInput,
+                    cartTotal: currentSubtotal,
+                    cartItems: items.map(i => ({ productId: i.id }))
+                });
+
+                if (res.data.status === 'success') {
+                    applyPromo(res.data.data);
+                    toast.success(res.data.data.message);
+                } else {
+                    toast.error(res.data.status === 'error' ? res.data.message : 'Invalid code');
+                    applyPromo(null);
+                }
             }
         } catch (e: any) {
             toast.error(e.response?.data?.message || "Failed to check promo code");
-            applyPromo(null);
+            if (!invoiceId) applyPromo(null);
         } finally {
             setLoading(false);
         }
@@ -883,7 +896,7 @@ function CheckoutContent() {
                                         })()}
                                     </div>
 
-                                    {!invoiceId && (
+                                    {(!invoiceId || invoice?.status !== 'PAID') && (
                                         <div className="pt-4 space-y-3">
                                             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Promo Code</Label>
                                             <div className="flex gap-2">
