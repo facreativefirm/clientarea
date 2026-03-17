@@ -65,72 +65,38 @@ function CheckoutContent() {
     const [domainInputs, setDomainInputs] = useState<Record<string, string>>({});
     const [domainTargetItem, setDomainTargetItem] = useState<string | null>(null);
     const [checkingDomainId, setCheckingDomainId] = useState<string | null>(null);
+    const [dynamicMethods, setDynamicMethods] = useState<any[]>([]);
 
-    const ALL_PAYMENT_METHODS = [
-        {
-            id: 'bkash_payment', name: 'bKash Payment', desc: 'Auto Merchant Payment', icon: Smartphone, type: 'auto'
-        },
-        {
-            id: 'nagad_auto', name: 'Nagad Payment', desc: 'Merchant Payment', icon: Zap, type: 'auto'
-        },
-        {
-            id: 'bkash_manual', name: 'bKash Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Go to your bKash Mobile Menu or App.\n2. Choose "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #\n6. Confirm with your PIN.',
-                bn: '১. আপনার বিকাশ অ্যাপ বা ডায়াল মেনুতে যান।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।\n৬. আপনার পিন দিয়ে কনফার্ম করুন।'
-            }
-        },
-        {
-            id: 'nagad_manual', name: 'Nagad Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Open Nagad App or Dial *167#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
-                bn: '১. নগদ অ্যাপ খুলুন বা *১৬৭# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
-            }
-        },
-        {
-            id: 'rocket_manual', name: 'Rocket Personal', desc: 'Send Money (Personal)', icon: Smartphone, type: 'manual',
-            instructions: {
-                en: '1. Open Rocket App or Dial *322#.\n2. Select "Send Money".\n3. Enter: 01781 881199 (Personal Number).\n4. Amount: Total Amount + Cashout Charge.\n5. Reference: Your Invoice #',
-                bn: '১. রকেট অ্যাপ খুলুন বা *৩২২# ডায়াল করুন।\n২. "Send Money" অপশনটি বেছে নিন।\n৩. রকেট নম্বর দিন: ০১৭৮১ ৮৮১১৯৯ (পার্সোনাল)।\n৪. পরিমাণ: মোট টাকা + ক্যাশআউট চার্জ।\n৫. রেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন।'
-            }
-        },
-        {
-            id: 'bank_brac', name: 'BRAC BANK', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
-            instructions: {
-                en: 'Bank Name: BRAC BANK\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 2050400590002\nBranch: Agrabad Branch, Chattogram\nRef: Your Invoice #',
-                bn: 'ব্যাংকের নাম: ব্র্যাক ব্যাংক\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ২০৫০৪০০৫৯০০০২\nশাখা: আগ্রাবাদ শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
-            }
-        },
-        {
-            id: 'bank_city', name: 'CITY BANK PLC', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
-            instructions: {
-                en: 'Bank Name: CITY BANK PLC\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 1224295297001\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
-                bn: 'ব্যাংকের নাম: সিটি ব্যাংক পিএলসি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ১২২৪২৯৫২৯৭০০১\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
-            }
-        },
-        {
-            id: 'bank_ucb', name: 'UCB', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
-            instructions: {
-                en: 'Bank Name: UCB\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 0522112000002158\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
-                bn: 'ব্যাংকের নাম: ইউসিবি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ০৫২২১১২০০০০০০২১৫৮\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
-            }
-        },
-        {
-            id: 'bank_pubali', name: 'PUBALI BANK PLC', desc: 'Direct Deposit', icon: Landmark, type: 'manual',
-            instructions: {
-                en: 'Bank Name: PUBALI BANK PLC\nAccount Name: F. A. CREATIVE FIRM LIMITED\nAccount Number: 1502901041810\nBranch: Anderkilla Branch, Chattogram\nRef: Your Invoice #',
-                bn: 'ব্যাংকের নাম: পূবালী ব্যাংক পিএলসি\nঅ্যাকাউন্টের নাম: F. A. CREATIVE FIRM LIMITED\nঅ্যাকাউন্ট নম্বর: ১৫০২৯০১০৪১৮১০\nশাখা: আন্দরকিল্লা শাখা, চট্টগ্রাম\nরেফারেন্স: আপনার ইনভয়েস নম্বর ব্যবহার করুন'
-            }
+    // Build payment methods from API response (already sorted by displayOrder)
+    const ALL_PAYMENT_METHODS = dynamicMethods.map(m => ({
+        id: m.type === 'auto_gateway' ? (m.metadata || `dynamic_${m.id}`) : `dynamic_${m.id}`,
+        name: m.name,
+        desc: m.description || (m.type === 'bank' ? 'Bank Transfer' : 'Mobile Wallet'),
+        icon: m.type === 'bank' ? Landmark : (m.type === 'auto_gateway' ? Zap : Smartphone),
+        type: m.type === 'auto_gateway' ? 'auto' : 'manual',
+        instructions: {
+            en: m.instructionsEn || '',
+            bn: m.instructionsBn || ''
         }
-    ];
+    }));
 
     useEffect(() => {
         setIsMounted(true);
+        fetchPaymentMethods();
         if (invoiceId) {
             fetchInvoice(parseInt(invoiceId));
             setStep(3);
         }
     }, [invoiceId]);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const res = await api.get("/payment-methods/active");
+            setDynamicMethods(res.data.data.methods);
+        } catch (error) {
+            console.error("Failed to fetch payment methods:", error);
+        }
+    };
 
     const fetchInvoice = async (id: number) => {
         try {

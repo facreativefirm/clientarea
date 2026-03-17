@@ -84,10 +84,21 @@ export default function InvoiceDetailsPage() {
     const [couponCode, setCouponCode] = useState("");
     const [couponLoading, setCouponLoading] = useState(false);
 
+    // Dynamic payment methods
+    const [paymentMethods, setPaymentMethods] = useState<{ id: number; name: string; type: string }[]>([]);
+
     useEffect(() => {
         fetchSettings();
         fetchInvoice();
+        fetchPaymentMethodsList();
     }, [params.id]);
+
+    const fetchPaymentMethodsList = async () => {
+        try {
+            const res = await api.get("/payment-methods");
+            setPaymentMethods(res.data.data.methods);
+        } catch { }
+    };
 
     const fetchInvoice = async () => {
         try {
@@ -311,8 +322,10 @@ export default function InvoiceDetailsPage() {
                                                             onChange={(e) => setPaymentGateway(e.target.value)}
                                                         >
                                                             <option value="Cash">Cash on Hand</option>
-                                                            <option value="Bank Transfer">Bank Transfer</option>
                                                             <option value="Check">Check</option>
+                                                            {paymentMethods.map(m => (
+                                                                <option key={m.id} value={m.name}>{m.name}</option>
+                                                            ))}
                                                             <option value="Other">Other</option>
                                                         </select>
                                                     </div>

@@ -60,6 +60,7 @@ function StoreCheckoutContent() {
     const [domainInputs, setDomainInputs] = useState<Record<string, string>>({});
     const [domainTargetItem, setDomainTargetItem] = useState<string | null>(null);
     const [checkingDomainId, setCheckingDomainId] = useState<string | null>(null);
+    const [dynamicMethods, setDynamicMethods] = useState<any[]>([]);
 
     const [completedOrder, setCompletedOrder] = useState<any>(null);
     const [agreeToPolicies, setAgreeToPolicies] = useState(false);

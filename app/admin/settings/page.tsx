@@ -37,6 +37,7 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import PaymentMethodsManager from "@/components/admin/settings/PaymentMethodsManager";
 
 export default function SystemSettingsPage() {
     const { t } = useLanguage();
@@ -63,12 +64,14 @@ export default function SystemSettingsPage() {
         nagadPublicKey: "",
         nagadPrivateKey: "",
         nagadRunMode: "sandbox",
+        nagadDisplayOrder: "1",
         bkashEnabled: "false",
         bkashAppKey: "",
         bkashAppSecret: "",
         bkashUsername: "",
         bkashPassword: "",
         bkashRunMode: "sandbox",
+        bkashDisplayOrder: "0",
         companyAddress: ""
     });
     const [loading, setLoading] = useState(true);
@@ -525,6 +528,17 @@ export default function SystemSettingsPage() {
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
+                                                        <div className="space-y-3">
+                                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Display Order</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min="0"
+                                                                value={settings.nagadDisplayOrder || "1"}
+                                                                onChange={(e) => handleUpdateSetting("nagadDisplayOrder", e.target.value)}
+                                                                placeholder="1"
+                                                                className="h-14 rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold"
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                     <div className="space-y-3">
@@ -615,14 +629,23 @@ export default function SystemSettingsPage() {
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
+                                                        <div className="space-y-3 md:col-span-2">
+                                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Display Order</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min="0"
+                                                                value={settings.bkashDisplayOrder || "0"}
+                                                                onChange={(e) => handleUpdateSetting("bkashDisplayOrder", e.target.value)}
+                                                                placeholder="0"
+                                                                className="h-14 rounded-2xl bg-white/5 border-border focus:border-primary/50 font-bold"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
-                                                <p className="text-sm text-blue-400 font-medium">
-                                                    Manual payments (Bank, Rocket) can be configured in official payment methods settings.
-                                                </p>
+                                            <div className="pt-6 border-t border-white/10">
+                                                <PaymentMethodsManager />
                                             </div>
                                         </div>
                                     </div>
