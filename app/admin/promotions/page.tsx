@@ -95,9 +95,9 @@ export default function PromotionsPage() {
                 if (Array.isArray(parsed)) {
                     applicableProductsValue = parsed.join(', ');
                 }
-            } catch (e) {
-                console.error("Failed to parse applicable products", e);
             }
+        } catch (e) {
+            console.error("Failed to parse applicable products", e);
         }
 
         setFormData({
@@ -109,7 +109,7 @@ export default function PromotionsPage() {
             usageLimit: promo.usageLimit?.toString() || "",
             recurrence: promo.recurrence?.toString() || "",
             minimumOrderAmount: promo.minimumOrderAmount?.toString() || "",
-            applicableProducts: parsedProducts
+            applicableProducts: applicableProductsValue
         });
         setEditingId(promo.id);
         setIsCreateOpen(true);
