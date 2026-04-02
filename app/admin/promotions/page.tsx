@@ -95,22 +95,21 @@ export default function PromotionsPage() {
                 if (Array.isArray(parsed)) {
                     applicableProductsValue = parsed.join(', ');
                 }
+            } catch (e) {
+                console.error("Failed to parse applicable products", e);
             }
-        } catch (e) {
-            // If parsing fails, use the raw value
-            applicableProductsValue = promo.applicableProducts || "";
         }
 
         setFormData({
             code: promo.code,
             type: promo.type,
-            value: promo.value?.toString() || "",
-            validFrom: promo.validFrom ? new Date(promo.validFrom).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            value: promo.value.toString(),
+            validFrom: new Date(promo.validFrom).toISOString().split('T')[0],
             validUntil: promo.validUntil ? new Date(promo.validUntil).toISOString().split('T')[0] : "",
             usageLimit: promo.usageLimit?.toString() || "",
             recurrence: promo.recurrence?.toString() || "",
             minimumOrderAmount: promo.minimumOrderAmount?.toString() || "",
-            applicableProducts: applicableProductsValue
+            applicableProducts: parsedProducts
         });
         setEditingId(promo.id);
         setIsCreateOpen(true);

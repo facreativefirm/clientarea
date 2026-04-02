@@ -42,13 +42,17 @@ export function ProductSelector({ value, onChange, className }: ProductSelectorP
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchProducts(search);
+        }, 300); // Debounce search
 
-    const fetchProducts = async () => {
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchProducts = async (searchTerm = "") => {
         try {
             setLoading(true);
-            const response = await api.get("/products");
+            const response = await api.get(`/products?search=${encodeURIComponent(searchTerm)}&limit=50`);
             setProducts(response.data.data.products || []);
         } catch (err) {
             console.error(err);

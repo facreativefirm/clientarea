@@ -45,13 +45,17 @@ export function ClientSelector({ value, onChange, className }: ClientSelectorPro
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchClients();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchClients(search);
+        }, 300); // Debounce search
 
-    const fetchClients = async () => {
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchClients = async (searchTerm = "") => {
         try {
             setLoading(true);
-            const response = await api.get("/clients");
+            const response = await api.get(`/clients?search=${encodeURIComponent(searchTerm)}&limit=50`);
             setClients(response.data.data.clients || []);
         } catch (err) {
             console.error(err);
