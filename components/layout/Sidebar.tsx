@@ -25,7 +25,8 @@ import {
     Zap,
     TrendingUp,
     DollarSign,
-    Tag
+    Tag,
+    Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -176,6 +177,7 @@ export function Sidebar() {
                     ]
                 },
                 { name: "Reports", icon: BarChart3, href: "/admin/reports" },
+                ...(role === 'SUPER_ADMIN' ? [{ name: "Trash", icon: Trash2, href: "/admin/trash" }] : []),
             ];
         }
 
