@@ -85,7 +85,7 @@ export default function InvoiceDetailsPage() {
     const [couponLoading, setCouponLoading] = useState(false);
 
     // Dynamic payment methods
-    const [paymentMethods, setPaymentMethods] = useState<{ id: number; name: string; type: string }[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<{ id: number; name: string; type: string; enabled: boolean }[]>([]);
 
     useEffect(() => {
         fetchSettings();
@@ -96,7 +96,9 @@ export default function InvoiceDetailsPage() {
     const fetchPaymentMethodsList = async () => {
         try {
             const res = await api.get("/payment-methods");
-            setPaymentMethods(res.data.data.methods);
+            const methods = res.data.data.methods || [];
+            setPaymentMethods(methods);
+
         } catch { }
     };
 
@@ -324,9 +326,8 @@ export default function InvoiceDetailsPage() {
                                                             <option value="Cash">Cash on Hand</option>
                                                             <option value="Check">Check</option>
                                                             {paymentMethods.map(m => (
-                                                                <option key={m.id} value={m.name}>{m.name}</option>
+                                                                <option key={m.id} value={m.name}>{m.name}{!m.enabled ? ' (Disabled)' : ''}</option>
                                                             ))}
-                                                            <option value="Other">Other</option>
                                                         </select>
                                                     </div>
                                                     <div className="space-y-2">
