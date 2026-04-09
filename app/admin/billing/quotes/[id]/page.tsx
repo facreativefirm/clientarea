@@ -8,7 +8,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Printer, Download, Mail, Save, CheckCircle, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, Printer, Download, Mail, Save, CheckCircle, Clock, XCircle, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -26,6 +26,8 @@ export default function AdminQuoteDetailsPage() {
     const componentRef = useRef<HTMLDivElement>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedQuote, setEditedQuote] = useState<any>(null);
+    const [editedItems, setEditedItems] = useState<any[]>([]);
+    const [saveLoading, setSaveLoading] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -86,25 +88,99 @@ export default function AdminQuoteDetailsPage() {
         }
     };
 
+    const startEditing = () => {
+        if (!quote) return;
+        setEditedQuote({ ...quote });
+        setEditedItems(quote.items.map((item: any) => ({
+            id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: Number(item.unitPrice),
+            amount: Number(item.amount),
+            productId: item.productId,
+            billingCycle: item.billingCycle,
+            domainName: item.domainName,
+        })));
+        setIsEditing(true);
+    };
+
+    const cancelEditing = () => {
+        setIsEditing(false);
+        setEditedQuote(quote);
+        setEditedItems([]);
+    };
+
+    const updateItem = (index: number, field: string, value: any) => {
+        setEditedItems(prev => prev.map((item, i) => {
+            if (i !== index) return item;
+            const updated = { ...item, [field]: value };
+            if (field === 'quantity' || field === 'unitPrice') {
+                updated.amount = (updated.quantity || 0) * (updated.unitPrice || 0);
+            }
+            return updated;
+        }));
+    };
+
+    const addItem = () => {
+        setEditedItems(prev => [...prev, {
+            description: '',
+            quantity: 1,
+            unitPrice: 0,
+            amount: 0,
+            productId: null,
+            billingCycle: null,
+            domainName: null,
+        }]);
+    };
+
+    const removeItem = (index: number) => {
+        if (editedItems.length <= 1) {
+            toast.error("Quote must have at least one item");
+            return;
+        }
+        setEditedItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const editedSubtotal = editedItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
     const handleSave = async () => {
         if (!editedQuote) return;
 
+        const emptyItems = editedItems.filter(i => !i.description.trim());
+        if (emptyItems.length > 0) {
+            toast.error("All items must have a description");
+            return;
+        }
+
         try {
+            setSaveLoading(true);
             const response = await api.patch(`/quotes/${params.id}`, {
+                subject: editedQuote.subject,
                 notes: editedQuote.notes,
                 terms: editedQuote.terms,
-                status: editedQuote.status
+                validUntil: editedQuote.validUntil,
+                items: editedItems.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    productId: item.productId,
+                    billingCycle: item.billingCycle,
+                    domainName: item.domainName,
+                })),
             });
 
             if (response.data.status === 'success') {
                 setQuote(response.data.data.quote);
                 setEditedQuote(response.data.data.quote);
                 setIsEditing(false);
-                toast.success("Quotation updated successfully");
+                toast.success(quote.status !== 'DRAFT' ? "Quotation updated and reset to draft. You can now resend it." : "Quotation updated successfully");
+                fetchQuote();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Failed to update quotation");
+            toast.error(error.response?.data?.message || "Failed to update quotation");
+        } finally {
+            setSaveLoading(false);
         }
     };
 
@@ -190,10 +266,22 @@ export default function AdminQuoteDetailsPage() {
                                     <Download size={16} />
                                     Download PDF
                                 </Button>
-                                {quote.status === 'DRAFT' && (
+                                {quote.status !== 'ACCEPTED' && !isEditing && (
+                                    <Button variant="outline" onClick={startEditing} className="gap-2">
+                                        <Save size={16} />
+                                        Edit Quotation
+                                    </Button>
+                                )}
+                                {quote.status === 'DRAFT' && !isEditing && (
                                     <Button onClick={handleSend} className="gap-2">
                                         <Mail size={16} />
                                         Send to Client
+                                    </Button>
+                                )}
+                                {(quote.status === 'SENT' || quote.status === 'REJECTED') && !isEditing && (
+                                    <Button onClick={handleSend} variant="secondary" className="gap-2">
+                                        <Mail size={16} />
+                                        Resend to Client
                                     </Button>
                                 )}
                                 {quote.status === 'SENT' && !isExpired && (
@@ -261,6 +349,30 @@ export default function AdminQuoteDetailsPage() {
                                 </div>
                             </div>
 
+                            {/* Subject (editable) */}
+                            {isEditing && (
+                                <div className="mb-6">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 block">Subject</label>
+                                    <Input
+                                        value={editedQuote?.subject || ''}
+                                        onChange={(e) => setEditedQuote({ ...editedQuote, subject: e.target.value })}
+                                        placeholder="Quote subject"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Valid Until (editable) */}
+                            {isEditing && (
+                                <div className="mb-6">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 block">Valid Until</label>
+                                    <Input
+                                        type="date"
+                                        value={editedQuote?.validUntil ? new Date(editedQuote.validUntil).toISOString().split('T')[0] : ''}
+                                        onChange={(e) => setEditedQuote({ ...editedQuote, validUntil: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
                             {/* Table */}
                             <div className="mb-5">
                                 <table className="w-full text-left">
@@ -270,27 +382,81 @@ export default function AdminQuoteDetailsPage() {
                                             <th className="py-3 font-semibold text-sm text-muted-foreground text-center">Qty</th>
                                             <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Unit Price</th>
                                             <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Total</th>
+                                            {isEditing && <th className="py-3 w-10"></th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/10">
-                                        {quote.items.map((item: any) => (
-                                            <tr key={item.id}>
-                                                <td className="py-1">
-                                                    <p className="font-medium">{item.description}</p>
-                                                </td>
-                                                <td className="py-1 text-center text-muted-foreground">
-                                                    {item.quantity}
-                                                </td>
-                                                <td className="py-1 text-right text-muted-foreground">
-                                                    {formatPrice(item.unitPrice)}
-                                                </td>
-                                                <td className="py-1 text-right font-medium">
-                                                    {formatPrice(item.amount || (item.quantity * item.unitPrice))}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {isEditing ? (
+                                            editedItems.map((item: any, index: number) => (
+                                                <tr key={index}>
+                                                    <td className="py-2 pr-2">
+                                                        <Input
+                                                            value={item.description}
+                                                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                                            placeholder="Item description"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2 px-1">
+                                                        <Input
+                                                            type="number"
+                                                            min={1}
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                                            className="w-20 text-center mx-auto"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2 px-1">
+                                                        <Input
+                                                            type="number"
+                                                            min={0}
+                                                            step="0.01"
+                                                            value={item.unitPrice}
+                                                            onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                                            className="w-28 text-right ml-auto"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2 text-right font-medium text-sm">
+                                                        {formatPrice(item.amount)}
+                                                    </td>
+                                                    <td className="py-2 text-center">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                                            onClick={() => removeItem(index)}
+                                                            disabled={editedItems.length <= 1}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            quote.items.map((item: any) => (
+                                                <tr key={item.id}>
+                                                    <td className="py-1">
+                                                        <p className="font-medium">{item.description}</p>
+                                                    </td>
+                                                    <td className="py-1 text-center text-muted-foreground">
+                                                        {item.quantity}
+                                                    </td>
+                                                    <td className="py-1 text-right text-muted-foreground">
+                                                        {formatPrice(item.unitPrice)}
+                                                    </td>
+                                                    <td className="py-1 text-right font-medium">
+                                                        {formatPrice(item.amount || (item.quantity * item.unitPrice))}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
+                                {isEditing && (
+                                    <Button variant="outline" size="sm" onClick={addItem} className="mt-3 gap-2">
+                                        <Plus size={14} />
+                                        Add Item
+                                    </Button>
+                                )}
                             </div>
 
                             {/* Totals */}
@@ -298,7 +464,7 @@ export default function AdminQuoteDetailsPage() {
                                 <div className="w-64 space-y-3">
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Subtotal</span>
-                                        <span>{formatPrice(quote.subtotal)}</span>
+                                        <span>{formatPrice(isEditing ? editedSubtotal : quote.subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Tax</span>
@@ -306,30 +472,44 @@ export default function AdminQuoteDetailsPage() {
                                     </div>
                                     <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">
                                         <span>Total</span>
-                                        <span className="text-primary">{formatPrice(quote.totalAmount)}</span>
+                                        <span className="text-primary">{formatPrice(isEditing ? editedSubtotal : quote.totalAmount)}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Notes Section */}
-                            {(quote.notes || quote.terms) && (
+                            {/* Notes & Terms Section */}
+                            {(quote.notes || quote.terms || isEditing) && (
                                 <div className="mt-2 pt-2 border-t border-border/10 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {quote.notes && (
-                                        <div>
-                                            <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Client Notes</h4>
-                                            {isEditing ? (
-                                                <Textarea
-                                                    value={editedQuote?.notes || ''}
-                                                    onChange={(e) => setEditedQuote({ ...editedQuote, notes: e.target.value })}
-                                                    className="min-h-[100px]"
-                                                />
-                                            ) : (
-                                                <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
-                                                    {quote.notes}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                    <div>
+                                        <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Notes</h4>
+                                        {isEditing ? (
+                                            <Textarea
+                                                value={editedQuote?.notes || ''}
+                                                onChange={(e) => setEditedQuote({ ...editedQuote, notes: e.target.value })}
+                                                className="min-h-[100px]"
+                                                placeholder="Add notes..."
+                                            />
+                                        ) : quote.notes ? (
+                                            <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
+                                                {quote.notes}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Terms & Conditions</h4>
+                                        {isEditing ? (
+                                            <Textarea
+                                                value={editedQuote?.terms || ''}
+                                                onChange={(e) => setEditedQuote({ ...editedQuote, terms: e.target.value })}
+                                                className="min-h-[100px]"
+                                                placeholder="Add terms..."
+                                            />
+                                        ) : quote.terms ? (
+                                            <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
+                                                {quote.terms}
+                                            </div>
+                                        ) : null}
+                                    </div>
                                 </div>
                             )}
 
@@ -342,23 +522,12 @@ export default function AdminQuoteDetailsPage() {
                         {/* Edit Controls - Hidden in Print */}
                         {isEditing && (
                             <div className="flex justify-end gap-2 print:hidden">
-                                <Button variant="outline" onClick={() => {
-                                    setIsEditing(false);
-                                    setEditedQuote(quote);
-                                }}>
+                                <Button variant="outline" onClick={cancelEditing}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSave} className="gap-2">
-                                    <Save size={16} />
-                                    Save Changes
-                                </Button>
-                            </div>
-                        )}
-
-                        {!isEditing && quote.status === 'DRAFT' && (
-                            <div className="flex justify-end print:hidden">
-                                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                                    Edit Quotation
+                                <Button onClick={handleSave} disabled={saveLoading} className="gap-2">
+                                    {saveLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <Save size={16} />}
+                                    {quote.status !== 'DRAFT' ? 'Save & Reset to Draft' : 'Save Changes'}
                                 </Button>
                             </div>
                         )}

@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, Printer, Download, CheckCircle, Clock, Pencil, X, Trash2, Check, XCircle } from "lucide-react";
+import { ArrowLeft, Printer, Download, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -31,11 +30,7 @@ export default function ClientQuoteDetailsPage() {
     const [loading, setLoading] = useState(true);
     const componentRef = useRef<HTMLDivElement>(null);
 
-    // Edit mode state
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedItems, setEditedItems] = useState<any[]>([]);
-    const [editedNotes, setEditedNotes] = useState("");
-    const [saving, setSaving] = useState(false);
+    // Action state
     const [acceptLoading, setAcceptLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
     const [showRejectConfirm, setShowRejectConfirm] = useState(false);
@@ -99,64 +94,6 @@ export default function ClientQuoteDetailsPage() {
         }
     };
 
-    const startEditing = () => {
-        if (!quote) return;
-        setEditedItems(quote.items.map((item: any) => ({
-            id: item.id,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: Number(item.unitPrice),
-            amount: Number(item.amount),
-        })));
-        setEditedNotes(quote.notes || "");
-        setIsEditing(true);
-    };
-
-    const cancelEditing = () => {
-        setIsEditing(false);
-        setEditedItems([]);
-        setEditedNotes("");
-    };
-
-    const updateItemQuantity = (itemId: number, newQty: number) => {
-        if (newQty < 1) return;
-        setEditedItems(prev => prev.map(item =>
-            item.id === itemId
-                ? { ...item, quantity: newQty, amount: newQty * item.unitPrice }
-                : item
-        ));
-    };
-
-    const removeItem = (itemId: number) => {
-        if (editedItems.length <= 1) {
-            toast.error("Quote must have at least one item");
-            return;
-        }
-        setEditedItems(prev => prev.filter(item => item.id !== itemId));
-    };
-
-    const editedSubtotal = editedItems.reduce((sum, item) => sum + item.amount, 0);
-
-    const handleSaveChanges = async () => {
-        if (!quote) return;
-        try {
-            setSaving(true);
-            const res = await api.patch(`/quotes/${quote.id}/client-edit`, {
-                items: editedItems.map(item => ({ id: item.id, quantity: item.quantity })),
-                notes: editedNotes,
-            });
-            if (res.data.status === 'success') {
-                setQuote(res.data.data.quote);
-                setIsEditing(false);
-                toast.success("Quotation updated successfully");
-            }
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to update quotation");
-        } finally {
-            setSaving(false);
-        }
-    };
-
     const handleAccept = async () => {
         if (!quote) return;
         try {
@@ -203,7 +140,6 @@ export default function ClientQuoteDetailsPage() {
     const clientName = quote.client.user ? `${quote.client.user.firstName} ${quote.client.user.lastName}` : (quote.client.companyName || 'Valued Client');
     const contact = quote.client.contacts?.[0];
     const isExpired = new Date(quote.validUntil) < new Date();
-    const canEdit = quote.status === 'SENT' && !isExpired;
     const canAcceptReject = quote.status === 'SENT' && !isExpired;
 
     return (
@@ -242,31 +178,11 @@ export default function ClientQuoteDetailsPage() {
                                 <Printer size={16} />
                                 Print
                             </Button> */}
-                            {!isEditing && (
-                                <Button variant="outline" onClick={handleDownload} className="gap-2">
-                                    <Download size={16} />
-                                    Download PDF
-                                </Button>
-                            )}
-                            {canEdit && !isEditing && (
-                                <Button variant="outline" onClick={startEditing} className="gap-2">
-                                    <Pencil size={16} />
-                                    Edit Quotation
-                                </Button>
-                            )}
-                            {isEditing && (
-                                <>
-                                    <Button variant="outline" onClick={cancelEditing} className="gap-2">
-                                        <X size={16} />
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={handleSaveChanges} disabled={saving} className="gap-2">
-                                        {saving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <Check size={16} />}
-                                        Save Changes
-                                    </Button>
-                                </>
-                            )}
-                            {canAcceptReject && !isEditing && (
+                            <Button variant="outline" onClick={handleDownload} className="gap-2">
+                                <Download size={16} />
+                                Download PDF
+                            </Button>
+                            {canAcceptReject && (
                                 <>
                                     <Button onClick={handleAccept} disabled={acceptLoading} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
                                         {acceptLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <CheckCircle size={16} />}
@@ -354,62 +270,25 @@ export default function ClientQuoteDetailsPage() {
                                         <th className="py-3 font-semibold text-sm text-muted-foreground text-center">Qty</th>
                                         <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Unit Price</th>
                                         <th className="py-3 font-semibold text-sm text-muted-foreground text-right">Total</th>
-                                        {isEditing && <th className="py-3 w-10"></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/10">
-                                    {isEditing ? (
-                                        editedItems.map((item: any) => (
-                                            <tr key={item.id} className="border-b border-border/5">
-                                                <td className="py-4 pr-4">
-                                                    <p className="font-semibold text-sm">{item.description}</p>
-                                                </td>
-                                                <td className="py-4 text-center">
-                                                    <Input
-                                                        type="number"
-                                                        min={1}
-                                                        value={item.quantity}
-                                                        onChange={(e) => updateItemQuantity(item.id, parseInt(e.target.value) || 1)}
-                                                        className="w-20 text-center mx-auto"
-                                                    />
-                                                </td>
-                                                <td className="py-4 text-right text-muted-foreground text-sm">
-                                                    {formatPrice(item.unitPrice)}
-                                                </td>
-                                                <td className="py-4 text-right font-bold text-sm text-primary">
-                                                    {formatPrice(item.amount)}
-                                                </td>
-                                                <td className="py-4 text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive"
-                                                        onClick={() => removeItem(item.id)}
-                                                        disabled={editedItems.length <= 1}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        quote.items.map((item: any) => (
-                                            <tr key={item.id} className="border-b border-border/5">
-                                                <td className="py-4 pr-4">
-                                                    <p className="font-semibold text-sm">{item.description}</p>
-                                                </td>
-                                                <td className="py-4 text-center text-muted-foreground text-sm">
-                                                    {item.quantity}
-                                                </td>
-                                                <td className="py-4 text-right text-muted-foreground text-sm">
-                                                    {formatPrice(item.unitPrice)}
-                                                </td>
-                                                <td className="py-4 text-right font-bold text-sm text-primary">
-                                                    {formatPrice(item.amount || (item.quantity * item.unitPrice))}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
+                                    {quote.items.map((item: any) => (
+                                        <tr key={item.id} className="border-b border-border/5">
+                                            <td className="py-4 pr-4">
+                                                <p className="font-semibold text-sm">{item.description}</p>
+                                            </td>
+                                            <td className="py-4 text-center text-muted-foreground text-sm">
+                                                {item.quantity}
+                                            </td>
+                                            <td className="py-4 text-right text-muted-foreground text-sm">
+                                                {formatPrice(item.unitPrice)}
+                                            </td>
+                                            <td className="py-4 text-right font-bold text-sm text-primary">
+                                                {formatPrice(item.amount || (item.quantity * item.unitPrice))}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
@@ -419,7 +298,7 @@ export default function ClientQuoteDetailsPage() {
                             <div className="w-64 space-y-3">
                                 <div className="flex justify-between text-muted-foreground">
                                     <span>Subtotal</span>
-                                    <span>{formatPrice(isEditing ? editedSubtotal : quote.subtotal)}</span>
+                                    <span>{formatPrice(quote.subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-muted-foreground">
                                     <span>Tax</span>
@@ -427,35 +306,21 @@ export default function ClientQuoteDetailsPage() {
                                 </div>
                                 <div className="pt-3 border-t border-border flex justify-between font-bold text-lg">
                                     <span>Total</span>
-                                    <span className="text-primary">{formatPrice(isEditing ? editedSubtotal : quote.totalAmount)}</span>
+                                    <span className="text-primary">{formatPrice(quote.totalAmount)}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Terms & Notes Section */}
-                        {(quote.terms || quote.notes || isEditing) && (
+                        {(quote.terms || quote.notes) && (
                             <div className="mt-12 pt-8 border-t border-border/10 space-y-6">
-                                {isEditing ? (
+                                {quote.notes && (
                                     <div>
-                                        <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Your Notes / Requested Changes</h4>
-                                        <textarea
-                                            className="w-full min-h-[100px] text-sm bg-secondary/10 p-4 rounded-2xl border border-border/50 resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                            value={editedNotes}
-                                            onChange={(e) => setEditedNotes(e.target.value)}
-                                            placeholder="Add any notes or explain your requested changes..."
-                                        />
+                                        <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Notes</h4>
+                                        <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
+                                            {quote.notes}
+                                        </div>
                                     </div>
-                                ) : (
-                                    <>
-                                        {quote.notes && (
-                                            <div>
-                                                <h4 className="font-semibold text-sm mb-2 opacity-50 uppercase tracking-widest px-1">Notes</h4>
-                                                <div className="text-sm bg-secondary/10 p-4 rounded-2xl border border-white/5 whitespace-pre-wrap">
-                                                    {quote.notes}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
                                 )}
                                 {quote.terms && (
                                     <div>
